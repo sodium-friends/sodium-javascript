@@ -1,0 +1,18 @@
+{
+  "name": "sodium-javascript",
+  "version": "0.0.0",
+  "description": "WIP - a pure javascript version of sodium-native",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mafintosh/sodium-javascript.git"
+  },
+  "author": "Mathias Buus (@mafintosh)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mafintosh/sodium-javascript/issues"
+  },
+  "homepage": "https://github.com/mafintosh/sodium-javascript"
+}
