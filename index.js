@@ -2,7 +2,7 @@
 
 // Based on https://github.com/dchest/tweetnacl-js/blob/6dcbcaf5f5cbfd313f2dcfe763db35c828c8ff5b/nacl-fast.js.
 
-var nacl = module.exports
+var sodium = module.exports
 
 // Ported in 2014 by Dmitry Chestnykh and Devi Mandiri.
 // Public domain.
@@ -1921,8 +1921,8 @@ function scalarbase(p, s) {
 }
 
 function crypto_sign_keypair(pk, sk, seeded) {
-  check(pk, nacl.crypto_sign_PUBLICKEYBYTES)
-  check(sk, nacl.crypto_sign_SECRETKEYBYTES)
+  check(pk, sodium.crypto_sign_PUBLICKEYBYTES)
+  check(sk, sodium.crypto_sign_SECRETKEYBYTES)
 
   var d = new Uint8Array(64);
   var p = [gf(), gf(), gf(), gf()];
@@ -1942,7 +1942,7 @@ function crypto_sign_keypair(pk, sk, seeded) {
 }
 
 function crypto_sign_seed_keypair (pk, sk, seed) {
-  check(seed, nacl.crypto_sign_SEEDBYTES)
+  check(seed, sodium.crypto_sign_SEEDBYTES)
   seed.copy(sk)
   crypto_sign_keypair(pk, sk, true)
 }
@@ -2118,22 +2118,22 @@ function randombytes_buf (n) {
 
 function crypto_stream_wrap(c, n, k) {
   check(c, 0)
-  check(n, nacl.crypto_stream_NONCEBYTES)
-  check(k, nacl.crypto_stream_KEYBYTES)
+  check(n, sodium.crypto_stream_NONCEBYTES)
+  check(k, sodium.crypto_stream_KEYBYTES)
   crypto_stream(c, 0, c.length, n, k)
 }
 
 function crypto_stream_xor_wrap(c, m, n, k) {
   check(m, 0)
   check(c, m.length)
-  check(n, nacl.crypto_stream_NONCEBYTES)
-  check(k, nacl.crypto_stream_KEYBYTES)
+  check(n, sodium.crypto_stream_NONCEBYTES)
+  check(k, sodium.crypto_stream_KEYBYTES)
   crypto_stream_xor(c, 0, m, 0, m.length, n, k)
 }
 
 function crypto_secretbox_easy(o, msg, n, k) {
   check(msg, 0)
-  check(o, msg.length + nacl.crypto_secretbox_MACBYTES)
+  check(o, msg.length + sodium.crypto_secretbox_MACBYTES)
   check(n, crypto_secretbox_NONCEBYTES)
   check(k, crypto_secretbox_KEYBYTES)
 
@@ -2146,8 +2146,8 @@ function crypto_secretbox_easy(o, msg, n, k) {
 }
 
 function crypto_secretbox_open_easy(msg, box, n, k) {
-  check(box, nacl.crypto_secretbox_MACBYTES)
-  check(msg, box.length - nacl.crypto_secretbox_MACBYTES)
+  check(box, sodium.crypto_secretbox_MACBYTES)
+  check(msg, box.length - sodium.crypto_secretbox_MACBYTES)
   check(n, crypto_secretbox_NONCEBYTES)
   check(k, crypto_secretbox_KEYBYTES)
 
@@ -2160,6 +2160,21 @@ function crypto_secretbox_open_easy(msg, box, n, k) {
 
   for (i = crypto_secretbox_ZEROBYTES; i < m.length; i++) msg[i - crypto_secretbox_ZEROBYTES] = m[i]
   return true
+}
+
+var blake2b = require('blakejs/blake2b')
+
+function crypto_generichash (out, data, key) {
+  var tmp = blake2b.blake2b(data, key, out.length)
+  for (var i = 0; i < tmp.length; i++) out[i] = tmp[i]
+}
+
+function crypto_generichash_batch (out, batch, key) {
+  var i = 0
+  var ctx = blake2b.blake2bInit(out.length, key)
+  for (i = 0; i < batch.length; i++) blake2b.blake2bUpdate(ctx, batch[i])
+  var tmp = blake2b.blake2bFinal(ctx)
+  for (var i = 0; i < tmp.length; i++) out[i] = tmp[i]
 }
 
 var crypto_secretbox_KEYBYTES = 32,
@@ -2180,34 +2195,43 @@ var crypto_secretbox_KEYBYTES = 32,
     crypto_sign_SEEDBYTES = 32,
     crypto_hash_BYTES = 64;
 
-nacl.randombytes_buf = randombytes_buf
+sodium.randombytes_buf = randombytes_buf
 
-nacl.crypto_sign_BYTES = crypto_sign_BYTES
-nacl.crypto_sign_PUBLICKEYBYTES = crypto_sign_PUBLICKEYBYTES
-nacl.crypto_sign_SECRETKEYBYTES = crypto_sign_SECRETKEYBYTES
-nacl.crypto_sign_SEEDBYTES = crypto_sign_SEEDBYTES
-nacl.crypto_sign_keypair = crypto_sign_keypair
-nacl.crypto_sign_seed_keypair = crypto_sign_seed_keypair
-nacl.crypto_sign = crypto_sign
-nacl.crypto_sign_open = crypto_sign_open
-nacl.crypto_sign_detached = crypto_sign_detached
-nacl.crypto_sign_verify_detached = crypto_sign_verify_detached
+sodium.crypto_sign_BYTES = crypto_sign_BYTES
+sodium.crypto_sign_PUBLICKEYBYTES = crypto_sign_PUBLICKEYBYTES
+sodium.crypto_sign_SECRETKEYBYTES = crypto_sign_SECRETKEYBYTES
+sodium.crypto_sign_SEEDBYTES = crypto_sign_SEEDBYTES
+sodium.crypto_sign_keypair = crypto_sign_keypair
+sodium.crypto_sign_seed_keypair = crypto_sign_seed_keypair
+sodium.crypto_sign = crypto_sign
+sodium.crypto_sign_open = crypto_sign_open
+sodium.crypto_sign_detached = crypto_sign_detached
+sodium.crypto_sign_verify_detached = crypto_sign_verify_detached
 
-nacl.crypto_stream_KEYBYTES = 32
-nacl.crypto_stream_NONCEBYTES = 24
-nacl.crypto_stream = crypto_stream_wrap
-nacl.crypto_stream_xor = crypto_stream_xor_wrap
+sodium.crypto_stream_KEYBYTES = 32
+sodium.crypto_stream_NONCEBYTES = 24
+sodium.crypto_stream = crypto_stream_wrap
+sodium.crypto_stream_xor = crypto_stream_xor_wrap
 
-nacl.crypto_scalarmult_BYTES = crypto_scalarmult_BYTES
-nacl.crypto_scalarmult_SCALARBYTES = crypto_scalarmult_SCALARBYTES
-nacl.crypto_scalarmult_base = crypto_scalarmult_base
-nacl.crypto_scalarmult = crypto_scalarmult
+sodium.crypto_scalarmult_BYTES = crypto_scalarmult_BYTES
+sodium.crypto_scalarmult_SCALARBYTES = crypto_scalarmult_SCALARBYTES
+sodium.crypto_scalarmult_base = crypto_scalarmult_base
+sodium.crypto_scalarmult = crypto_scalarmult
 
-nacl.crypto_secretbox_KEYBYTES = crypto_secretbox_KEYBYTES,
-nacl.crypto_secretbox_NONCEBYTES = crypto_secretbox_NONCEBYTES,
-nacl.crypto_secretbox_MACBYTES = 16
-nacl.crypto_secretbox_easy = crypto_secretbox_easy
-nacl.crypto_secretbox_open_easy = crypto_secretbox_open_easy
+sodium.crypto_secretbox_KEYBYTES = crypto_secretbox_KEYBYTES,
+sodium.crypto_secretbox_NONCEBYTES = crypto_secretbox_NONCEBYTES,
+sodium.crypto_secretbox_MACBYTES = 16
+sodium.crypto_secretbox_easy = crypto_secretbox_easy
+sodium.crypto_secretbox_open_easy = crypto_secretbox_open_easy
+
+sodium.crypto_generichash_BYTES_MIN = 16
+sodium.crypto_generichash_BYTES_MAX = 64
+sodium.crypto_generichash_BYTES = 32
+sodium.crypto_generichash_KEYBYTES_MIN = 16
+sodium.crypto_generichash_KEYBYTES_MAX = 64
+sodium.crypto_generichash_KEYBYTES = 32
+sodium.crypto_generichash = crypto_generichash
+sodium.crypto_generichash_batch = crypto_generichash_batch
 
 function cleanup(arr) {
   for (var i = 0; i < arr.length; i++) arr[i] = 0;
@@ -2217,10 +2241,6 @@ function check (buf, len) {
   if (!buf || (len && buf.length < len)) throw new Error('Argument must be a buffer' + (len ? ' of length ' + len : ''))
 }
 
-nacl.setPRNG = function(fn) {
-  randombytes = fn;
-};
-
 (function() {
   // Initialize PRNG if environment provides CSPRNG.
   // If not, methods calling randombytes will throw.
@@ -2228,23 +2248,23 @@ nacl.setPRNG = function(fn) {
   if (crypto && crypto.getRandomValues) {
     // Browsers.
     var QUOTA = 65536;
-    nacl.setPRNG(function(x, n) {
+    randombytes = function(x, n) {
       var i, v = new Uint8Array(n);
       for (i = 0; i < n; i += QUOTA) {
         crypto.getRandomValues(v.subarray(i, i + Math.min(n - i, QUOTA)));
       }
       for (i = 0; i < n; i++) x[i] = v[i];
       cleanup(v);
-    });
+    };
   } else if (typeof require !== 'undefined') {
     // Node.js.
     crypto = require('cry' + 'pto');
     if (crypto && crypto.randomBytes) {
-      nacl.setPRNG(function(x, n) {
+      randombytes = function(x, n) {
         var i, v = crypto.randomBytes(n);
         for (i = 0; i < n; i++) x[i] = v[i];
         cleanup(v);
-      });
+      };
     }
   }
 })();

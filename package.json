@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "description": "WIP - a pure javascript version of sodium-native",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "blakejs": "^1.0.1"
+  },
   "devDependencies": {},
   "repository": {
     "type": "git",
