@@ -11,7 +11,8 @@
     "browserify": "^14.1.0"
   },
   "scripts": {
-    "browser": "browserify example.js | browser-run"
+    "browser": "browserify example.js | browser-run",
+    "browser-manual": "browserify example.js | browser-run -p 1234"
   },
   "repository": {
     "type": "git",
