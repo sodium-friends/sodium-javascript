@@ -6,7 +6,9 @@
   "dependencies": {
     "blakejs": "^1.0.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "sodium-test": "^0.1.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mafintosh/sodium-javascript.git"
