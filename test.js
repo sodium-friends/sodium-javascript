@@ -1,1 +1,1 @@
-require('sodium-test')('.')
+require('sodium-test')(require('.'))
