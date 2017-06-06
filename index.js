@@ -2180,6 +2180,10 @@ var crypto_secretbox_KEYBYTES = 32,
     crypto_sign_SEEDBYTES = 32,
     crypto_hash_BYTES = 64;
 
+sodium.memzero = function (len, offset) {
+  for (var i = offset; i < len; i++) arr[i] = 0;
+}
+
 sodium.randombytes_buf = randombytes_buf
 
 sodium.crypto_sign_BYTES = crypto_sign_BYTES
