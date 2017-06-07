@@ -7,7 +7,7 @@
     "blake2b": "^1.2.0"
   },
   "devDependencies": {
-    "sodium-test": "^0.2.0"
+    "sodium-test": "^0.3.0"
   },
   "repository": {
     "type": "git",

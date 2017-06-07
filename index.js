@@ -2198,6 +2198,7 @@ sodium.crypto_sign_detached = crypto_sign_detached
 sodium.crypto_sign_verify_detached = crypto_sign_verify_detached
 
 forward(require('./crypto_generichash'))
+forward(require('./crypto_kdf'))
 
 sodium.crypto_stream_KEYBYTES = 32
 sodium.crypto_stream_NONCEBYTES = 24
