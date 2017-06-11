@@ -10,11 +10,11 @@ module.exports.crypto_generichash_KEYBYTES_MAX = blake2b.KEYBYTES_MAX
 module.exports.crypto_generichash_KEYBYTES = blake2b.KEYBYTES
 
 module.exports.crypto_generichash = function (output, input, key) {
-  blake2b(output, input, key)
+  blake2b(output.length, key).update(input).final(output)
 }
 
 module.exports.crypto_generichash_batch = function (output, inputArray, key) {
-  var ctx = blake2b.instance(output.length, key)
+  var ctx = blake2b(output.length, key)
   for (var i = 0; i < inputArray.length; i++) {
     ctx.update(inputArray[i])
   }
@@ -23,5 +23,5 @@ module.exports.crypto_generichash_batch = function (output, inputArray, key) {
 
 module.exports.crypto_generichash_instance = function (key, outlen) {
   if (outlen == null) outlen = module.exports.crypto_generichash_BYTES
-  return blake2b.instance(outlen, key)
+  return blake2b(outlen, key)
 }

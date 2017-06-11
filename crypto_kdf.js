@@ -1,4 +1,4 @@
-var assert = require('assert')
+var assert = require('nanoassert')
 var randombytes_buf = require('.').randombytes_buf
 var blake2b = require('blake2b')
 
@@ -18,20 +18,22 @@ function STORE64_LE(dest, int) {
 }
 
 module.exports.crypto_kdf_derive_from_key = function crypto_kdf_derive_from_key (subkey, subkey_id, ctx, key) {
-  assert(subkey.length >= module.exports.crypto_kdf_BYTES_MIN, 'subkey must be')
-  assert(ctx.length >= module.exports.crypto_kdf_CONTEXTBYTES, 'context must be')
+  assert(subkey.length >= module.exports.crypto_kdf_BYTES_MIN, 'subkey must be at least crypto_kdf_BYTES_MIN')
+  assert(subkey_id >= 0 && subkey_id <= 0x1fffffffffffff, 'subkey_id must be safe integer')
+  assert(ctx.length >= module.exports.crypto_kdf_CONTEXTBYTES, 'context must be at least crypto_kdf_CONTEXTBYTES')
 
   var ctx_padded = new Uint8Array(blake2b.PERSONALBYTES)
   var salt = new Uint8Array(blake2b.SALTBYTES)
 
   ctx_padded.set(ctx, 0, module.exports.crypto_kdf_CONTEXTBYTES)
-
   STORE64_LE(salt, subkey_id)
 
-  blake2b(subkey.slice(0, Math.min(subkey.length, module.exports.crypto_kdf_BYTES_MAX)), [], key, salt, ctx_padded, true)
+  var outlen = Math.min(subkey.length, module.exports.crypto_kdf_BYTES_MAX)
+  blake2b(outlen, key, salt, ctx_padded, true)
+    .final(subkey)
 }
 
 module.exports.crypto_kdf_keygen = function crypto_kdf_keygen (out) {
-  assert(out.length >= module.exports.crypto_kdf_KEYBYTES)
+  assert(out.length >= module.exports.crypto_kdf_KEYBYTES, 'out.length must be crypto_kdf_KEYBYTES')
   randombytes_buf(out.subarray(0, module.exports.crypto_kdf_KEYBYTES))
 }

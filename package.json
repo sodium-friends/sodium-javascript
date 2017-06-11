@@ -4,10 +4,14 @@
   "description": "WIP - a pure javascript version of sodium-native",
   "main": "index.js",
   "dependencies": {
-    "blake2b": "^1.2.0"
+    "blake2b": "^2.1.1",
+    "nanoassert": "^1.0.0"
   },
   "devDependencies": {
     "sodium-test": "^0.3.0"
+  },
+  "scripts": {
+    "test": " node test.js"
   },
   "repository": {
     "type": "git",
