@@ -33,5 +33,5 @@ module.exports.crypto_kdf_derive_from_key = function crypto_kdf_derive_from_key 
 
 module.exports.crypto_kdf_keygen = function crypto_kdf_keygen (out) {
   assert(out.length >= module.exports.crypto_kdf_KEYBYTES)
-  randombytes_buf(out, module.exports.crypto_kdf_KEYBYTES)
+  randombytes_buf(out.subarray(0, module.exports.crypto_kdf_KEYBYTES))
 }
