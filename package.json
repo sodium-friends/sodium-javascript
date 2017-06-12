@@ -4,14 +4,21 @@
   "description": "WIP - a pure javascript version of sodium-native",
   "main": "index.js",
   "dependencies": {
+    "base64-to-uint8array": "^1.0.0",
     "blake2b": "^2.1.1",
+    "brfs": "^1.4.3",
     "nanoassert": "^1.0.0"
   },
   "devDependencies": {
-    "sodium-test": "^0.3.0"
+    "sodium-test": "^0.4.0"
   },
   "scripts": {
     "test": " node test.js"
+  },
+  "browserify": {
+    "transform": [
+      "brfs"
+    ]
   },
   "repository": {
     "type": "git",
