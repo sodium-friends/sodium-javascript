@@ -31,5 +31,5 @@ module.exports.crypto_generichash_instance = function (key, outlen) {
 }
 
 blake2b.ready(function (err) {
-  if (blake2b.WASM_SUPPORTED) module.exports.crypto_generichash_WASM_LOADED = !err
+  module.exports.crypto_generichash_WASM_LOADED = blake2b.WASM_LOADED
 })
