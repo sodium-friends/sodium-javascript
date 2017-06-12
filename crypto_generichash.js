@@ -7,10 +7,15 @@ module.exports.crypto_generichash_BYTES = blake2b.BYTES
 module.exports.crypto_generichash_KEYBYTES_MIN = blake2b.KEYBYTES_MIN
 module.exports.crypto_generichash_KEYBYTES_MAX = blake2b.KEYBYTES_MAX
 module.exports.crypto_generichash_KEYBYTES = blake2b.KEYBYTES
+module.exports.crypto_generichash_WASM_SUPPORTED = blake2b.WASM_SUPPORTED
+module.exports.crypto_generichash_WASM_LOADED = false
+
 
 module.exports.crypto_generichash = function (output, input, key) {
   blake2b(output.length, key).update(input).final(output)
 }
+
+module.exports.crypto_generichash_ready = blake2b.ready
 
 module.exports.crypto_generichash_batch = function (output, inputArray, key) {
   var ctx = blake2b(output.length, key)
@@ -24,3 +29,7 @@ module.exports.crypto_generichash_instance = function (key, outlen) {
   if (outlen == null) outlen = module.exports.crypto_generichash_BYTES
   return blake2b(outlen, key)
 }
+
+blake2b.ready(function (err) {
+  if (blake2b.WASM_SUPPORTED) module.exports.crypto_generichash_WASM_LOADED = !err
+})
