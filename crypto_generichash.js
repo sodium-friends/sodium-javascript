@@ -10,7 +10,6 @@ module.exports.crypto_generichash_KEYBYTES = blake2b.KEYBYTES
 module.exports.crypto_generichash_WASM_SUPPORTED = blake2b.WASM_SUPPORTED
 module.exports.crypto_generichash_WASM_LOADED = false
 
-
 module.exports.crypto_generichash = function (output, input, key) {
   blake2b(output.length, key).update(input).final(output)
 }
