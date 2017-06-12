@@ -1,4 +1,3 @@
-var assert = require('assert')
 var blake2b = require('blake2b')
 
 module.exports.crypto_generichash_PRIMITIVE = 'blake2b'
