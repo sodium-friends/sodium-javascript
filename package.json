@@ -14,8 +14,8 @@
     "sodium-test": "^0.5.1"
   },
   "scripts": {
-    "browser": "browserify example.js | browser-run",
-    "browser-manual": "browserify example.js | browser-run -p 1234",
+    "browser": "browserify test.js | browser-run",
+    "browser-manual": "browserify test.js | browser-run -p 1234",
     "test": " node test.js"
   },
   "browserify": {
