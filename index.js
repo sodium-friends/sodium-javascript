@@ -16,8 +16,8 @@ var gf = function(init) {
   return r;
 };
 
-//  Pluggable, initialized in high-level API below.
-var randombytes = function(/* x, n */) { throw new Error('no PRNG'); };
+// also forwarded at the bottom but randombytes is non-enumerable
+var randombytes = require('./randombytes').randombytes
 
 var _0 = new Uint8Array(16);
 var _9 = new Uint8Array(32); _9[0] = 9;
@@ -2112,10 +2112,6 @@ function crypto_sign_verify_detached (sig, m, pk) {
   return crypto_sign_open(sm, m, pk)
 }
 
-function randombytes_buf (n) {
-  randombytes(n, n.length)
-}
-
 function crypto_stream_wrap(c, n, k) {
   check(c, 0)
   check(n, sodium.crypto_stream_NONCEBYTES)
@@ -2184,8 +2180,6 @@ sodium.memzero = function (len, offset) {
   for (var i = offset; i < len; i++) arr[i] = 0;
 }
 
-sodium.randombytes_buf = randombytes_buf
-
 sodium.crypto_sign_BYTES = crypto_sign_BYTES
 sodium.crypto_sign_PUBLICKEYBYTES = crypto_sign_PUBLICKEYBYTES
 sodium.crypto_sign_SECRETKEYBYTES = crypto_sign_SECRETKEYBYTES
@@ -2200,6 +2194,7 @@ sodium.crypto_sign_verify_detached = crypto_sign_verify_detached
 forward(require('./crypto_generichash'))
 forward(require('./crypto_kdf'))
 forward(require('./crypto_shorthash'))
+forward(require('./randombytes'))
 
 sodium.crypto_stream_KEYBYTES = 32
 sodium.crypto_stream_NONCEBYTES = 24
@@ -2230,31 +2225,3 @@ function forward (submodule) {
     module.exports[prop] = submodule[prop]
   })
 }
-
-(function() {
-  // Initialize PRNG if environment provides CSPRNG.
-  // If not, methods calling randombytes will throw.
-  var crypto = typeof self !== 'undefined' ? (self.crypto || self.msCrypto) : null;
-  if (crypto && crypto.getRandomValues) {
-    // Browsers.
-    var QUOTA = 65536;
-    randombytes = function(x, n) {
-      var i, v = new Uint8Array(n);
-      for (i = 0; i < n; i += QUOTA) {
-        crypto.getRandomValues(v.subarray(i, i + Math.min(n - i, QUOTA)));
-      }
-      for (i = 0; i < n; i++) x[i] = v[i];
-      cleanup(v);
-    };
-  } else if (typeof require !== 'undefined') {
-    // Node.js.
-    crypto = require('cry' + 'pto');
-    if (crypto && crypto.randomBytes) {
-      randombytes = function(x, n) {
-        var i, v = crypto.randomBytes(n);
-        for (i = 0; i < n; i++) x[i] = v[i];
-        cleanup(v);
-      };
-    }
-  }
-})();
