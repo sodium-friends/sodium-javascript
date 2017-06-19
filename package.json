@@ -1,18 +1,27 @@
 {
   "name": "sodium-javascript",
-  "version": "0.0.1",
+  "version": "0.3.1",
   "description": "WIP - a pure javascript version of sodium-native",
   "main": "index.js",
   "dependencies": {
-    "blakejs": "^1.0.1"
+    "blake2b": "^2.1.1",
+    "nanoassert": "^1.0.0",
+    "siphash24": "^1.0.1"
   },
   "devDependencies": {
     "browser-run": "^4.0.2",
-    "browserify": "^14.1.0"
+    "browserify": "^14.1.0",
+    "sodium-test": "^0.4.0"
   },
   "scripts": {
     "browser": "browserify example.js | browser-run",
-    "browser-manual": "browserify example.js | browser-run -p 1234"
+    "browser-manual": "browserify example.js | browser-run -p 1234",
+    "test": " node test.js"
+  },
+  "browserify": {
+    "transform": [
+      "brfs"
+    ]
   },
   "repository": {
     "type": "git",

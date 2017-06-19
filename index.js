@@ -2162,21 +2162,6 @@ function crypto_secretbox_open_easy(msg, box, n, k) {
   return true
 }
 
-var blake2b = require('blakejs/blake2b')
-
-function crypto_generichash (out, data, key) {
-  var tmp = blake2b.blake2b(data, key, out.length)
-  for (var i = 0; i < tmp.length; i++) out[i] = tmp[i]
-}
-
-function crypto_generichash_batch (out, batch, key) {
-  var i = 0
-  var ctx = blake2b.blake2bInit(out.length, key)
-  for (i = 0; i < batch.length; i++) blake2b.blake2bUpdate(ctx, batch[i])
-  var tmp = blake2b.blake2bFinal(ctx)
-  for (var i = 0; i < tmp.length; i++) out[i] = tmp[i]
-}
-
 var crypto_secretbox_KEYBYTES = 32,
     crypto_secretbox_NONCEBYTES = 24,
     crypto_secretbox_ZEROBYTES = 32,
@@ -2195,6 +2180,10 @@ var crypto_secretbox_KEYBYTES = 32,
     crypto_sign_SEEDBYTES = 32,
     crypto_hash_BYTES = 64;
 
+sodium.memzero = function (len, offset) {
+  for (var i = offset; i < len; i++) arr[i] = 0;
+}
+
 sodium.randombytes_buf = randombytes_buf
 
 sodium.crypto_sign_BYTES = crypto_sign_BYTES
@@ -2207,6 +2196,10 @@ sodium.crypto_sign = crypto_sign
 sodium.crypto_sign_open = crypto_sign_open
 sodium.crypto_sign_detached = crypto_sign_detached
 sodium.crypto_sign_verify_detached = crypto_sign_verify_detached
+
+forward(require('./crypto_generichash'))
+forward(require('./crypto_kdf'))
+forward(require('./crypto_shorthash'))
 
 sodium.crypto_stream_KEYBYTES = 32
 sodium.crypto_stream_NONCEBYTES = 24
@@ -2224,21 +2217,18 @@ sodium.crypto_secretbox_MACBYTES = 16
 sodium.crypto_secretbox_easy = crypto_secretbox_easy
 sodium.crypto_secretbox_open_easy = crypto_secretbox_open_easy
 
-sodium.crypto_generichash_BYTES_MIN = 16
-sodium.crypto_generichash_BYTES_MAX = 64
-sodium.crypto_generichash_BYTES = 32
-sodium.crypto_generichash_KEYBYTES_MIN = 16
-sodium.crypto_generichash_KEYBYTES_MAX = 64
-sodium.crypto_generichash_KEYBYTES = 32
-sodium.crypto_generichash = crypto_generichash
-sodium.crypto_generichash_batch = crypto_generichash_batch
-
 function cleanup(arr) {
   for (var i = 0; i < arr.length; i++) arr[i] = 0;
 }
 
 function check (buf, len) {
   if (!buf || (len && buf.length < len)) throw new Error('Argument must be a buffer' + (len ? ' of length ' + len : ''))
+}
+
+function forward (submodule) {
+  Object.keys(submodule).forEach(function (prop) {
+    module.exports[prop] = submodule[prop]
+  })
 }
 
 (function() {
