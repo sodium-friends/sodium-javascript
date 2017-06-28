@@ -6,22 +6,18 @@
   "dependencies": {
     "blake2b": "^2.1.1",
     "nanoassert": "^1.0.0",
-    "siphash24": "^1.0.1"
+    "siphash24": "^1.0.1",
+    "xsalsa20": "^1.0.0"
   },
   "devDependencies": {
     "browser-run": "^4.0.2",
     "browserify": "^14.1.0",
-    "sodium-test": "^0.5.1"
+    "sodium-test": "^0.6.0"
   },
   "scripts": {
     "browser": "browserify test.js | browser-run",
     "browser-manual": "browserify test.js | browser-run -p 1234",
-    "test": " node test.js"
-  },
-  "browserify": {
-    "transform": [
-      "brfs"
-    ]
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
