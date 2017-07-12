@@ -1601,7 +1601,7 @@ function crypto_sign(sm, m, sk) {
 function crypto_sign_detached(sig, m, sk) {
   var sm = new Uint8Array(m.length + crypto_sign_BYTES)
   crypto_sign(sm, m, sk)
-  for (var i = 0; i < 32; i++) sig[i] = sm[i]
+  for (var i = 0; i < crypto_sign_BYTES; i++) sig[i] = sm[i]
 }
 
 function unpackneg(r, p) {
@@ -1684,8 +1684,8 @@ function crypto_sign_verify_detached (sig, m, pk) {
   check(sig, crypto_sign_BYTES)
   var sm = new Uint8Array(m.length + sig.length)
   var i = 0
-  for (i = 0; i < 64; i++) sm[i] = m[i]
-  for (i = 0; i < m.length; i++) sm[i + 64] = m[i]
+  for (i = 0; i < crypto_sign_BYTES; i++) sm[i] = sig[i]
+  for (i = 0; i < m.length; i++) sm[i + crypto_sign_BYTES] = m[i]
   return crypto_sign_open(sm, m, pk)
 }
 
