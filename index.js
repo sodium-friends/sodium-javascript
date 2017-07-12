@@ -1642,7 +1642,7 @@ function unpackneg(r, p) {
   return 0;
 }
 
-function crypto_sign_open(msg, sm, pk) {
+function crypto_sign_open(sm, msg, pk) {
   check(msg, sm.length - crypto_sign_BYTES)
   check(sm, crypto_sign_BYTES)
   check(pk, crypto_sign_PUBLICKEYBYTES)
