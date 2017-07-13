@@ -12,7 +12,7 @@
   "devDependencies": {
     "browser-run": "^4.0.2",
     "browserify": "^14.1.0",
-    "sodium-test": "^0.6.0"
+    "sodium-test": "^0.7.0"
   },
   "scripts": {
     "browser": "browserify test.js | browser-run",

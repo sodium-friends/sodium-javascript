@@ -1682,11 +1682,11 @@ function crypto_sign_open(msg, sm, pk) {
 
 function crypto_sign_verify_detached (sig, m, pk) {
   check(sig, crypto_sign_BYTES)
-  var sm = new Uint8Array(m.length + sig.length)
+  var sm = new Uint8Array(m.length + crypto_sign_BYTES)
   var i = 0
   for (i = 0; i < crypto_sign_BYTES; i++) sm[i] = sig[i]
   for (i = 0; i < m.length; i++) sm[i + crypto_sign_BYTES] = m[i]
-  return crypto_sign_open(sm, m, pk)
+  return crypto_sign_open(m, sm, pk)
 }
 
 function crypto_secretbox_detached (o, mac, msg, n, k) {
