@@ -1,9 +1,9 @@
 var assert = require('nanoassert')
 var randombytes = (function () {
   var QUOTA = 65536 // limit for QuotaExceededException
-  var crypto = typeof window !== 'undefined' ? (window.crypto || window.msCrypto) : null
+  var crypto = typeof global !== 'undefined' ? crypto = (global.crypto || global.msCrypto) : null
 
-  function windowBytes (out, n) {
+  function browserBytes (out, n) {
     for (var i = 0; i < n; i += QUOTA) {
       crypto.getRandomValues(out.subarray(i, i + Math.min(n - i, QUOTA)))
     }
@@ -18,7 +18,7 @@ var randombytes = (function () {
   }
 
   if (crypto && crypto.getRandomValues) {
-    return windowBytes
+    return browserBytes
   } else if (typeof require !== 'undefined') {
     // Node.js.
     crypto = require('cry' + 'pto');
