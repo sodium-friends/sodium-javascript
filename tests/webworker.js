@@ -1,4 +1,4 @@
-var sodium = require('.')
+var sodium = require('../')
 
 module.exports = function (self) {
   self.addEventListener('message', function (e) {

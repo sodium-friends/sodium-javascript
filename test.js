@@ -5,10 +5,10 @@ if (typeof window !== 'undefined') {
   var arrConst = new Uint8Array(16)
   test('randombytes works in web worker context', function (t) {
     var work = require('webworkify')
-    var w = work(require('./test-worker.js'))
+    var w = work(require('./tests/webworker.js'))
     w.addEventListener('message', function (e) {
       var arr = e.data[0]
-      t.notEqual(arrConst, arr, '')
+      t.notEqual(arrConst, arr, 'Array should contain random bytes')
       t.end()
       window.close()
     })
