@@ -14,6 +14,9 @@
     "browserify": "^14.1.0",
     "sodium-test": "^0.7.0"
   },
+  "browser": {
+    "crypto": false
+  },
   "scripts": {
     "browser": "browserify test.js | browser-run",
     "browser-manual": "browserify test.js | browser-run -p 1234",

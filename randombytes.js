@@ -21,7 +21,7 @@ var randombytes = (function () {
     return browserBytes
   } else if (typeof require !== 'undefined') {
     // Node.js.
-    crypto = require('cry' + 'pto');
+    crypto = require('crypto')
     if (crypto && crypto.randomBytes) {
       return nodeBytes
     }
