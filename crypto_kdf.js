@@ -6,7 +6,7 @@ module.exports.crypto_kdf_PRIMITIVE = 'blake2b'
 module.exports.crypto_kdf_BYTES_MIN = 16
 module.exports.crypto_kdf_BYTES_MAX = 64
 module.exports.crypto_kdf_CONTEXTBYTES = 8
-module.exports.crypto_kdf_KEYBYTES = 64
+module.exports.crypto_kdf_KEYBYTES = 32
 
 function STORE64_LE(dest, int) {
   var mul = 1
@@ -29,7 +29,7 @@ module.exports.crypto_kdf_derive_from_key = function crypto_kdf_derive_from_key 
   STORE64_LE(salt, subkey_id)
 
   var outlen = Math.min(subkey.length, module.exports.crypto_kdf_BYTES_MAX)
-  blake2b(outlen, key.slice(0, blake2b.KEYBYTES), salt, ctx_padded, true)
+  blake2b(outlen, key.subarray(0, module.exports.crypto_kdf_KEYBYTES), salt, ctx_padded, true)
     .final(subkey)
 }
 
