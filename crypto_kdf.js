@@ -29,7 +29,7 @@ module.exports.crypto_kdf_derive_from_key = function crypto_kdf_derive_from_key 
   STORE64_LE(salt, subkey_id)
 
   var outlen = Math.min(subkey.length, module.exports.crypto_kdf_BYTES_MAX)
-  blake2b(outlen, key, salt, ctx_padded, true)
+  blake2b(outlen, key.slice(0, blake2b.KEYBYTES), salt, ctx_padded, true)
     .final(subkey)
 }
 
