@@ -1736,6 +1736,13 @@ function crypto_secretbox_open_easy(msg, box, n, k) {
   return true
 }
 
+function crypto_box_keypair(x, y) {
+  check(x, crypto_box_PUBLICKEYBYTES)
+  check(y, crypto_box_SECRETKEYBYTES)
+  randombytes(x, 32);
+  return crypto_scalarmult_base(y, x); 
+}
+
 var crypto_secretbox_KEYBYTES = 32,
     crypto_secretbox_NONCEBYTES = 24,
     crypto_secretbox_ZEROBYTES = 32,
@@ -1787,6 +1794,10 @@ sodium.crypto_secretbox_easy = crypto_secretbox_easy
 sodium.crypto_secretbox_open_easy = crypto_secretbox_open_easy
 sodium.crypto_secretbox_detached = crypto_secretbox_detached
 sodium.crypto_secretbox_open_detached = crypto_secretbox_open_detached
+
+sodium.crypto_box_PUBLICKEYBYTES = crypto_box_PUBLICKEYBYTES
+sodium.crypto_box_SECRETKEYBYTES = crypto_box_SECRETKEYBYTES
+sodium.crypto_box_keypair = crypto_box_keypair
 
 function cleanup(arr) {
   for (var i = 0; i < arr.length; i++) arr[i] = 0;
