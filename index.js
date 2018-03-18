@@ -1736,11 +1736,11 @@ function crypto_secretbox_open_easy(msg, box, n, k) {
   return true
 }
 
-function crypto_box_keypair(x, y) {
-  check(x, crypto_box_PUBLICKEYBYTES)
-  check(y, crypto_box_SECRETKEYBYTES)
-  randombytes(x, 32);
-  return crypto_scalarmult_base(y, x); 
+function crypto_box_keypair(pk, sk) {
+  check(pk, crypto_box_PUBLICKEYBYTES)
+  check(sk, crypto_box_SECRETKEYBYTES)
+  randombytes(pk, 32);
+  return crypto_scalarmult_base(sk, pk); 
 }
 
 var crypto_secretbox_KEYBYTES = 32,
