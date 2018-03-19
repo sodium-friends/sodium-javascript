@@ -17,6 +17,9 @@
   "browser": {
     "crypto": false
   },
+  "react-native": {
+    "crypto": "crypto"
+  },
   "scripts": {
     "browser": "browserify test.js | browser-run",
     "browser-manual": "browserify test.js | browser-run -p 1234",
