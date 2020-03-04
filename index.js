@@ -1851,6 +1851,10 @@ sodium.crypto_box_keypair = crypto_box_keypair
 sodium.crypto_box_seal = crypto_box_seal
 sodium.crypto_box_seal_open = crypto_box_seal_open
 
+sodium.sodium_malloc = function (n) {
+  return new Uint8Array(n)
+}
+
 function cleanup(arr) {
   for (var i = 0; i < arr.length; i++) arr[i] = 0;
 }
