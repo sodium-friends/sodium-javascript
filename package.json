@@ -12,7 +12,8 @@
   "devDependencies": {
     "browser-run": "^4.0.2",
     "browserify": "^14.1.0",
-    "sodium-test": "^0.7.0"
+    "sodium-test": "^0.7.0",
+    "webworkify": "^1.4.0"
   },
   "browser": {
     "crypto": false
