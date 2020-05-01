@@ -1829,6 +1829,7 @@ forward(require('./crypto_kdf'))
 forward(require('./crypto_shorthash'))
 forward(require('./randombytes'))
 forward(require('./crypto_stream'))
+forward(require('./crypto_stream_chacha20'))
 
 sodium.crypto_scalarmult_BYTES = crypto_scalarmult_BYTES
 sodium.crypto_scalarmult_SCALARBYTES = crypto_scalarmult_SCALARBYTES
