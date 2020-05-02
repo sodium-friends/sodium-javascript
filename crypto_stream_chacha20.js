@@ -4,8 +4,10 @@ const MOD = 0xffffffff
 const constant = [1634760805, 857760878, 2036477234, 1797285236]
 
 exports.crypto_stream_chacha20_KEYBYTES = 32
-exports.crypto_stream_chacha20_ietf_KEYBYTES = 32
 exports.crypto_stream_chacha20_NONCEBYTES = 8
+exports.crypto_stream_chacha20_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEGER
+
+exports.crypto_stream_chacha20_ietf_KEYBYTES = 32
 exports.crypto_stream_chacha20_ietf_NONCEBYTES = 12
 exports.crypto_stream_chacha20_ietf_MESSAGEBYTES_MAX = 2 ** 32
 
@@ -36,7 +38,7 @@ exports.crypto_stream_chacha20_xor_ic = function (c, m, n, ic, k) {
   xor.final()
 }
 
-exports.crypto_stream_chacha20_xor_instance = function (c, m, n, k) {
+exports.crypto_stream_chacha20_xor_instance = function (n, k) {
   assert(n.byteLength === exports.crypto_stream_chacha20_NONCEBYTES,
     'n should be crypto_stream_chacha20_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_KEYBYTES,
@@ -72,7 +74,7 @@ exports.crypto_stream_chacha20_ietf_xor_ic = function (c, m, n, ic, k) {
   xor.final()
 }
 
-exports.crypto_stream_chacha20_ietf_xor_instance = function (c, m, n, k) {
+exports.crypto_stream_chacha20_ietf_xor_instance = function (n, k) {
   assert(n.byteLength === exports.crypto_stream_chacha20_ietf_NONCEBYTES,
     'n should be crypto_stream_chacha20_ietf_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_ietf_KEYBYTES,
@@ -90,7 +92,7 @@ function Chacha20 (k, n, counter) {
   assert(counter < Number.MAX_SAFE_INTEGER)
 
   this.finalized = false
-  this.offset = 0
+  this.pos = 0
   this.state = new Uint32Array(16)
 
   for (let i = 0; i < 4; i++) this.state[i] = constant[i]
@@ -113,34 +115,47 @@ function Chacha20 (k, n, counter) {
 
 Chacha20.prototype.update = function (output, input) {
   assert(!this.finalized, 'cipher finalized.')
-  assert(output.byteLength >= input.byteLength, 'output cannot be shorter than input.')
+  assert(output.byteLength >= input.byteLength,
+    'output cannot be shorter than input.')
 
-  var len = this.offset + input.length
-  var offset = this.offset
-  var block = 0
+  var len = input.length
+  var offset = this.pos % 64
+  this.pos += len
 
+  // input position
+  var j = 0
+
+  var keyStream = chacha20_block(this.state)
+
+  // try to finsih the current block
+  while (offset > 0 && len > 0) {
+    output[j] = input[j++] ^ keyStream[offset]
+    offset = (offset + 1) & 0x3f
+    if (!offset) this.state[12]++
+    len--
+  }
+
+  // encrypt rest block at a time
   while (len > 0) {
-    var keyStream = chacha20_block(this.state)
-  
+    keyStream = chacha20_block(this.state)
+
+    // less than a full block remaining
     if (len < 64) {
-      for (; offset < input.length % 64;) {
-        var i = block * 64 + offset
-        output[i] = input[i] ^ keyStream[offset++]
+      for (let i = 0; i < len; i++) {
+        output[j] = input[j++] ^ keyStream[offset++]
+        offset &= 0x3f
       }
 
-      this.offset = offset
       return
     }
 
     for (; offset < 64;) {
-      var i = 64 * block + offset
-      output[i] = input[i] ^ keyStream[offset++]
+      output[j] = input[j++] ^ keyStream[offset++]
     }
 
-    offset = 0
     this.state[12]++
+    offset = 0
     len -= 64
-    block++
   }
 }
 
@@ -197,20 +212,4 @@ function QR (obj, a, b, c, d) {
   obj[c] += obj[d]
   obj[b] ^= obj[c]
   obj[b] = rotl(obj[b], 7)
-}
-
-function arrToBuffer (buf, arr) {
-  for (let i = 0; i < arr.length; i++) {
-    buf.writeUInt32LE(arr[i], 4 * i)
-  }
-
-  return buf
-}
-
-function bufferToArr (arr, buf) {
-  for (let i = 0; i < arr.length; i++) {
-    arr[i] = buf.readUInt32LE(4 * i)
-  }
-
-  return arr
 }
