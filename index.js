@@ -13,16 +13,6 @@ var sodium = module.exports
 // also forwarded at the bottom but randombytes is non-enumerable
 var randombytes = require('./randombytes').randombytes
 
-function vn(x, xi, y, yi, n) {
-  var i,d = 0;
-  for (i = 0; i < n; i++) d |= x[xi+i]^y[yi+i];
-  return (1 & ((d - 1) >>> 8)) - 1;
-}
-
-function crypto_verify_16(x, xi, y, yi) {
-  return vn(x,xi,y,yi,16);
-}
-
 
 function crypto_stream_xor (c, cpos, m, mpos, clen, n, k) {
   cs.crypto_stream_xor(c, m, n, k)
@@ -136,11 +126,17 @@ function cleanup(arr) {
   for (var i = 0; i < arr.length; i++) arr[i] = 0;
 }
 
+forward(require('./crypto_box'))
+forward(require('./crypto_generichash'))
 forward(require('./crypto_hash'))
+forward(require('./crypto_kdf'))
+forward(require('./crypto_onetimeauth'))
 forward(require('./crypto_scalarmult'))
 forward(require('./crypto_secretbox'))
+forward(require('./crypto_shorthash'))
 forward(require('./crypto_sign'))
 forward(require('./crypto_stream'))
+forward(require('./randombytes'))
 
 function forward (submodule) {
   Object.keys(submodule).forEach(function (prop) {
