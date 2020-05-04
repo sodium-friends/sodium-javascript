@@ -5,7 +5,7 @@ const {
   X, Y, I, A, Z, M, S,
   sel25519, pack25519,
   inv25519, unpack25519
-} = require('./curve')
+} = require('./ed25519')
 
 const crypto_sign_BYTES = 64,
     crypto_sign_PUBLICKEYBYTES = 32,
