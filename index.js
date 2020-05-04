@@ -14,14 +14,6 @@ var sodium = module.exports
 var randombytes = require('./randombytes').randombytes
 
 
-function crypto_stream_xor (c, cpos, m, mpos, clen, n, k) {
-  cs.crypto_stream_xor(c, m, n, k)
-}
-
-function crypto_stream (c, cpos, clen, n, k) {
-  cs.crypto_stream(c, n, k)
-}
-
 function crypto_onetimeauth(out, outpos, m, mpos, n, k) {
   var s = new poly1305(k);
   s.update(m, mpos, n);
