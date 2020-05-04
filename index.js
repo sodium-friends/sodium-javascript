@@ -17,15 +17,6 @@ sodium.memzero = function (len, offset) {
   for (var i = offset; i < len; i++) arr[i] = 0;
 }
 
-
-forward(require('./crypto_generichash'))
-forward(require('./crypto_kdf'))
-forward(require('./crypto_shorthash'))
-forward(require('./randombytes'))
-forward(require('./crypto_stream'))
-
-
-
 sodium.sodium_malloc = function (n) {
   return new Uint8Array(n)
 }
