@@ -1,11 +1,8 @@
 'use strict';
 
-var xsalsa20 = require('xsalsa20')
-
 // Based on https://github.com/dchest/tweetnacl-js/blob/6dcbcaf5f5cbfd313f2dcfe763db35c828c8ff5b/nacl-fast.js.
 
 var sodium = module.exports
-var cs = require('./crypto_stream')
 
 // Ported in 2014 by Dmitry Chestnykh and Devi Mandiri.
 // Public domain.
@@ -1859,9 +1856,7 @@ function cleanup(arr) {
   for (var i = 0; i < arr.length; i++) arr[i] = 0;
 }
 
-function check (buf, len) {
-  if (!buf || (len && buf.length < len)) throw new Error('Argument must be a buffer' + (len ? ' of length ' + len : ''))
-}
+forward(require('./crypto_stream'))
 
 function forward (submodule) {
   Object.keys(submodule).forEach(function (prop) {
