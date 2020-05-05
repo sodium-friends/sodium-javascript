@@ -1,6 +1,5 @@
 const assert = require('nanoassert')
 
-const MOD = 0xffffffff
 const constant = [1634760805, 857760878, 2036477234, 1797285236]
 
 exports.crypto_stream_chacha20_KEYBYTES = 32
@@ -21,7 +20,7 @@ exports.crypto_stream_chacha20_xor = function (c, m, n, k) {
     'n should be crypto_stream_chacha20_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_KEYBYTES,
     'k should be crypto_stream_chacha20_KEYBYTES')
- 
+
   var xor = new Chacha20(k, n)
   xor.update(c, m)
   xor.final()
@@ -57,7 +56,7 @@ exports.crypto_stream_chacha20_ietf_xor = function (c, m, n, k) {
     'n should be crypto_stream_chacha20_ietf_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_ietf_KEYBYTES,
     'k should be crypto_stream_chacha20_ietf_KEYBYTES')
- 
+
   var xor = new Chacha20(k, n)
   xor.update(c, m)
   xor.final()
@@ -99,7 +98,7 @@ function Chacha20 (k, n, counter) {
   for (let i = 0; i < 8; i++) this.state[4 + i] = k.readUInt32LE(4 * i)
 
   this.state[12] = counter & 0xffffffff
-  
+
   if (n.byteLength === 8) {
     this.state[13] = counter >> 32
     this.state[14] = n.readUInt32LE(0)
@@ -171,18 +170,18 @@ module.exports.keystream = function (output, key, nonce, counter) {
 
 function chacha20_block (state) {
   var workingState = new Uint32Array(16)
-  for (let i = 16; i--;) workingState[i] = state[i] 
+  for (let i = 16; i--;) workingState[i] = state[i]
 
   for (let i = 0; i < 20; i += 2) {
-    QR(workingState, 0, 4,  8, 12) // column 0
-    QR(workingState, 1, 5,  9, 13) // column 1
+    QR(workingState, 0, 4, 8, 12) // column 0
+    QR(workingState, 1, 5, 9, 13) // column 1
     QR(workingState, 2, 6, 10, 14) // column 2
     QR(workingState, 3, 7, 11, 15) // column 3
- 
+
     QR(workingState, 0, 5, 10, 15) // diagonal 1 (main diagonal)
     QR(workingState, 1, 6, 11, 12) // diagonal 2
-    QR(workingState, 2, 7,  8, 13) // diagonal 3
-    QR(workingState, 3, 4,  9, 14) // diagonal 4
+    QR(workingState, 2, 7, 8, 13) // diagonal 3
+    QR(workingState, 3, 4, 9, 14) // diagonal 4
   }
 
   for (let i = 0; i < 16; i++) {
