@@ -10,29 +10,29 @@ exports.crypto_stream_chacha20_ietf_KEYBYTES = 32
 exports.crypto_stream_chacha20_ietf_NONCEBYTES = 12
 exports.crypto_stream_chacha20_ietf_MESSAGEBYTES_MAX = 2 ** 32
 
-exports.crypto_stream_chacha20 = function (c, n, k) {
+exports.crypto_stream_chacha20 = function (c, clen, n, k) {
   c.fill(0)
-  exports.crypto_stream_chacha20_xor(c, c, n, k)
+  exports.crypto_stream_chacha20_xor(c, 0, c, 0, 0, n, k)
 }
 
-exports.crypto_stream_chacha20_xor = function (c, m, n, k) {
+exports.crypto_stream_chacha20_xor = function (c, cpos, m, mpos, clen, n, k) {
   assert(n.byteLength === exports.crypto_stream_chacha20_NONCEBYTES,
     'n should be crypto_stream_chacha20_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_KEYBYTES,
     'k should be crypto_stream_chacha20_KEYBYTES')
 
-  var xor = new Chacha20(k, n)
+  var xor = new Chacha20(n, k)
   xor.update(c, m)
   xor.final()
 }
 
-exports.crypto_stream_chacha20_xor_ic = function (c, m, n, ic, k) {
+exports.crypto_stream_chacha20_xor_ic = function (c, m, mlen, n, ic, k) {
   assert(n.byteLength === exports.crypto_stream_chacha20_NONCEBYTES,
     'n should be crypto_stream_chacha20_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_KEYBYTES,
     'k should be crypto_stream_chacha20_KEYBYTES')
 
-  var xor = new Chacha20(k, n, ic)
+  var xor = new Chacha20(n, k, ic)
   xor.update(c, m)
   xor.final()
 }
@@ -43,32 +43,32 @@ exports.crypto_stream_chacha20_xor_instance = function (n, k) {
   assert(k.byteLength === exports.crypto_stream_chacha20_KEYBYTES,
     'k should be crypto_stream_chacha20_KEYBYTES')
 
-  return new Chacha20(k, n)
+  return new Chacha20(n, k)
 }
 
-exports.crypto_stream_chacha20_ietf = function (c, n, k) {
+exports.crypto_stream_chacha20_ietf = function (c, clen, n, k) {
   c.fill(0)
-  exports.crypto_stream_chacha20_ietf_xor(c, c, n, k)
+  exports.crypto_stream_chacha20_ietf_xor(c, 0, c, 0, 0, n, k)
 }
 
-exports.crypto_stream_chacha20_ietf_xor = function (c, m, n, k) {
+exports.crypto_stream_chacha20_ietf_xor = function (c, cpos, m, mpos, clen, n, k) {
   assert(n.byteLength === exports.crypto_stream_chacha20_ietf_NONCEBYTES,
     'n should be crypto_stream_chacha20_ietf_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_ietf_KEYBYTES,
     'k should be crypto_stream_chacha20_ietf_KEYBYTES')
 
-  var xor = new Chacha20(k, n)
+  var xor = new Chacha20(n, k)
   xor.update(c, m)
   xor.final()
 }
 
-exports.crypto_stream_chacha20_ietf_xor_ic = function (c, m, n, ic, k) {
+exports.crypto_stream_chacha20_ietf_xor_ic = function (c, m, mlen, n, ic, k) {
   assert(n.byteLength === exports.crypto_stream_chacha20_ietf_NONCEBYTES,
     'n should be crypto_stream_chacha20_ietf_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_ietf_KEYBYTES,
     'k should be crypto_stream_chacha20_ietf_KEYBYTES')
 
-  var xor = new Chacha20(k, n, ic)
+  var xor = new Chacha20(n, k, ic)
   xor.update(c, m)
   xor.final()
 }
@@ -79,10 +79,10 @@ exports.crypto_stream_chacha20_ietf_xor_instance = function (n, k) {
   assert(k.byteLength === exports.crypto_stream_chacha20_ietf_KEYBYTES,
     'k should be crypto_stream_chacha20_ietf_KEYBYTES')
 
-  return new Chacha20(k, n)
+  return new Chacha20(n, k)
 }
 
-function Chacha20 (k, n, counter) {
+function Chacha20 (n, k, counter) {
   assert(k.byteLength === exports.crypto_stream_chacha20_ietf_KEYBYTES)
   assert(n.byteLength === exports.crypto_stream_chacha20_NONCEBYTES ||
     n.byteLength === exports.crypto_stream_chacha20_ietf_NONCEBYTES)
