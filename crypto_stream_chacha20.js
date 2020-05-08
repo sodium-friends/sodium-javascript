@@ -11,11 +11,15 @@ exports.crypto_stream_chacha20_ietf_NONCEBYTES = 12
 exports.crypto_stream_chacha20_ietf_MESSAGEBYTES_MAX = 2 ** 32
 
 exports.crypto_stream_chacha20 = function (c, clen, n, k) {
+  if (clen) return exports.crypto_stream_chacha20(c.subarray(0, clen), null, n, k)
+
   c.fill(0)
   exports.crypto_stream_chacha20_xor(c, 0, c, 0, 0, n, k)
 }
 
 exports.crypto_stream_chacha20_xor = function (c, cpos, m, mpos, clen, n, k) {
+  if (clen && clen > 0) return exports.crypto_stream_chacha20_xor(c.subarray(0, clen), null, m.subarray(0, clen), null, null, n, k)
+
   assert(n.byteLength === exports.crypto_stream_chacha20_NONCEBYTES,
     'n should be crypto_stream_chacha20_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_KEYBYTES,
@@ -27,6 +31,8 @@ exports.crypto_stream_chacha20_xor = function (c, cpos, m, mpos, clen, n, k) {
 }
 
 exports.crypto_stream_chacha20_xor_ic = function (c, m, mlen, n, ic, k) {
+  if (mlen) return exports.crypto_stream_chacha20_xor_ic(c, m.subarray(0, mlen), null, n, ic, k)
+
   assert(n.byteLength === exports.crypto_stream_chacha20_NONCEBYTES,
     'n should be crypto_stream_chacha20_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_KEYBYTES,
@@ -47,11 +53,15 @@ exports.crypto_stream_chacha20_xor_instance = function (n, k) {
 }
 
 exports.crypto_stream_chacha20_ietf = function (c, clen, n, k) {
+  if (clen) return exports.crypto_stream_chacha20_ietf(c.subarray(0, clen), null, n, k)
+
   c.fill(0)
   exports.crypto_stream_chacha20_ietf_xor(c, 0, c, 0, 0, n, k)
 }
 
 exports.crypto_stream_chacha20_ietf_xor = function (c, cpos, m, mpos, clen, n, k) {
+  if (clen) return exports.crypto_stream_chacha20_ietf_xor(c.subarray(0, clen), null, m.subarray(0, clen), null, null, n, k)
+
   assert(n.byteLength === exports.crypto_stream_chacha20_ietf_NONCEBYTES,
     'n should be crypto_stream_chacha20_ietf_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_ietf_KEYBYTES,
@@ -63,6 +73,8 @@ exports.crypto_stream_chacha20_ietf_xor = function (c, cpos, m, mpos, clen, n, k
 }
 
 exports.crypto_stream_chacha20_ietf_xor_ic = function (c, m, mlen, n, ic, k) {
+  if (mlen) return exports.crypto_stream_chacha20_ietf_xor_ic(c, m.subarray(0, mlen), null, n, ic, k)
+
   assert(n.byteLength === exports.crypto_stream_chacha20_ietf_NONCEBYTES,
     'n should be crypto_stream_chacha20_ietf_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_ietf_KEYBYTES,
