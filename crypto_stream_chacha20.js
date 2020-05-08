@@ -112,7 +112,7 @@ function Chacha20 (n, k, counter) {
   this.state[12] = counter & 0xffffffff
 
   if (n.byteLength === 8) {
-    this.state[13] = counter >> 32
+    this.state[13] = (counter && 0xffffffff00000000) >> 32
     this.state[14] = n.readUInt32LE(0)
     this.state[15] = n.readUInt32LE(4)
   } else {
