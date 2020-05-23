@@ -1,6 +1,9 @@
-module.exports = {
-  crypto_hash,
-  crypto_hash_BYTES
+const sha256 = require('sha256-wasm')
+
+var crypto_hash_sha256_BYTES = 32
+
+function crypto_hash_sha256 (output, input) {
+  return sha256().update(input).digest(output)
 }
 
 var K = [
@@ -459,3 +462,10 @@ function crypto_hash (out, m, n) {
 }
 
 var crypto_hash_BYTES = 64
+
+module.exports = {
+  crypto_hash,
+  crypto_hash_sha256,
+  crypto_hash_BYTES,
+  crypto_hash_sha256_BYTES
+}
