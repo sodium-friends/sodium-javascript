@@ -4,12 +4,12 @@ exports.crypto_stream_KEYBYTES = 32
 exports.crypto_stream_NONCEBYTES = 24
 exports.crypto_stream_PRIMITIVE = 'xsalsa20'
 
-exports.crypto_stream = function (c, cpos, clen, nonce, key) {
+exports.crypto_stream = function (c, nonce, key) {
   c.fill(0)
-  exports.crypto_stream_xor(c, 0, c, 0, 0, nonce, key)
+  exports.crypto_stream_xor(c, c, nonce, key)
 }
 
-exports.crypto_stream_xor = function (c, cpos, m, mpos, clen, nonce, key) {
+exports.crypto_stream_xor = function (c, m, nonce, key) {
   var xor = xsalsa20(nonce, key)
 
   xor.update(m, c)

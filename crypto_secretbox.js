@@ -21,24 +21,24 @@ module.exports = {
   crypto_secretbox_MACBYTES
 }
 
-function crypto_secretbox(c,m,d,n,k) {
-  var i;
-  if (d < 32) return -1;
-  crypto_stream_xor(c,0,m,0,d,n,k);
-  crypto_onetimeauth(c, 16, c, 32, d - 32, c);
-  for (i = 0; i < 16; i++) c[i] = 0;
-  return 0;
+function crypto_secretbox (c, m, d, n, k) {
+  var i
+  if (d < 32) return -1
+  crypto_stream_xor(c, m, n, k)
+  crypto_onetimeauth(c, 16, c, 32, d - 32, c)
+  for (i = 0; i < 16; i++) c[i] = 0
+  return 0
 }
 
-function crypto_secretbox_open(m,c,d,n,k) {
-  var i;
-  var x = new Uint8Array(32);
-  if (d < 32) return -1;
-  crypto_stream(x,0,32,n,k);
-  if (crypto_onetimeauth_verify(c, 16,c, 32,d - 32,x) !== 0) return -1;
-  crypto_stream_xor(m,0,c,0,d,n,k);
-  for (i = 0; i < 32; i++) m[i] = 0;
-  return 0;
+function crypto_secretbox_open (m, c, d, n, k) {
+  var i
+  var x = new Uint8Array(32)
+  if (d < 32) return -1
+  crypto_stream(x, n, k)
+  if (crypto_onetimeauth_verify(c, 16, c, 32, d - 32, x) !== 0) return -1
+  crypto_stream_xor(m, c, n, k)
+  for (i = 0; i < 32; i++) m[i] = 0
+  return 0
 }
 
 function crypto_secretbox_detached (o, mac, msg, n, k) {
@@ -64,10 +64,10 @@ function crypto_secretbox_easy(o, msg, n, k) {
   check(k, crypto_secretbox_KEYBYTES)
 
   var i
-  var m = new Uint8Array(crypto_secretbox_ZEROBYTES + msg.length);
-  var c = new Uint8Array(m.length);
-  for (i = 0; i < msg.length; i++) m[i+crypto_secretbox_ZEROBYTES] = msg[i];
-  crypto_secretbox(c, m, m.length, n, k);
+  var m = new Uint8Array(crypto_secretbox_ZEROBYTES + msg.length)
+  var c = new Uint8Array(m.length)
+  for (i = 0; i < msg.length; i++) m[i+crypto_secretbox_ZEROBYTES] = msg[i]
+  crypto_secretbox(c, m, m.length, n, k)
   for (i = crypto_secretbox_BOXZEROBYTES; i < c.length; i++) o[i - crypto_secretbox_BOXZEROBYTES] = c[i]
 }
 
@@ -78,11 +78,11 @@ function crypto_secretbox_open_easy(msg, box, n, k) {
   check(k, crypto_secretbox_KEYBYTES)
 
   var i
-  var c = new Uint8Array(crypto_secretbox_BOXZEROBYTES + box.length);
+  var c = new Uint8Array(crypto_secretbox_BOXZEROBYTES + box.length)
   var m = new Uint8Array(c.length);
-  for (i = 0; i < box.length; i++) c[i+crypto_secretbox_BOXZEROBYTES] = box[i];
-  if (c.length < 32) return false;
-  if (crypto_secretbox_open(m, c, c.length, n, k) !== 0) return false;
+  for (i = 0; i < box.length; i++) c[i+crypto_secretbox_BOXZEROBYTES] = box[i]
+  if (c.length < 32) return false
+  if (crypto_secretbox_open(m, c, c.length, n, k) !== 0) return false
 
   for (i = crypto_secretbox_ZEROBYTES; i < m.length; i++) msg[i - crypto_secretbox_ZEROBYTES] = m[i]
   return true

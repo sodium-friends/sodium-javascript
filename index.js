@@ -35,6 +35,7 @@ forward(require('./crypto_secretbox'))
 forward(require('./crypto_shorthash'))
 forward(require('./crypto_sign'))
 forward(require('./crypto_stream'))
+forward(require('./crypto_stream_chacha20'))
 forward(require('./randombytes'))
 
 function forward (submodule) {
