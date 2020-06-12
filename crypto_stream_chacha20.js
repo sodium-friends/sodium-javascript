@@ -10,16 +10,12 @@ exports.crypto_stream_chacha20_ietf_KEYBYTES = 32
 exports.crypto_stream_chacha20_ietf_NONCEBYTES = 12
 exports.crypto_stream_chacha20_ietf_MESSAGEBYTES_MAX = 2 ** 32
 
-exports.crypto_stream_chacha20 = function (c, clen, n, k) {
-  if (clen) return exports.crypto_stream_chacha20(c.subarray(0, clen), null, n, k)
-
+exports.crypto_stream_chacha20 = function (c, n, k) {
   c.fill(0)
-  exports.crypto_stream_chacha20_xor(c, 0, c, 0, 0, n, k)
+  exports.crypto_stream_chacha20_xor(c, c, n, k)
 }
 
-exports.crypto_stream_chacha20_xor = function (c, cpos, m, mpos, clen, n, k) {
-  if (clen && clen > 0) return exports.crypto_stream_chacha20_xor(c.subarray(0, clen), null, m.subarray(0, clen), null, null, n, k)
-
+exports.crypto_stream_chacha20_xor = function (c, m, n, k) {
   assert(n.byteLength === exports.crypto_stream_chacha20_NONCEBYTES,
     'n should be crypto_stream_chacha20_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_KEYBYTES,
@@ -30,9 +26,7 @@ exports.crypto_stream_chacha20_xor = function (c, cpos, m, mpos, clen, n, k) {
   xor.final()
 }
 
-exports.crypto_stream_chacha20_xor_ic = function (c, m, mlen, n, ic, k) {
-  if (mlen) return exports.crypto_stream_chacha20_xor_ic(c, m.subarray(0, mlen), null, n, ic, k)
-
+exports.crypto_stream_chacha20_xor_ic = function (c, m, n, ic, k) {
   assert(n.byteLength === exports.crypto_stream_chacha20_NONCEBYTES,
     'n should be crypto_stream_chacha20_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_KEYBYTES,
@@ -52,16 +46,12 @@ exports.crypto_stream_chacha20_xor_instance = function (n, k) {
   return new Chacha20(n, k)
 }
 
-exports.crypto_stream_chacha20_ietf = function (c, clen, n, k) {
-  if (clen) return exports.crypto_stream_chacha20_ietf(c.subarray(0, clen), null, n, k)
-
+exports.crypto_stream_chacha20_ietf = function (c, n, k) {
   c.fill(0)
-  exports.crypto_stream_chacha20_ietf_xor(c, 0, c, 0, 0, n, k)
+  exports.crypto_stream_chacha20_ietf_xor(c, c, n, k)
 }
 
-exports.crypto_stream_chacha20_ietf_xor = function (c, cpos, m, mpos, clen, n, k) {
-  if (clen) return exports.crypto_stream_chacha20_ietf_xor(c.subarray(0, clen), null, m.subarray(0, clen), null, null, n, k)
-
+exports.crypto_stream_chacha20_ietf_xor = function (c, m, n, k) {
   assert(n.byteLength === exports.crypto_stream_chacha20_ietf_NONCEBYTES,
     'n should be crypto_stream_chacha20_ietf_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_ietf_KEYBYTES,
@@ -72,9 +62,7 @@ exports.crypto_stream_chacha20_ietf_xor = function (c, cpos, m, mpos, clen, n, k
   xor.final()
 }
 
-exports.crypto_stream_chacha20_ietf_xor_ic = function (c, m, mlen, n, ic, k) {
-  if (mlen) return exports.crypto_stream_chacha20_ietf_xor_ic(c, m.subarray(0, mlen), null, n, ic, k)
-
+exports.crypto_stream_chacha20_ietf_xor_ic = function (c, m, n, ic, k) {
   assert(n.byteLength === exports.crypto_stream_chacha20_ietf_NONCEBYTES,
     'n should be crypto_stream_chacha20_ietf_NONCEBYTES')
   assert(k.byteLength === exports.crypto_stream_chacha20_ietf_KEYBYTES,
@@ -136,7 +124,7 @@ Chacha20.prototype.update = function (output, input) {
   // input position
   let j = 0
 
-  let keyStream = chacha20_block(this.state)
+  let keyStream = chacha20Block(this.state)
 
   // try to finsih the current block
   while (offset > 0 && len > 0) {
@@ -148,7 +136,7 @@ Chacha20.prototype.update = function (output, input) {
 
   // encrypt rest block at a time
   while (len > 0) {
-    keyStream = chacha20_block(this.state)
+    keyStream = chacha20Block(this.state)
 
     // less than a full block remaining
     if (len < 64) {
@@ -174,7 +162,7 @@ Chacha20.prototype.final = function () {
   this.finalized = true
 }
 
-function chacha20_block (state) {
+function chacha20Block (state) {
   // working state
   const ws = new Uint32Array(16)
   for (let i = 16; i--;) ws[i] = state[i]
