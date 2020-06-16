@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 // Based on https://github.com/dchest/tweetnacl-js/blob/6dcbcaf5f5cbfd313f2dcfe763db35c828c8ff5b/nacl-fast.js.
 
@@ -11,7 +11,6 @@ var sodium = module.exports
 // See for details: http://tweetnacl.cr.yp.to/
 
 // also forwarded at the bottom but randombytes is non-enumerable
-var randombytes = require('./randombytes').randombytes
 
 sodium.sodium_memzero = function (arr) {
   arr.fill(0)
@@ -19,10 +18,6 @@ sodium.sodium_memzero = function (arr) {
 
 sodium.sodium_malloc = function (n) {
   return new Uint8Array(n)
-}
-
-function cleanup(arr) {
-  for (var i = 0; i < arr.length; i++) arr[i] = 0;
 }
 
 forward(require('./crypto_box'))
