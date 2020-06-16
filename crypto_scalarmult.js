@@ -1,5 +1,10 @@
 const { _9, _121665, gf, inv25519, pack25519, unpack25519, sel25519, A, M, Z, S } = require('./ed25519.js')
 
+var crypto_scalarmult_BYTES = 32
+var crypto_scalarmult_SCALARBYTES = 32
+var crypto_scalarmult_BYTES = 32
+var crypto_scalarmult_SCALARBYTES = 32
+
 module.exports = {
   crypto_scalarmult,
   crypto_scalarmult_base,
@@ -70,7 +75,3 @@ function crypto_scalarmult_base (q, n) {
 function check (buf, len) {
   if (!buf || (len && buf.length < len)) throw new Error('Argument must be a buffer' + (len ? ' of length ' + len : ''))
 }
-var crypto_scalarmult_BYTES = 32
-var crypto_scalarmult_SCALARBYTES = 32
-var crypto_scalarmult_BYTES = 32
-var crypto_scalarmult_SCALARBYTES = 32
