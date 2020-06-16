@@ -1,3 +1,6 @@
+const { crypto_hash_sha512 } = require('./crypto_hash')
+const { memzero } = require('./')
+
 module.exports = {
   crypto_box_keypair,
   crypto_box_seal,
@@ -16,6 +19,19 @@ function crypto_box_keypair(pk, sk) {
   check(pk, crypto_box_PUBLICKEYBYTES)
   check(sk, crypto_box_SECRETKEYBYTES)
   randombytes(sk, 32)
+  return crypto_scalarmult_base(pk, sk)
+}
+
+function crypto_box_seed_keypair(pk, sk, seed) {
+  check(pk, crypto_box_PUBLICKEYBYTES)
+  check(sk, crypto_box_SECRETKEYBYTES)
+  check(sk, crypto_box_SEEDBYTES)
+
+  const hash = Buffer.alloc(64)
+  crypto_hash_sha512(hash, seed, 32)
+  sk.set(hash, 0, 0, 32)
+  memzero(hash)
+
   return crypto_scalarmult_base(pk, sk)
 }
 
