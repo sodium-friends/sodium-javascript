@@ -6,6 +6,7 @@ const {
   sel25519, pack25519,
   inv25519, unpack25519
 } = require('./ed25519')
+const { randombytes } = require('./randombytes')
 
 const crypto_sign_BYTES = 64,
     crypto_sign_PUBLICKEYBYTES = 32,
@@ -108,8 +109,8 @@ function scalarbase(p, s) {
 }
 
 function crypto_sign_keypair(pk, sk, seeded) {
-  check(pk, sodium.crypto_sign_PUBLICKEYBYTES)
-  check(sk, sodium.crypto_sign_SECRETKEYBYTES)
+  check(pk, crypto_sign_PUBLICKEYBYTES)
+  check(sk, crypto_sign_SECRETKEYBYTES)
 
   var d = new Uint8Array(64);
   var p = [gf(), gf(), gf(), gf()];
@@ -129,9 +130,9 @@ function crypto_sign_keypair(pk, sk, seeded) {
 }
 
 function crypto_sign_seed_keypair (pk, sk, seed) {
-  check(seed, sodium.crypto_sign_SEEDBYTES)
+  check(seed, crypto_sign_SEEDBYTES)
   seed.copy(sk)
-  crypto_sign_keypair(pk, sk, true)
+  return crypto_sign_keypair(pk, sk, true)
 }
 
 var L = new Float64Array([0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10]);
@@ -206,6 +207,7 @@ function crypto_sign(sm, m, sk) {
   }
 
   modL(sm.subarray(32), x);
+  return smlen
 }
 
 function crypto_sign_detached(sig, m, sk) {
