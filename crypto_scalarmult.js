@@ -63,13 +63,6 @@ function crypto_scalarmult (q, n, p) {
   return 0
 }
 
-module.exports = {
-  crypto_scalarmult_base,
-  crypto_scalarmult_base,
-  crypto_scalarmult_BYTES,
-  crypto_scalarmult_SCALARBYTES
-}
-
 function crypto_scalarmult_base (q, n) {
   return crypto_scalarmult(q, n, _9)
 }
