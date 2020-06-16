@@ -4,7 +4,6 @@ const { randombytes } = require('./randombytes')
 const { crypto_generichash_batch } = require('./crypto_generichash')
 const { crypto_secretbox_open_easy, crypto_secretbox_easy } = require('./crypto_secretbox')
 const xsalsa20 = require('xsalsa20')
-const { memzero } = require('./')
 
 var crypto_box_PUBLICKEYBYTES = 32,
     crypto_box_SECRETKEYBYTES = 32,
@@ -47,7 +46,7 @@ function crypto_box_seed_keypair(pk, sk, seed) {
   const hash = Buffer.alloc(64)
   crypto_hash_sha512(hash, seed, 32)
   hash.copy(sk, 0, 0, 32)
-  memzero(hash)
+  hash.fill(0)
 
   return crypto_scalarmult_base(pk, sk)
 }
