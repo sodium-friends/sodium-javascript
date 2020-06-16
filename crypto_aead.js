@@ -12,18 +12,17 @@ const crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEG
 const _pad0 = Buffer.alloc(16)
 
 function crypto_aead_chacha20poly1305_ietf_encrypt(c, m, ad, nsec, npub, k) {
-  var clen = 0
   var ret
 
   assert(m.length <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
 
-  ret = crypto_aead_chacha20poly1305_ietf_encrypt_detached(c, c.subarray(m.length), m, ad, nsec, npub, k);
+  ret = crypto_aead_chacha20poly1305_ietf_encrypt_detached(c, c.subarray(m.length), m, ad, nsec, npub, k)
 
-  if (ret == 0) {
-     return m.length + crypto_aead_chacha20poly1305_ietf_ABYTES;
+  if (ret === 0) {
+    return m.length + crypto_aead_chacha20poly1305_ietf_ABYTES
   }
- 
-  return ret;
+
+  return ret
 }
 
 function crypto_aead_chacha20poly1305_ietf_encrypt_detached(c, mac, m, ad, nsec, npub, k) {
@@ -54,8 +53,7 @@ function crypto_aead_chacha20poly1305_ietf_encrypt_detached(c, mac, m, ad, nsec,
   return crypto_aead_chacha20poly1305_ietf_ABYTES
 }
 
-function crypto_aead_chacha20poly1305_ietf_decrypt(m, nsec, c, ad, npub, k) {
-  var mlen = 0
+function crypto_aead_chacha20poly1305_ietf_decrypt (m, nsec, c, ad, npub, k) {
   var ret = -1
 
   if (c.length >= crypto_aead_chacha20poly1305_ietf_ABYTES) {
@@ -66,14 +64,14 @@ function crypto_aead_chacha20poly1305_ietf_decrypt(m, nsec, c, ad, npub, k) {
       ad, npub, k)
   }
 
-  if (ret == 0) {
-    return mlen = c.length - crypto_aead_chacha20poly1305_ietf_ABYTES
+  if (ret === 0) {
+    return c.length - crypto_aead_chacha20poly1305_ietf_ABYTES
   }
 
   return ret;
 }
 
-function crypto_aead_chacha20poly1305_ietf_decrypt_detached(m, nsec, c, mac, ad, npub, k) {
+function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad, npub, k) {
   const block0 = new Uint8Array(64)
   const slen = Buffer.alloc(8)
   const computed_mac = Buffer.alloc(crypto_aead_chacha20poly1305_ietf_ABYTES)
@@ -99,13 +97,13 @@ function crypto_aead_chacha20poly1305_ietf_decrypt_detached(m, nsec, c, mac, ad,
 
   poly.finish(computed_mac, 0)
 
-  assert(computed_mac.length == 16)
+  assert(computed_mac.length === 16)
   ret = crypto_verify_16(computed_mac, 0, mac, 0)
 
   computed_mac.fill(0)
   slen.fill(0)
 
-  if (ret != 0) {
+  if (ret !== 0) {
     m.fill(0)
     return -1
   }
@@ -129,4 +127,6 @@ module.exports = {
   crypto_aead_chacha20poly1305_ietf_KEYBYTES,
   crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
   crypto_aead_chacha20poly1305_ietf_NSECBYTES
+}
+d_chacha20poly1305_ietf_NSECBYTES
 }
