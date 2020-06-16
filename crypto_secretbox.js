@@ -66,7 +66,7 @@ function crypto_secretbox_easy(o, msg, n, k) {
   var i
   var m = new Uint8Array(crypto_secretbox_ZEROBYTES + msg.length)
   var c = new Uint8Array(m.length)
-  for (i = 0; i < msg.length; i++) m[i+crypto_secretbox_ZEROBYTES] = msg[i]
+  for (i = 0; i < msg.length; i++) m[i + crypto_secretbox_ZEROBYTES] = msg[i]
   crypto_secretbox(c, m, m.length, n, k)
   for (i = crypto_secretbox_BOXZEROBYTES; i < c.length; i++) o[i - crypto_secretbox_BOXZEROBYTES] = c[i]
 }
@@ -79,8 +79,8 @@ function crypto_secretbox_open_easy(msg, box, n, k) {
 
   var i
   var c = new Uint8Array(crypto_secretbox_BOXZEROBYTES + box.length)
-  var m = new Uint8Array(c.length);
-  for (i = 0; i < box.length; i++) c[i+crypto_secretbox_BOXZEROBYTES] = box[i]
+  var m = new Uint8Array(c.length)
+  for (i = 0; i < box.length; i++) c[i + crypto_secretbox_BOXZEROBYTES] = box[i]
   if (c.length < 32) return false
   if (crypto_secretbox_open(m, c, c.length, n, k) !== 0) return false
 
