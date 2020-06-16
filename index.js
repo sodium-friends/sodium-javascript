@@ -13,7 +13,7 @@ var sodium = module.exports
 // also forwarded at the bottom but randombytes is non-enumerable
 var randombytes = require('./randombytes').randombytes
 
-sodium.memzero = function (len, offset) {
+sodium.sodium_memzero = function (len, offset) {
   for (var i = offset; i < len; i++) arr[i] = 0;
 }
 
