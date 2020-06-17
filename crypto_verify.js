@@ -27,7 +27,7 @@ function sodium_memcmp (a, b) {
   return vn(a, 0, b, 0, a.byteLength) === 0
 }
 
-function sodium_is_zero = function (arr) {
+function sodium_is_zero (arr) {
   var d = 0
   for (let i = 0; i < arr.length; i++) d |= arr[i]
   return d === 0
