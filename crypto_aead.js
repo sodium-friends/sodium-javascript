@@ -11,12 +11,16 @@ const crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEG
 
 const _pad0 = Buffer.alloc(16)
 
-function crypto_aead_chacha20poly1305_ietf_encrypt(c, m, ad, nsec, npub, k) {
-  var ret
-
+function crypto_aead_chacha20poly1305_ietf_encrypt (c, m, ad, nsec, npub, k) {
+  assert(c.length === m.length + crypto_aead_chacha20poly1305_ietf_ABYTES,
+    "ciphertext should be 'crypto_aead_chacha20poly1305_ietf_ABYTES' longer than message")
+  assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
+    "npub should be 'crypto_aead_chacha20poly1305_ietf_NPUBBYTES' long")
+  assert(k.length === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
+    "k should be 'crypto_aead_chacha20poly1305_ietf_KEYBYTES' long")
   assert(m.length <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
 
-  ret = crypto_aead_chacha20poly1305_ietf_encrypt_detached(c, c.subarray(m.length), m, ad, nsec, npub, k)
+  var ret = crypto_aead_chacha20poly1305_ietf_encrypt_detached(c.subarray(0, m.length), c.subarray(m.length), m, ad, nsec, npub, k)
 
   if (ret === 0) {
     return m.length + crypto_aead_chacha20poly1305_ietf_ABYTES
@@ -25,7 +29,16 @@ function crypto_aead_chacha20poly1305_ietf_encrypt(c, m, ad, nsec, npub, k) {
   return ret
 }
 
-function crypto_aead_chacha20poly1305_ietf_encrypt_detached(c, mac, m, ad, nsec, npub, k) {
+function crypto_aead_chacha20poly1305_ietf_encrypt_detached (c, mac, m, ad, nsec, npub, k) {
+  assert(c.length === m.length, 'ciphertext should be same length than message')
+  assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
+    "npub should be 'crypto_aead_chacha20poly1305_ietf_NPUBBYTES' long")
+  assert(k.length === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
+    "k should be 'crypto_aead_chacha20poly1305_ietf_KEYBYTES' long")
+  assert(m.length <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
+  assert(mac.length <= crypto_aead_chacha20poly1305_ietf_ABYTES,
+    "mac should be 'crypto_aead_chacha20poly1305_ietf_ABYTES' long")
+
   const block0 = new Uint8Array(64)
   var slen = Buffer.alloc(8)
 
@@ -50,10 +63,18 @@ function crypto_aead_chacha20poly1305_ietf_encrypt_detached(c, mac, m, ad, nsec,
   poly.finish(mac, 0)
   slen.fill(0)
 
-  return crypto_aead_chacha20poly1305_ietf_ABYTES
+  return 0
 }
 
 function crypto_aead_chacha20poly1305_ietf_decrypt (m, nsec, c, ad, npub, k) {
+  assert(m.length === c.length - crypto_aead_chacha20poly1305_ietf_ABYTES,
+    "message should be 'crypto_aead_chacha20poly1305_ietf_ABYTES' shorter than ciphertext")
+  assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
+    "npub should be 'crypto_aead_chacha20poly1305_ietf_NPUBBYTES' long")
+  assert(k.length === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
+    "k should be 'crypto_aead_chacha20poly1305_ietf_KEYBYTES' long")
+  assert(m.length <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
+
   var ret = -1
 
   if (c.length >= crypto_aead_chacha20poly1305_ietf_ABYTES) {
@@ -72,6 +93,15 @@ function crypto_aead_chacha20poly1305_ietf_decrypt (m, nsec, c, ad, npub, k) {
 }
 
 function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad, npub, k) {
+  assert(c.length === m.length, 'message should be same length than ciphertext')
+  assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
+    "npub should be 'crypto_aead_chacha20poly1305_ietf_NPUBBYTES' long")
+  assert(k.length === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
+    "k should be 'crypto_aead_chacha20poly1305_ietf_KEYBYTES' long")
+  assert(m.length <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
+  assert(mac.length <= crypto_aead_chacha20poly1305_ietf_ABYTES,
+    "mac should be 'crypto_aead_chacha20poly1305_ietf_ABYTES' long")
+
   const block0 = new Uint8Array(64)
   const slen = Buffer.alloc(8)
   const computed_mac = Buffer.alloc(crypto_aead_chacha20poly1305_ietf_ABYTES)
@@ -126,7 +156,6 @@ module.exports = {
   crypto_aead_chacha20poly1305_ietf_ABYTES,
   crypto_aead_chacha20poly1305_ietf_KEYBYTES,
   crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
-  crypto_aead_chacha20poly1305_ietf_NSECBYTES
-}
-d_chacha20poly1305_ietf_NSECBYTES
+  crypto_aead_chacha20poly1305_ietf_NSECBYTES,
+  crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX
 }
