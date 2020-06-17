@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "blake2b": "^2.1.1",
+    "chacha20-universal": "^1.0.2",
     "nanoassert": "^1.0.0",
     "siphash24": "^1.0.1",
     "xsalsa20": "^1.0.0"
