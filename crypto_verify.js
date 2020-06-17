@@ -22,7 +22,7 @@ function crypto_verify_32(x, xi, y, yi) {
 }
 
 function sodium_memcmp (a, b) {
-  assert(a.byteLength = b.byteLength, 'buffers must be the same size')
+  assert(a.byteLength === b.byteLength, 'buffers must be the same size')
 
   return vn(a, 0, b, 0, a.byteLength) === 0
 }

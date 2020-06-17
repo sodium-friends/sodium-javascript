@@ -28,7 +28,7 @@ function crypto_aead_chacha20poly1305_ietf_encrypt (c, m, ad, nsec, npub, k) {
     return m.length + crypto_aead_chacha20poly1305_ietf_ABYTES
   }
 
-  return ret
+  assert(false, 'could not encrypt data')
 }
 
 function crypto_aead_chacha20poly1305_ietf_encrypt_detached (c, mac, m, ad, nsec, npub, k) {
@@ -95,7 +95,7 @@ function crypto_aead_chacha20poly1305_ietf_decrypt (m, nsec, c, ad, npub, k) {
     return c.length - crypto_aead_chacha20poly1305_ietf_ABYTES
   }
 
-  return ret
+  assert(false, 'could not verify data')
 }
 
 function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad, npub, k) {
@@ -143,7 +143,7 @@ function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad
 
   if (ret !== 0) {
     m.fill(0)
-    return -1
+    assert(false, 'could not verify data')
   }
 
   crypto_stream_chacha20_ietf_xor_ic(m, c, npub, 1, k)
