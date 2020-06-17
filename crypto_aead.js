@@ -12,6 +12,8 @@ const crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEG
 const _pad0 = Buffer.alloc(16)
 
 function crypto_aead_chacha20poly1305_ietf_encrypt (c, m, ad, nsec, npub, k) {
+  if (ad === null) return crypto_aead_chacha20poly1305_ietf_encrypt(c, m, Buffer.alloc(0), nsec, npub, k)
+
   assert(c.length === m.length + crypto_aead_chacha20poly1305_ietf_ABYTES,
     "ciphertext should be 'crypto_aead_chacha20poly1305_ietf_ABYTES' longer than message")
   assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
@@ -30,6 +32,8 @@ function crypto_aead_chacha20poly1305_ietf_encrypt (c, m, ad, nsec, npub, k) {
 }
 
 function crypto_aead_chacha20poly1305_ietf_encrypt_detached (c, mac, m, ad, nsec, npub, k) {
+  if (ad === null) return crypto_aead_chacha20poly1305_ietf_encrypt(c, mac, m, Buffer.alloc(0), nsec, npub, k)
+
   assert(c.length === m.length, 'ciphertext should be same length than message')
   assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
     "npub should be 'crypto_aead_chacha20poly1305_ietf_NPUBBYTES' long")
@@ -67,6 +71,8 @@ function crypto_aead_chacha20poly1305_ietf_encrypt_detached (c, mac, m, ad, nsec
 }
 
 function crypto_aead_chacha20poly1305_ietf_decrypt (m, nsec, c, ad, npub, k) {
+  if (ad === null) return crypto_aead_chacha20poly1305_ietf_decrypt(m, nsec, c, Buffer.alloc(0), npub, k)
+
   assert(m.length === c.length - crypto_aead_chacha20poly1305_ietf_ABYTES,
     "message should be 'crypto_aead_chacha20poly1305_ietf_ABYTES' shorter than ciphertext")
   assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
@@ -93,6 +99,8 @@ function crypto_aead_chacha20poly1305_ietf_decrypt (m, nsec, c, ad, npub, k) {
 }
 
 function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad, npub, k) {
+  if (ad === null) return crypto_aead_chacha20poly1305_ietf_decrypt(m, nsec, c, mac, Buffer.alloc(0), npub, k)
+
   assert(c.length === m.length, 'message should be same length than ciphertext')
   assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
     "npub should be 'crypto_aead_chacha20poly1305_ietf_NPUBBYTES' long")
