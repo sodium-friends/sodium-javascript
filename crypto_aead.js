@@ -89,7 +89,7 @@ function crypto_aead_chacha20poly1305_ietf_decrypt (m, nsec, c, ad, npub, k) {
     return c.length - crypto_aead_chacha20poly1305_ietf_ABYTES
   }
 
-  return ret;
+  return ret
 }
 
 function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad, npub, k) {

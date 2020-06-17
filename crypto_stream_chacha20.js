@@ -95,18 +95,18 @@ function Chacha20 (n, k, counter) {
   this.state = new Uint32Array(16)
 
   for (let i = 0; i < 4; i++) this.state[i] = constant[i]
-  for (let i = 0; i < 8; i++) this.state[4 + i] = k.readUInt32LE(4 * i)
+  for (let i = 0; i < 8; i++) this.state[4 + i] = readUInt32LE(k, 4 * i)
 
   this.state[12] = counter & 0xffffffff
 
   if (n.byteLength === 8) {
     this.state[13] = (counter && 0xffffffff00000000) >> 32
-    this.state[14] = n.readUInt32LE(0)
-    this.state[15] = n.readUInt32LE(4)
+    this.state[14] = readUInt32LE(n, 0)
+    this.state[15] = readUInt32LE(n, 4)
   } else {
-    this.state[13] = n.readUInt32LE(0)
-    this.state[14] = n.readUInt32LE(4)
-    this.state[15] = n.readUInt32LE(8)
+    this.state[13] = readUInt32LE(n, 0)
+    this.state[14] = readUInt32LE(n, 4)
+    this.state[15] = readUInt32LE(n, 8)
   }
 
   return this
@@ -206,4 +206,14 @@ function QR (obj, a, b, c, d) {
   obj[c] += obj[d]
   obj[b] ^= obj[c]
   obj[b] = rotl(obj[b], 7)
+}
+
+function readUInt32LE (buf, offset) {
+  if (Buffer.isBuffer(buf)) return buf.readUInt32LE(offset)
+  else if (buf instanceof Uint8Array) {
+    var ret = 0
+    for (let i = 0; i < 4; i++) ret |= buf[offset + i] << (8 * i)
+    return ret
+  }
+  assert(false, 'buf should be a Buffer or a Uint8Array')
 }
