@@ -9,60 +9,60 @@ const crypto_aead_chacha20poly1305_ietf_NPUBBYTES = 12
 const crypto_aead_chacha20poly1305_ietf_ABYTES = 16
 const crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEGER
 
-const _pad0 = Buffer.alloc(16)
+const _pad0 = new Uint8Array(16)
 
 function crypto_aead_chacha20poly1305_ietf_encrypt (c, m, ad, nsec, npub, k) {
-  if (ad === null) return crypto_aead_chacha20poly1305_ietf_encrypt(c, m, Buffer.alloc(0), nsec, npub, k)
+  if (ad === null) return crypto_aead_chacha20poly1305_ietf_encrypt(c, m, new Uint8Array(0), nsec, npub, k)
 
-  assert(c.length === m.length + crypto_aead_chacha20poly1305_ietf_ABYTES,
+  assert(c.byteLength === m.byteLength + crypto_aead_chacha20poly1305_ietf_ABYTES,
     "ciphertext should be 'crypto_aead_chacha20poly1305_ietf_ABYTES' longer than message")
-  assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
+  assert(npub.byteLength === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
     "npub should be 'crypto_aead_chacha20poly1305_ietf_NPUBBYTES' long")
-  assert(k.length === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
+  assert(k.byteLength === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
     "k should be 'crypto_aead_chacha20poly1305_ietf_KEYBYTES' long")
-  assert(m.length <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
+  assert(m.byteLength <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
 
-  var ret = crypto_aead_chacha20poly1305_ietf_encrypt_detached(c.subarray(0, m.length), c.subarray(m.length), m, ad, nsec, npub, k)
+  var ret = crypto_aead_chacha20poly1305_ietf_encrypt_detached(c.subarray(0, m.byteLength), c.subarray(m.byteLength), m, ad, nsec, npub, k)
 
   if (ret === 0) {
-    return m.length + crypto_aead_chacha20poly1305_ietf_ABYTES
+    return m.byteLength + crypto_aead_chacha20poly1305_ietf_ABYTES
   }
 
-  assert(false, 'could not encrypt data')
+  throw new Error('could not encrypt data')
 }
 
 function crypto_aead_chacha20poly1305_ietf_encrypt_detached (c, mac, m, ad, nsec, npub, k) {
-  if (ad === null) return crypto_aead_chacha20poly1305_ietf_encrypt(c, mac, m, Buffer.alloc(0), nsec, npub, k)
+  if (ad === null) return crypto_aead_chacha20poly1305_ietf_encrypt(c, mac, m, new Uint8Array(0), nsec, npub, k)
 
-  assert(c.length === m.length, 'ciphertext should be same length than message')
-  assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
+  assert(c.byteLength === m.byteLength, 'ciphertext should be same length than message')
+  assert(npub.byteLength === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
     "npub should be 'crypto_aead_chacha20poly1305_ietf_NPUBBYTES' long")
-  assert(k.length === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
+  assert(k.byteLength === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
     "k should be 'crypto_aead_chacha20poly1305_ietf_KEYBYTES' long")
-  assert(m.length <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
-  assert(mac.length <= crypto_aead_chacha20poly1305_ietf_ABYTES,
+  assert(m.byteLength <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
+  assert(mac.byteLength <= crypto_aead_chacha20poly1305_ietf_ABYTES,
     "mac should be 'crypto_aead_chacha20poly1305_ietf_ABYTES' long")
 
   const block0 = new Uint8Array(64)
-  var slen = Buffer.alloc(8)
+  var slen = new Uint8Array(8)
 
   crypto_stream_chacha20_ietf(block0, npub, k)
   const poly = new Poly1305(block0)
   block0.fill(0)
 
-  poly.update(ad, 0, ad.length)
-  poly.update(_pad0, 0, (0x10 - ad.length) & 0xf)
+  poly.update(ad, 0, ad.byteLength)
+  poly.update(_pad0, 0, (0x10 - ad.byteLength) & 0xf)
 
   crypto_stream_chacha20_ietf_xor_ic(c, m, npub, 1, k)
 
-  poly.update(c, 0, m.length)
-  poly.update(_pad0, 0, (0x10 - m.length) & 0xf)
+  poly.update(c, 0, m.byteLength)
+  poly.update(_pad0, 0, (0x10 - m.byteLength) & 0xf)
 
-  write64LE(slen, ad.length)
-  poly.update(slen, 0, slen.length)
+  write64LE(slen, 0, ad.byteLength)
+  poly.update(slen, 0, slen.byteLength)
 
-  write64LE(slen, m.length)
-  poly.update(slen, 0, slen.length)
+  write64LE(slen, 0, m.byteLength)
+  poly.update(slen, 0, slen.byteLength)
 
   poly.finish(mac, 0)
   slen.fill(0)
@@ -71,48 +71,48 @@ function crypto_aead_chacha20poly1305_ietf_encrypt_detached (c, mac, m, ad, nsec
 }
 
 function crypto_aead_chacha20poly1305_ietf_decrypt (m, nsec, c, ad, npub, k) {
-  if (ad === null) return crypto_aead_chacha20poly1305_ietf_decrypt(m, nsec, c, Buffer.alloc(0), npub, k)
+  if (ad === null) return crypto_aead_chacha20poly1305_ietf_decrypt(m, nsec, c, new Uint8Array(0), npub, k)
 
-  assert(m.length === c.length - crypto_aead_chacha20poly1305_ietf_ABYTES,
+  assert(m.byteLength === c.byteLength - crypto_aead_chacha20poly1305_ietf_ABYTES,
     "message should be 'crypto_aead_chacha20poly1305_ietf_ABYTES' shorter than ciphertext")
-  assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
+  assert(npub.byteLength === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
     "npub should be 'crypto_aead_chacha20poly1305_ietf_NPUBBYTES' long")
-  assert(k.length === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
+  assert(k.byteLength === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
     "k should be 'crypto_aead_chacha20poly1305_ietf_KEYBYTES' long")
-  assert(m.length <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
+  assert(m.byteLength <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
 
   var ret = -1
 
-  if (c.length >= crypto_aead_chacha20poly1305_ietf_ABYTES) {
+  if (c.byteLength >= crypto_aead_chacha20poly1305_ietf_ABYTES) {
     ret = crypto_aead_chacha20poly1305_ietf_decrypt_detached(
       m, nsec,
-      c.subarray(0, c.length - crypto_aead_chacha20poly1305_ietf_ABYTES),
-      c.subarray(c.length - crypto_aead_chacha20poly1305_ietf_ABYTES),
+      c.subarray(0, c.byteLength - crypto_aead_chacha20poly1305_ietf_ABYTES),
+      c.subarray(c.byteLength - crypto_aead_chacha20poly1305_ietf_ABYTES),
       ad, npub, k)
   }
 
   if (ret === 0) {
-    return c.length - crypto_aead_chacha20poly1305_ietf_ABYTES
+    return c.byteLength - crypto_aead_chacha20poly1305_ietf_ABYTES
   }
 
-  assert(false, 'could not verify data')
+  throw new Error('could not verify data')
 }
 
 function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad, npub, k) {
-  if (ad === null) return crypto_aead_chacha20poly1305_ietf_decrypt(m, nsec, c, mac, Buffer.alloc(0), npub, k)
+  if (ad === null) return crypto_aead_chacha20poly1305_ietf_decrypt(m, nsec, c, mac, new Uint8Array(0), npub, k)
 
-  assert(c.length === m.length, 'message should be same length than ciphertext')
-  assert(npub.length === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
+  assert(c.byteLength === m.byteLength, 'message should be same length than ciphertext')
+  assert(npub.byteLength === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
     "npub should be 'crypto_aead_chacha20poly1305_ietf_NPUBBYTES' long")
-  assert(k.length === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
+  assert(k.byteLength === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
     "k should be 'crypto_aead_chacha20poly1305_ietf_KEYBYTES' long")
-  assert(m.length <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
-  assert(mac.length <= crypto_aead_chacha20poly1305_ietf_ABYTES,
+  assert(m.byteLength <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX, 'message is too large')
+  assert(mac.byteLength <= crypto_aead_chacha20poly1305_ietf_ABYTES,
     "mac should be 'crypto_aead_chacha20poly1305_ietf_ABYTES' long")
 
   const block0 = new Uint8Array(64)
-  const slen = Buffer.alloc(8)
-  const computed_mac = Buffer.alloc(crypto_aead_chacha20poly1305_ietf_ABYTES)
+  const slen = new Uint8Array(8)
+  const computed_mac = new Uint8Array(crypto_aead_chacha20poly1305_ietf_ABYTES)
   var mlen
   var ret
 
@@ -120,22 +120,22 @@ function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad
   const poly = new Poly1305(block0)
   block0.fill(0)
 
-  poly.update(ad, 0, ad.length)
-  poly.update(_pad0, 0, (0x10 - ad.length) & 0xf)
+  poly.update(ad, 0, ad.byteLength)
+  poly.update(_pad0, 0, (0x10 - ad.byteLength) & 0xf)
 
-  mlen = c.length
+  mlen = c.byteLength
   poly.update(c, 0, mlen)
   poly.update(_pad0, 0, (0x10 - mlen) & 0xf)
 
-  write64LE(slen, ad.length)
-  poly.update(slen, 0, slen.length)
+  write64LE(slen, 0, ad.byteLength)
+  poly.update(slen, 0, slen.byteLength)
 
-  write64LE(slen, mlen)
-  poly.update(slen, 0, slen.length)
+  write64LE(slen, 0, mlen)
+  poly.update(slen, 0, slen.byteLength)
 
   poly.finish(computed_mac, 0)
 
-  assert(computed_mac.length === 16)
+  assert(computed_mac.byteLength === 16)
   ret = crypto_verify_16(computed_mac, 0, mac, 0)
 
   computed_mac.fill(0)
@@ -143,17 +143,19 @@ function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad
 
   if (ret !== 0) {
     m.fill(0)
-    assert(false, 'could not verify data')
+    throw new Error('could not verify data')
   }
 
   crypto_stream_chacha20_ietf_xor_ic(m, c, npub, 1, k)
   return 0
 }
 
-function write64LE (buf, int) {
-  buf.fill(0, 0, 8)
-  buf.writeUInt32LE(int & 0xffffffff)
-  buf.writeUInt32LE((int >> 32) & 0xffffffff)
+function write64LE (buf, offset, int) {
+  buf.fill(0, 0 ,8)
+
+  const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength)
+  view.setUint32(offset, int & 0xffffffff, true)
+  view.setUint32(offset + 4, (int / 2 ** 32) & 0xffffffff, true)
 }
 
 module.exports = {
