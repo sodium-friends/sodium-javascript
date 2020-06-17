@@ -3,7 +3,8 @@ const assert = require('nanoassert')
 module.exports = {
   crypto_verify_16,
   crypto_verify_32,
-  sodium_memcmp
+  sodium_memcmp,
+  sodium_is_zero
 }
 
 function vn (x, xi, y, yi, n) {
@@ -24,4 +25,10 @@ function sodium_memcmp (a, b) {
   assert(a.byteLength = b.byteLength, 'buffers must be the same size')
 
   return vn(a, 0, b, 0, a.byteLength) === 0
+}
+
+function sodium_is_zero = function (arr) {
+  var d = 0
+  for (let i = 0; i < arr.length; i++) d |= arr[i]
+  return d === 0
 }
