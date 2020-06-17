@@ -4,6 +4,7 @@ const { randombytes } = require('./randombytes')
 const { crypto_generichash_batch } = require('./crypto_generichash')
 const { crypto_secretbox_open_easy, crypto_secretbox_easy } = require('./crypto_secretbox')
 const xsalsa20 = require('xsalsa20')
+const assert = require('nanoassert')
 
 var crypto_box_PUBLICKEYBYTES = 32,
     crypto_box_SECRETKEYBYTES = 32,
@@ -39,13 +40,13 @@ function crypto_box_keypair(pk, sk) {
 }
 
 function crypto_box_seed_keypair(pk, sk, seed) {
-  check(pk, crypto_box_PUBLICKEYBYTES)
-  check(sk, crypto_box_SECRETKEYBYTES)
-  check(sk, crypto_box_SEEDBYTES)
+  assert(pk.byteLength === crypto_box_PUBLICKEYBYTES, "pk should be 'crypto_box_PUBLICKEYBYTES' bytes")
+  assert(sk.byteLength === crypto_box_SECRETKEYBYTES, "sk should be 'crypto_box_SECRETKEYBYTES' bytes")
+  assert(sk.byteLength === crypto_box_SEEDBYTES, "sk should be 'crypto_box_SEEDBYTES' bytes")
 
-  const hash = Buffer.alloc(64)
+  const hash = new Uint8Array(64)
   crypto_hash_sha512(hash, seed, 32)
-  hash.copy(sk, 0, 0, 32)
+  sk.set(hash.subarray(0, 32))
   hash.fill(0)
 
   return crypto_scalarmult_base(pk, sk)
