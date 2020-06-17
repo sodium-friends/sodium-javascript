@@ -2,7 +2,8 @@ const assert = require('nanoassert')
 
 module.exports = {
   crypto_verify_16,
-  crypto_verify_32
+  crypto_verify_32,
+  sodium_memcmp
 }
 
 function vn (x, xi, y, yi, n) {
