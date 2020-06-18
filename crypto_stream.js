@@ -1,17 +1,20 @@
 var xsalsa20 = require('xsalsa20')
 
+if (new Uint16Array([1])[0] !== 1) throw new Error('Big endian architecture is not supported.')
+
 exports.crypto_stream_KEYBYTES = 32
 exports.crypto_stream_NONCEBYTES = 24
 exports.crypto_stream_PRIMITIVE = 'xsalsa20'
 
-exports.crypto_stream = function (out, nonce, key) {
-  out.fill(0)
-  exports.crypto_stream_xor(out, out, nonce, key)
+exports.crypto_stream = function (c, nonce, key) {
+  c.fill(0)
+  exports.crypto_stream_xor(c, c, nonce, key)
 }
 
-exports.crypto_stream_xor = function (out, inp, nonce, key) {
+exports.crypto_stream_xor = function (c, m, nonce, key) {
   var xor = xsalsa20(nonce, key)
-  xor.update(inp, out)
+
+  xor.update(m, c)
   xor.final()
 }
 

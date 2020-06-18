@@ -1,5 +1,7 @@
 var blake2b = require('blake2b')
 
+if (new Uint16Array([1])[0] !== 1) throw new Error('Big endian architecture is not supported.')
+
 module.exports.crypto_generichash_PRIMITIVE = 'blake2b'
 module.exports.crypto_generichash_BYTES_MIN = blake2b.BYTES_MIN
 module.exports.crypto_generichash_BYTES_MAX = blake2b.BYTES_MAX
