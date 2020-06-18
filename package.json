@@ -7,6 +7,8 @@
     "blake2b": "^2.1.1",
     "chacha20-universal": "^1.0.3",
     "nanoassert": "^1.0.0",
+    "sha256-wasm": "^1.3.0",
+    "sha512-wasm": "^1.2.0",
     "siphash24": "^1.0.1",
     "xsalsa20": "^1.0.0"
   },
