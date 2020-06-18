@@ -84,7 +84,7 @@ function crypto_aead_chacha20poly1305_ietf_decrypt (m, nsec, c, ad, npub, k) {
     m, nsec,
     c.subarray(0, c.byteLength - crypto_aead_chacha20poly1305_ietf_ABYTES),
     c.subarray(c.byteLength - crypto_aead_chacha20poly1305_ietf_ABYTES),
-    ad, npub, k) 
+    ad, npub, k)
 
   return c.byteLength - crypto_aead_chacha20poly1305_ietf_ABYTES
 }
@@ -139,7 +139,7 @@ function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad
 }
 
 function write64LE (buf, offset, int) {
-  buf.fill(0, 0 ,8)
+  buf.fill(0, 0, 8)
 
   const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength)
   view.setUint32(offset, int & 0xffffffff, true)
