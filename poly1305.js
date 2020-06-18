@@ -3,6 +3,8 @@
 * https://github.com/floodyberry/poly1305-donna
 */
 
+if (new Uint16Array([1])[0] !== 1) throw new Error('Big endian architecture is not supported.')
+
 var poly1305 = function(key) {
   this.buffer = new Uint8Array(16);
   this.r = new Uint16Array(10);

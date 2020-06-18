@@ -1,6 +1,8 @@
 const assert = require('nanoassert')
 const Chacha20 = require('chacha20-universal')
 
+if (new Uint16Array([1])[0] !== 1) throw new Error('Big endian architecture is not supported.')
+
 exports.crypto_stream_chacha20_KEYBYTES = 32
 exports.crypto_stream_chacha20_NONCEBYTES = 8
 exports.crypto_stream_chacha20_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEGER

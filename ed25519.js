@@ -1,3 +1,5 @@
+if (new Uint16Array([1])[0] !== 1) throw new Error('Big endian architecture is not supported.')
+
 var gf = function(init) {
   var i, r = new Float64Array(16);
   if (init) for (i = 0; i < init.length; i++) r[i] = init[i];
