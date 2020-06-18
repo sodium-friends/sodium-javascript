@@ -20,5 +20,6 @@ function crypto_hash (out, m, n) {
 module.exports = {
   crypto_hash,
   crypto_hash_sha512,
+  crypto_hash_sha512_BYTES,
   crypto_hash_BYTES
 }
