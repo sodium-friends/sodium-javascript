@@ -131,7 +131,7 @@ function crypto_sign_keypair(pk, sk, seeded) {
 
 function crypto_sign_seed_keypair (pk, sk, seed) {
   check(seed, crypto_sign_SEEDBYTES)
-  seed.copy(sk)
+  sk.set(seed)
   return crypto_sign_keypair(pk, sk, true)
 }
 
