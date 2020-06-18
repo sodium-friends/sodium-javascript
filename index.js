@@ -23,6 +23,7 @@ sodium.sodium_malloc = function (n) {
 forward(require('./crypto_box'))
 forward(require('./crypto_generichash'))
 forward(require('./crypto_hash'))
+forward(require('./crypto_hash_sha256'))
 forward(require('./crypto_kdf'))
 forward(require('./crypto_kx'))
 forward(require('./crypto_aead'))
