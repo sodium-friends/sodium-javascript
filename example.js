@@ -1,19 +1,19 @@
-var sodium = require('./')
+const sodium = require('./')
 
-var key = Buffer.alloc(sodium.crypto_secretbox_KEYBYTES)
-var nonce = Buffer.alloc(sodium.crypto_secretbox_NONCEBYTES)
+const key = Buffer.alloc(sodium.crypto_secretbox_KEYBYTES)
+const nonce = Buffer.alloc(sodium.crypto_secretbox_NONCEBYTES)
 
 sodium.randombytes_buf(key)
 sodium.randombytes_buf(nonce)
 
-var message = Buffer.from('Hello, World!')
-var cipher = Buffer.alloc(message.length + sodium.crypto_secretbox_MACBYTES)
+const message = Buffer.from('Hello, World!')
+const cipher = Buffer.alloc(message.length + sodium.crypto_secretbox_MACBYTES)
 
 sodium.crypto_secretbox_easy(cipher, message, nonce, key)
 
 console.log('Encrypted:', cipher)
 
-var plainText = Buffer.alloc(cipher.length - sodium.crypto_secretbox_MACBYTES)
+const plainText = Buffer.alloc(cipher.length - sodium.crypto_secretbox_MACBYTES)
 
 sodium.crypto_secretbox_open_easy(plainText, cipher, nonce, key)
 
