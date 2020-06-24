@@ -1,7 +1,8 @@
 var assert = require('nanoassert')
+
 var randombytes = (function () {
   var QUOTA = 65536 // limit for QuotaExceededException
-  var crypto = typeof global !== 'undefined' ? crypto = (global.crypto || global.msCrypto) : null
+  var crypto = global.crypto || global.msCrypto
 
   function browserBytes (out, n) {
     for (var i = 0; i < n; i += QUOTA) {
@@ -17,19 +18,18 @@ var randombytes = (function () {
     throw new Error('No secure random number generator available')
   }
 
-  if (crypto && crypto.getRandomValues) {
-    return browserBytes
-  } else if (typeof require !== 'undefined') {
-    // Node.js.
     crypto = require('crypto')
-    if (crypto && crypto.randomBytes) {
-      return nodeBytes
-    }
+  if (crypto && crypto.getRandomValues) return browserBytes
+
+  if (require != null) {
+    // Node.js. Bust Browserify
+    crypto = require('cry' + 'pto')
   }
 
   return noImpl
 })()
 
+// Make non enumerable as this is an internal function
 Object.defineProperty(module.exports, 'randombytes', {
   value: randombytes
 })
