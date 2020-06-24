@@ -35,6 +35,11 @@ console.log('Plaintext:', plainText.toString())
 See [sodium-native](https://github.com/sodium-friends/sodium-native).
 This is a work in progress so all functions are not implemented yet.
 
+This module is organised into individual submodules which can be required
+independently for smaller bundles in the browser. To leverage automatic
+switching between `sodium-javascript` and `sodium-native`, see
+[`sodium-universal`](https://github.com/sodium-friends/sodium-universal).
+
 ## Install
 
 ```
