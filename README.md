@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/sodium-friends/sodium-javascript.svg?branch=master)](https://travis-ci.org/sodium-friends/sodium-javascript)
 
-> WIP - a pure javascript version of [sodium-native](https://github.com/mafintosh/sodium-native).
+> WIP - a pure javascript version of [sodium-native](https://github.com/sodium-friends/sodium-native).
 Based on tweetnacl
 
 ## Usage
@@ -32,7 +32,7 @@ console.log('Plaintext:', plainText.toString())
 
 ## API
 
-See [sodium-native](https://github.com/mafintosh/sodium-native).
+See [sodium-native](https://github.com/sodium-friends/sodium-native).
 This is a work in progress so all functions are not implemented yet.
 
 ## Install
