@@ -16,9 +16,9 @@ module.exports = {
 }
 
 function crypto_onetimeauth (mac, msg, key) {
-  assert(mac.byteLength === crypto_onetimeauth_BYTES, 'mac must be \'crypto_onetimeauth_BYTES\' bytes')
+  assert(mac.byteLength === crypto_onetimeauth_BYTES, "mac must be 'crypto_onetimeauth_BYTES' bytes")
   assert(msg.byteLength != null, 'msg must be buffer')
-  assert(key.byteLength === crypto_onetimeauth_KEYBYTES, 'key must be \'crypto_onetimeauth_KEYBYTES\' bytes')
+  assert(key.byteLength === crypto_onetimeauth_KEYBYTES, "key must be 'crypto_onetimeauth_KEYBYTES' bytes")
 
   var s = new Poly1305(key)
   s.update(msg, 0, msg.byteLength)
@@ -27,9 +27,9 @@ function crypto_onetimeauth (mac, msg, key) {
 }
 
 function crypto_onetimeauth_verify (mac, msg, key) {
-  assert(mac.byteLength === crypto_onetimeauth_BYTES, 'mac must be \'crypto_onetimeauth_BYTES\' bytes')
+  assert(mac.byteLength === crypto_onetimeauth_BYTES, "mac must be 'crypto_onetimeauth_BYTES' bytes")
   assert(msg.byteLength != null, 'msg must be buffer')
-  assert(key.byteLength === crypto_onetimeauth_KEYBYTES, 'key must be \'crypto_onetimeauth_KEYBYTES\' bytes')
+  assert(key.byteLength === crypto_onetimeauth_KEYBYTES, "key must be 'crypto_onetimeauth_KEYBYTES' bytes")
 
   var tmp = new Uint8Array(16)
   crypto_onetimeauth(tmp, msg, key)

@@ -24,11 +24,11 @@ module.exports = {
 }
 
 function crypto_secretbox (c, m, n, k) {
-  assert(c.byteLength === m.byteLength, 'c must be \'m.byteLength\' bytes')
+  assert(c.byteLength === m.byteLength, "c must be 'm.byteLength' bytes")
   const mlen = m.byteLength
-  assert(mlen >= crypto_secretbox_ZEROBYTES, 'mlen must be at least \'crypto_secretbox_ZEROBYTES\'')
-  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
-  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+  assert(mlen >= crypto_secretbox_ZEROBYTES, "mlen must be at least 'crypto_secretbox_ZEROBYTES'")
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, "n must be 'crypto_secretbox_NONCEBYTES' bytes")
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, "k must be 'crypto_secretbox_KEYBYTES' bytes")
 
   crypto_stream_xor(c, m, n, k)
   crypto_onetimeauth(
@@ -41,11 +41,11 @@ function crypto_secretbox (c, m, n, k) {
 }
 
 function crypto_secretbox_open (m, c, n, k) {
-  assert(c.byteLength === m.byteLength, 'c must be \'m.byteLength\' bytes')
+  assert(c.byteLength === m.byteLength, "c must be 'm.byteLength' bytes")
   const mlen = m.byteLength
-  assert(mlen >= crypto_secretbox_ZEROBYTES, 'mlen must be at least \'crypto_secretbox_ZEROBYTES\'')
-  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
-  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+  assert(mlen >= crypto_secretbox_ZEROBYTES, "mlen must be at least 'crypto_secretbox_ZEROBYTES'")
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, "n must be 'crypto_secretbox_NONCEBYTES' bytes")
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, "k must be 'crypto_secretbox_KEYBYTES' bytes")
 
   const x = new Uint8Array(crypto_onetimeauth_KEYBYTES)
   crypto_stream(x, n, k)
@@ -62,10 +62,10 @@ function crypto_secretbox_open (m, c, n, k) {
 }
 
 function crypto_secretbox_detached (o, mac, msg, n, k) {
-  assert(o.byteLength === msg.byteLength, 'o must be \'msg.byteLength\' bytes')
-  assert(mac.byteLength === crypto_secretbox_MACBYTES, 'mac must be \'crypto_secretbox_MACBYTES\' bytes')
-  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
-  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+  assert(o.byteLength === msg.byteLength, "o must be 'msg.byteLength' bytes")
+  assert(mac.byteLength === crypto_secretbox_MACBYTES, "mac must be 'crypto_secretbox_MACBYTES' bytes")
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, "n must be 'crypto_secretbox_NONCEBYTES' bytes")
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, "k must be 'crypto_secretbox_KEYBYTES' bytes")
 
   const tmp = new Uint8Array(msg.byteLength + mac.byteLength)
   crypto_secretbox_easy(tmp, msg, n, k)
@@ -75,10 +75,10 @@ function crypto_secretbox_detached (o, mac, msg, n, k) {
 }
 
 function crypto_secretbox_open_detached (msg, o, mac, n, k) {
-  assert(o.byteLength === msg.byteLength, 'o must be \'msg.byteLength\' bytes')
-  assert(mac.byteLength === crypto_secretbox_MACBYTES, 'mac must be \'crypto_secretbox_MACBYTES\' bytes')
-  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
-  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+  assert(o.byteLength === msg.byteLength, "o must be 'msg.byteLength' bytes")
+  assert(mac.byteLength === crypto_secretbox_MACBYTES, "mac must be 'crypto_secretbox_MACBYTES' bytes")
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, "n must be 'crypto_secretbox_NONCEBYTES' bytes")
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, "k must be 'crypto_secretbox_KEYBYTES' bytes")
 
   const tmp = new Uint8Array(o.byteLength + mac.byteLength)
   tmp.set(o)
@@ -87,9 +87,9 @@ function crypto_secretbox_open_detached (msg, o, mac, n, k) {
 }
 
 function crypto_secretbox_easy (o, msg, n, k) {
-  assert(o.byteLength === msg.byteLength + crypto_secretbox_MACBYTES, 'o must be \'msg.byteLength + crypto_secretbox_MACBYTES\' bytes')
-  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
-  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+  assert(o.byteLength === msg.byteLength + crypto_secretbox_MACBYTES, "o must be 'msg.byteLength + crypto_secretbox_MACBYTES' bytes")
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, "n must be 'crypto_secretbox_NONCEBYTES' bytes")
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, "k must be 'crypto_secretbox_KEYBYTES' bytes")
 
   const m = new Uint8Array(crypto_secretbox_ZEROBYTES + msg.byteLength)
   const c = new Uint8Array(m.byteLength)
@@ -100,9 +100,9 @@ function crypto_secretbox_easy (o, msg, n, k) {
 }
 
 function crypto_secretbox_open_easy (msg, box, n, k) {
-  assert(box.byteLength === msg.byteLength + crypto_secretbox_MACBYTES, 'box must be \'msg.byteLength + crypto_secretbox_MACBYTES\' bytes')
-  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
-  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+  assert(box.byteLength === msg.byteLength + crypto_secretbox_MACBYTES, "box must be 'msg.byteLength + crypto_secretbox_MACBYTES' bytes")
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, "n must be 'crypto_secretbox_NONCEBYTES' bytes")
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, "k must be 'crypto_secretbox_KEYBYTES' bytes")
 
   const c = new Uint8Array(crypto_secretbox_BOXZEROBYTES + box.byteLength)
   const m = new Uint8Array(c.byteLength)
