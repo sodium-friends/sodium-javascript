@@ -5,7 +5,7 @@ var randombytes = (function () {
   var crypto = global.crypto || global.msCrypto
 
   function browserBytes (out, n) {
-    for (var i = 0; i < n; i += QUOTA) {
+    for (let i = 0; i < n; i += QUOTA) {
       crypto.getRandomValues(out.subarray(i, i + Math.min(n - i, QUOTA)))
     }
   }

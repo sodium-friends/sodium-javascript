@@ -1,6 +1,7 @@
-var assert = require('nanoassert')
-var randombytes_buf = require('./randombytes').randombytes_buf
-var blake2b = require('blake2b')
+/* eslint-disable camelcase */
+const assert = require('nanoassert')
+const randombytes_buf = require('./randombytes').randombytes_buf
+const blake2b = require('blake2b')
 
 module.exports.crypto_kdf_PRIMITIVE = 'blake2b'
 module.exports.crypto_kdf_BYTES_MIN = 16
@@ -8,7 +9,7 @@ module.exports.crypto_kdf_BYTES_MAX = 64
 module.exports.crypto_kdf_CONTEXTBYTES = 8
 module.exports.crypto_kdf_KEYBYTES = 32
 
-function STORE64_LE(dest, int) {
+function STORE64_LE (dest, int) {
   var mul = 1
   var i = 0
   dest[0] = int & 0xFF

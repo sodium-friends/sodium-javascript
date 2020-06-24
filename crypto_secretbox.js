@@ -1,11 +1,12 @@
-var { crypto_stream, crypto_stream_xor } = require('./crypto_stream')
-var { crypto_onetimeauth, crypto_onetimeauth_verify } = require('./crypto_onetimeauth')
+/* eslint-disable camelcase */
+const { crypto_stream, crypto_stream_xor } = require('./crypto_stream')
+const { crypto_onetimeauth, crypto_onetimeauth_verify } = require('./crypto_onetimeauth')
 
-var crypto_secretbox_KEYBYTES = 32,
-    crypto_secretbox_NONCEBYTES = 24,
-    crypto_secretbox_ZEROBYTES = 32,
-    crypto_secretbox_BOXZEROBYTES = 16,
-    crypto_secretbox_MACBYTES = 16
+const crypto_secretbox_KEYBYTES = 32
+const crypto_secretbox_NONCEBYTES = 24
+const crypto_secretbox_ZEROBYTES = 32
+const crypto_secretbox_BOXZEROBYTES = 16
+const crypto_secretbox_MACBYTES = 1
 
 module.exports = {
   crypto_secretbox,
@@ -57,7 +58,7 @@ function crypto_secretbox_open_detached (msg, o, mac, n, k) {
   return crypto_secretbox_open_easy(msg, tmp, n, k)
 }
 
-function crypto_secretbox_easy(o, msg, n, k) {
+function crypto_secretbox_easy (o, msg, n, k) {
   check(msg, 0)
   check(o, msg.length + crypto_secretbox_MACBYTES)
   check(n, crypto_secretbox_NONCEBYTES)
@@ -71,7 +72,7 @@ function crypto_secretbox_easy(o, msg, n, k) {
   for (i = crypto_secretbox_BOXZEROBYTES; i < c.length; i++) o[i - crypto_secretbox_BOXZEROBYTES] = c[i]
 }
 
-function crypto_secretbox_open_easy(msg, box, n, k) {
+function crypto_secretbox_open_easy (msg, box, n, k) {
   check(box, crypto_secretbox_MACBYTES)
   check(msg, box.length - crypto_secretbox_MACBYTES)
   check(n, crypto_secretbox_NONCEBYTES)

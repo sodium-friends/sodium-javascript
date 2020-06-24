@@ -1,9 +1,10 @@
+/* eslint-disable camelcase */
 const sha256 = require('sha256-wasm')
 const assert = require('nanoassert')
 
 if (new Uint16Array([1])[0] !== 1) throw new Error('Big endian architecture is not supported.')
 
-var crypto_hash_sha256_BYTES = 32
+const crypto_hash_sha256_BYTES = 32
 
 function crypto_hash_sha256 (out, m, n) {
   assert(out.byteLength === crypto_hash_sha256_BYTES, "out must be 'crypto_hash_sha256_BYTES' bytes long")

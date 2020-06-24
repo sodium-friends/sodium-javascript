@@ -1,11 +1,12 @@
+/* eslint-disable camelcase */
 const { crypto_scalarmult_base } = require('./crypto_scalarmult')
 const { crypto_generichash } = require('./crypto_generichash')
 const { randombytes_buf } = require('./randombytes')
 const assert = require('nanoassert')
 
-var crypto_kx_SEEDBYTES = 32
-var crypto_kx_PUBLICKEYBYTES = 32
-var crypto_kx_SECRETKEYBYTES = 32
+const crypto_kx_SEEDBYTES = 32
+const crypto_kx_PUBLICKEYBYTES = 32
+const crypto_kx_SECRETKEYBYTES = 32
 
 function crypto_kx_keypair (pk, sk) {
   assert(pk.byteLength === crypto_kx_PUBLICKEYBYTES, "pk must be 'crypto_kx_PUBLICKEYBYTES' bytes")

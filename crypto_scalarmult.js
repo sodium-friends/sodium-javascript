@@ -1,9 +1,8 @@
-const { _9, _121665, gf, inv25519, pack25519, unpack25519, sel25519, A, M, Z, S } = require('./ed25519.js')
+/* eslint-disable camelcase, one-var */
+const { _9, _121665, gf, inv25519, pack25519, unpack25519, sel25519, A, M, Z, S } = require('./internal/ed25519')
 
-var crypto_scalarmult_BYTES = 32
-var crypto_scalarmult_SCALARBYTES = 32
-var crypto_scalarmult_BYTES = 32
-var crypto_scalarmult_SCALARBYTES = 32
+const crypto_scalarmult_BYTES = 32
+const crypto_scalarmult_SCALARBYTES = 32
 
 module.exports = {
   crypto_scalarmult,
@@ -19,7 +18,7 @@ function crypto_scalarmult (q, n, p) {
   var z = new Uint8Array(32)
   var x = new Float64Array(80), r, i
   var a = gf(), b = gf(), c = gf(),
-      d = gf(), e = gf(), f = gf()
+    d = gf(), e = gf(), f = gf()
   for (i = 0; i < 31; i++) z[i] = n[i]
   z[31] = (n[31] & 127) | 64
   z[0] &= 248
