@@ -1,12 +1,13 @@
 /* eslint-disable camelcase */
+const assert = require('nanoassert')
 const { crypto_stream, crypto_stream_xor } = require('./crypto_stream')
-const { crypto_onetimeauth, crypto_onetimeauth_verify } = require('./crypto_onetimeauth')
+const { crypto_onetimeauth, crypto_onetimeauth_verify, crypto_onetimeauth_BYTES, crypto_onetimeauth_KEYBYTES } = require('./crypto_onetimeauth')
 
 const crypto_secretbox_KEYBYTES = 32
 const crypto_secretbox_NONCEBYTES = 24
 const crypto_secretbox_ZEROBYTES = 32
 const crypto_secretbox_BOXZEROBYTES = 16
-const crypto_secretbox_MACBYTES = 1
+const crypto_secretbox_MACBYTES = 16
 
 module.exports = {
   crypto_secretbox,
@@ -22,73 +23,91 @@ module.exports = {
   crypto_secretbox_MACBYTES
 }
 
-function crypto_secretbox (c, m, d, n, k) {
-  var i
-  if (d < 32) return -1
+function crypto_secretbox (c, m, n, k) {
+  assert(c.byteLength === m.byteLength, 'c must be \'m.byteLength\' bytes')
+  const mlen = m.byteLength
+  assert(mlen >= crypto_secretbox_ZEROBYTES, 'mlen must be at least \'crypto_secretbox_ZEROBYTES\'')
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+
   crypto_stream_xor(c, m, n, k)
-  crypto_onetimeauth(c, 16, c, 32, d - 32, c)
-  for (i = 0; i < 16; i++) c[i] = 0
+  crypto_onetimeauth(
+    c.subarray(crypto_secretbox_BOXZEROBYTES, crypto_secretbox_BOXZEROBYTES + crypto_onetimeauth_BYTES),
+    c.subarray(crypto_secretbox_BOXZEROBYTES + crypto_onetimeauth_BYTES, c.byteLength),
+    c.subarray(0, crypto_onetimeauth_KEYBYTES)
+  )
+  c.fill(0, 0, crypto_secretbox_BOXZEROBYTES)
   return 0
 }
 
-function crypto_secretbox_open (m, c, d, n, k) {
-  var i
-  var x = new Uint8Array(32)
-  if (d < 32) return -1
+function crypto_secretbox_open (m, c, n, k) {
+  assert(c.byteLength === m.byteLength, 'c must be \'m.byteLength\' bytes')
+  const mlen = m.byteLength
+  assert(mlen >= crypto_secretbox_ZEROBYTES, 'mlen must be at least \'crypto_secretbox_ZEROBYTES\'')
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+
+  const x = new Uint8Array(crypto_onetimeauth_KEYBYTES)
   crypto_stream(x, n, k)
-  if (crypto_onetimeauth_verify(c, 16, c, 32, d - 32, x) !== 0) return -1
+  const validMac = crypto_onetimeauth_verify(
+    c.subarray(crypto_secretbox_BOXZEROBYTES, crypto_secretbox_BOXZEROBYTES + crypto_onetimeauth_BYTES),
+    c.subarray(crypto_secretbox_BOXZEROBYTES + crypto_onetimeauth_BYTES, c.byteLength),
+    x
+  )
+
+  if (validMac === false) return false
   crypto_stream_xor(m, c, n, k)
-  for (i = 0; i < 32; i++) m[i] = 0
-  return 0
+  m.fill(0, 0, 32)
+  return true
 }
 
 function crypto_secretbox_detached (o, mac, msg, n, k) {
-  check(mac, crypto_secretbox_MACBYTES)
-  var tmp = new Uint8Array(msg.length + mac.length)
+  assert(o.byteLength === msg.byteLength, 'o must be \'msg.byteLength\' bytes')
+  assert(mac.byteLength === crypto_secretbox_MACBYTES, 'mac must be \'crypto_secretbox_MACBYTES\' bytes')
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+
+  const tmp = new Uint8Array(msg.byteLength + mac.byteLength)
   crypto_secretbox_easy(tmp, msg, n, k)
-  o.set(tmp.subarray(0, msg.length))
-  mac.set(tmp.subarray(msg.length))
+  o.set(tmp.subarray(0, msg.byteLength))
+  mac.set(tmp.subarray(msg.byteLength))
+  return true
 }
 
 function crypto_secretbox_open_detached (msg, o, mac, n, k) {
-  check(mac, crypto_secretbox_MACBYTES)
-  var tmp = new Uint8Array(o.length + mac.length)
+  assert(o.byteLength === msg.byteLength, 'o must be \'msg.byteLength\' bytes')
+  assert(mac.byteLength === crypto_secretbox_MACBYTES, 'mac must be \'crypto_secretbox_MACBYTES\' bytes')
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+
+  const tmp = new Uint8Array(o.byteLength + mac.byteLength)
   tmp.set(o)
-  tmp.set(mac, msg.length)
+  tmp.set(mac, msg.byteLength)
   return crypto_secretbox_open_easy(msg, tmp, n, k)
 }
 
 function crypto_secretbox_easy (o, msg, n, k) {
-  check(msg, 0)
-  check(o, msg.length + crypto_secretbox_MACBYTES)
-  check(n, crypto_secretbox_NONCEBYTES)
-  check(k, crypto_secretbox_KEYBYTES)
+  assert(o.byteLength === msg.byteLength + crypto_secretbox_MACBYTES, 'o must be \'msg.byteLength + crypto_secretbox_MACBYTES\' bytes')
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
 
-  var i
-  var m = new Uint8Array(crypto_secretbox_ZEROBYTES + msg.length)
-  var c = new Uint8Array(m.length)
-  for (i = 0; i < msg.length; i++) m[i + crypto_secretbox_ZEROBYTES] = msg[i]
-  crypto_secretbox(c, m, m.length, n, k)
-  for (i = crypto_secretbox_BOXZEROBYTES; i < c.length; i++) o[i - crypto_secretbox_BOXZEROBYTES] = c[i]
-}
-
-function crypto_secretbox_open_easy (msg, box, n, k) {
-  check(box, crypto_secretbox_MACBYTES)
-  check(msg, box.length - crypto_secretbox_MACBYTES)
-  check(n, crypto_secretbox_NONCEBYTES)
-  check(k, crypto_secretbox_KEYBYTES)
-
-  var i
-  var c = new Uint8Array(crypto_secretbox_BOXZEROBYTES + box.length)
-  var m = new Uint8Array(c.length)
-  for (i = 0; i < box.length; i++) c[i + crypto_secretbox_BOXZEROBYTES] = box[i]
-  if (c.length < 32) return false
-  if (crypto_secretbox_open(m, c, c.length, n, k) !== 0) return false
-
-  for (i = crypto_secretbox_ZEROBYTES; i < m.length; i++) msg[i - crypto_secretbox_ZEROBYTES] = m[i]
+  const m = new Uint8Array(crypto_secretbox_ZEROBYTES + msg.byteLength)
+  const c = new Uint8Array(m.byteLength)
+  m.set(msg, crypto_secretbox_ZEROBYTES)
+  if (crypto_secretbox(c, m, n, k) === false) return false
+  o.set(c.subarray(crypto_secretbox_BOXZEROBYTES))
   return true
 }
 
-function check (buf, len) {
-  if (!buf || (len && buf.length < len)) throw new Error('Argument must be a buffer' + (len ? ' of length ' + len : ''))
+function crypto_secretbox_open_easy (msg, box, n, k) {
+  assert(box.byteLength === msg.byteLength + crypto_secretbox_MACBYTES, 'box must be \'msg.byteLength + crypto_secretbox_MACBYTES\' bytes')
+  assert(n.byteLength === crypto_secretbox_NONCEBYTES, 'n must be \'crypto_secretbox_NONCEBYTES\' bytes')
+  assert(k.byteLength === crypto_secretbox_KEYBYTES, 'k must be \'crypto_secretbox_KEYBYTES\' bytes')
+
+  const c = new Uint8Array(crypto_secretbox_BOXZEROBYTES + box.byteLength)
+  const m = new Uint8Array(c.byteLength)
+  c.set(box, crypto_secretbox_BOXZEROBYTES)
+  if (crypto_secretbox_open(m, c, n, k) === false) return false
+  msg.set(m.subarray(crypto_secretbox_ZEROBYTES))
+  return true
 }
