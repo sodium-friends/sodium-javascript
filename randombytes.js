@@ -6,12 +6,12 @@ var randombytes = (function () {
 
   function browserBytes (out, n) {
     for (let i = 0; i < n; i += QUOTA) {
-      crypto.getRandomValues(new Uint8Array(out.buffer, i, Math.min(n - i, QUOTA)))
+      crypto.getRandomValues(new Uint8Array(out.buffer, i + out.byteOffset, Math.min(n - i, QUOTA)))
     }
   }
 
   function nodeBytes (out, n) {
-    new Uint8Array(out.buffer, 0, n).set(crypto.randomBytes(n))
+    new Uint8Array(out.buffer, out.byteOffset, n).set(crypto.randomBytes(n))
   }
 
   function noImpl () {
