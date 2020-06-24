@@ -18,12 +18,12 @@ var randombytes = (function () {
     throw new Error('No secure random number generator available')
   }
 
-    crypto = require('crypto')
   if (crypto && crypto.getRandomValues) return browserBytes
 
   if (require != null) {
     // Node.js. Bust Browserify
     crypto = require('cry' + 'pto')
+    if (crypto && crypto.randomBytes) return nodeBytes
   }
 
   return noImpl
