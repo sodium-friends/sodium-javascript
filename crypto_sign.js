@@ -254,6 +254,7 @@ function unpackneg (r, p) {
   return 0
 }
 
+/* eslint-disable no-unused-vars */
 function crypto_sign_open (msg, sm, pk) {
   check(msg, sm.length - crypto_sign_BYTES)
   check(sm, crypto_sign_BYTES)
@@ -284,13 +285,15 @@ function crypto_sign_open (msg, sm, pk) {
   n -= 64
   if (crypto_verify_32(sm, 0, t, 0)) {
     for (i = 0; i < n; i++) m[i] = 0
-    throw new Error('crypto_sign_open failed')
+    return false
+    // throw new Error('crypto_sign_open failed')
   }
 
   for (i = 0; i < n; i++) msg[i] = sm[i + 64]
   mlen = n
-  return mlen
+  return true
 }
+/* eslint-enable no-unused-vars */
 
 function crypto_sign_verify_detached (sig, m, pk) {
   check(sig, crypto_sign_BYTES)
