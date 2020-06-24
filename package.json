@@ -38,12 +38,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mafintosh/sodium-javascript.git"
+    "url": "git+https://github.com/sodium-friends/sodium-javascript.git"
   },
-  "author": "Mathias Buus (@mafintosh)",
+  "contributors": [
+    "Christophe Diederichs <chm-diederichs@hyperdivision.dk>",
+    "Emil Bay <github@tixz.dk> (http://bayes.dk)",
+    "Mathias Buus <mathiasbuus@gmail.com> (https://mafinto.sh)"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mafintosh/sodium-javascript/issues"
+    "url": "https://github.com/sodium-friends/sodium-javascript/issues"
   },
-  "homepage": "https://github.com/mafintosh/sodium-javascript"
+  "homepage": "https://github.com/sodium-friends/sodium-javascript#readme"
 }
