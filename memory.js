@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
-if (!window) var { MessageChannel } = require('worker' + '_threads')
+var MessageChannel = global.MessageChannel
+if (MessageChannel == null) ({ MessageChannel } = require('worker' + '_threads'))
 
 function sodium_malloc (n) {
   return new Uint8Array(n)
