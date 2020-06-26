@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 const assert = require('nanoassert')
-const { vn } = require('./verify')
+const { vn } = require('./crypto_verify')
 
 function sodium_increment (n) {
   const nlen = n.byteLength
