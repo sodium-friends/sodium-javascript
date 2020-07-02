@@ -207,6 +207,7 @@ function crypto_sign(sm, m, sk) {
   }
 
   modL(sm.subarray(32), x);
+  // console.log(Buffer.from(sm).toString('hex'))
   return smlen
 }
 
@@ -270,6 +271,7 @@ function crypto_sign_open(msg, sm, pk) {
   if (n < 64) return false;
 
   if (unpackneg(q, pk)) return false;
+  pack(t, q);
 
   for (i = 0; i < n; i++) m[i] = sm[i];
   for (i = 0; i < 32; i++) m[i+32] = pk[i];

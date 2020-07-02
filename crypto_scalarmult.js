@@ -11,7 +11,9 @@ module.exports = {
   crypto_scalarmult_BYTES,
   crypto_scalarmult_SCALARBYTES
 }
-
+const b = Buffer.alloc(32)
+pack25519(b, _9)
+console.log(b.toString('hex'))
 function crypto_scalarmult (q, n, p) {
   check(q, crypto_scalarmult_BYTES)
   check(n, crypto_scalarmult_SCALARBYTES)

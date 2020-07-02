@@ -56,7 +56,24 @@
     (get_local $f)
     (i64.or))
 
-  (func $mul (export "mul") (param $h i32) (param $f i32) (param $g i32)
+  (func $store_fe (export "store") (param $ptr i32)
+    (param $0 i64) (param $1 i64) (param $2 i64) (param $3 i64) (param $4 i64)
+    (param $5 i64) (param $6 i64) (param $7 i64) (param $8 i64) (param $9 i64)
+
+    (i64.store32 offset=0  (get_local $ptr) (get_local $0))
+    (i64.store32 offset=4  (get_local $ptr) (get_local $1))
+    (i64.store32 offset=8  (get_local $ptr) (get_local $2))
+    (i64.store32 offset=12 (get_local $ptr) (get_local $3))
+    (i64.store32 offset=16 (get_local $ptr) (get_local $4))
+    (i64.store32 offset=20 (get_local $ptr) (get_local $5))
+    (i64.store32 offset=24 (get_local $ptr) (get_local $6))
+    (i64.store32 offset=28 (get_local $ptr) (get_local $7))
+    (i64.store32 offset=32 (get_local $ptr) (get_local $8))
+    (i64.store32 offset=36 (get_local $ptr) (get_local $9)))
+
+  (func $mul (param $f i32) (param $g i32)
+    (result i64 i64 i64 i64 i64 i64 i64 i64 i64 i64)
+
     (local $f0 i64)
     (local $f1 i64)
     (local $f2 i64)
@@ -484,17 +501,17 @@
     (set_local $h1 (i64.add (get_local $h1) (get_local $carry0)))
     (set_local $h0 (i64.sub (get_local $h0) (i64.mul (get_local $carry0) (i64.shl (i64.const 1) (i64.const 26)))))
 
-    (i64.store32 offset=0  (get_local $h) (get_local $h0))
-    (i64.store32 offset=4  (get_local $h) (get_local $h1))
-    (i64.store32 offset=8  (get_local $h) (get_local $h2))
-    (i64.store32 offset=12 (get_local $h) (get_local $h3))
-    (i64.store32 offset=16 (get_local $h) (get_local $h4))
-    (i64.store32 offset=20 (get_local $h) (get_local $h5))
-    (i64.store32 offset=24 (get_local $h) (get_local $h6))
-    (i64.store32 offset=28 (get_local $h) (get_local $h7))
-    (i64.store32 offset=32 (get_local $h) (get_local $h8))
-    (i64.store32 offset=36 (get_local $h) (get_local $h9)))
-
+    (get_local $h0)
+    (get_local $h1)
+    (get_local $h2)
+    (get_local $h3)
+    (get_local $h4)
+    (get_local $h5)
+    (get_local $h6)
+    (get_local $h7)
+    (get_local $h8)
+    (get_local $h9))
+    
   (func $sq (export "sq") (param $h i32) (param $f i32) (param $double i32)
     (local $tmp i64)
     
@@ -781,8 +798,7 @@
     (i64.store32 offset=24 (get_local $h) (get_local $h6))
     (i64.store32 offset=28 (get_local $h) (get_local $h7))
     (i64.store32 offset=32 (get_local $h) (get_local $h8))
-    (i64.store32 offset=36 (get_local $h) (get_local $h9))
-  )
+    (i64.store32 offset=36 (get_local $h) (get_local $h9)))
 
 
   (func $sc25519_mul (export "sc25519_mul") (param $s i32) (param $a i32) (param $b i32)
@@ -2742,4 +2758,12 @@
     (i64.or)
 
     (i64.store offset=24))
+    
+    (func $fe25519_mul (export "fe25519_mul") (param $h i32) (param $f i32) (param $g i32)
+        (get_local $h)
+        (call $mul (get_local $f) (get_local $g))
+        (call $store_fe))
+      
+    ;; (func $pow22325 (export "pow22325") (param $out i32) (param $z i32)
+
 )

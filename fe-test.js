@@ -71,7 +71,9 @@ const p = Buffer.from([
   0x27, 0xa6, 0x3e, 0xd2, 0xc8, 0xac, 0xa4, 0xed
 ])
 
- function signedInt (i) {
+const pk_test = Buffer.from('d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a', 'hex')
+
+function signedInt (i) {
   return i < 0 ? 2 ** 32 + i : i
 }
 
@@ -100,79 +102,83 @@ const gf = ec.ge3()
 ///////////////////////////////////////////
 ec.fe25519_frombytes(a, an)
 ec.fe25519_frombytes(b, bn)
-// console.log('\na __________')
-// for (let i = 0; i < 10; i++) console.log(`a${i}:`, signedInt(a[i]).toString(16).padStart(8, '0'))
-// console.log('\nb __________')
-// for (let i = 0; i < 10; i++) console.log(`b${i}:`, signedInt(b[i]).toString(16).padStart(8, '0'))
-ec.fe25519_frombytes(c, bn)
-ec.fe25519_tobytes(res, c)
-console.log('tess  :', res.toString('hex'))
+// // console.log('\na __________')
+// // for (let i = 0; i < 10; i++) console.log(`a${i}:`, signedInt(a[i]).toString(16).padStart(8, '0'))
+// // console.log('\nb __________')
+// // for (let i = 0; i < 10; i++) console.log(`b${i}:`, signedInt(b[i]).toString(16).padStart(8, '0'))
+// ec.fe25519_frombytes(c, bn)
+// ec.fe25519_tobytes(res, c)
+// console.log('tess  :', res.toString('hex'))
 
 ec.fe25519_mul(g, a, b)
 ec.fe25519_tobytes(res, g)
 console.log('fe_mul:', res.toString('hex'))
 
-ec.fe25519_sq(g, a)
-ec.fe25519_tobytes(res, g)
-console.log('fe_sq :', res.toString('hex'))
+// ec.fe25519_sq(g, a)
+// ec.fe25519_tobytes(res, g)
+// console.log('fe_sq :', res.toString('hex'))
 
-ec.fe25519_reduce(g, c)
-ec.fe25519_tobytes(res, g)
-console.log('fe_red:', res.toString('hex'))
+// ec.fe25519_reduce(g, c)
+// ec.fe25519_tobytes(res, g)
+// console.log('fe_red:', res.toString('hex'))
 
-ec.fe25519_sqmul(a, 8734, b)
-ec.fe25519_tobytes(res, a)
-console.log('fe_sqm:', res.toString('hex'))
+// ec.fe25519_sqmul(a, 8734, b)
+// ec.fe25519_tobytes(res, a)
+// console.log('fe_sqm:', res.toString('hex'))
 
-ec.fe25519_invert(a, a)
-ec.fe25519_tobytes(res, a)
-console.log('fe_inv:', res.toString('hex'))
+// ec.fe25519_invert(a, a)
+// ec.fe25519_tobytes(res, a)
+// console.log('fe_inv:', res.toString('hex'))
 
-ec.fe25519_pow22523(a, a)
-ec.fe25519_tobytes(res, a)
-console.log('fe_p25:', res.toString('hex'))
+// ec.fe25519_pow22523(a, a)
+// ec.fe25519_tobytes(res, a)
+// console.log('fe_p25:', res.toString('hex'))
 
-ec.fe25519_cneg(a, a, 1)
-ec.fe25519_tobytes(res, a)
-console.log('fe_cng:', res.toString('hex'))
+// ec.fe25519_cneg(a, a, 1)
+// ec.fe25519_tobytes(res, a)
+// console.log('fe_cng:', res.toString('hex'))
 
-ec.sc25519_mul(res, an, bn)
-console.log('sc_mul:', res.toString('hex'))
+// ec.sc25519_mul(res, an, bn)
+// console.log('sc_mul:', res.toString('hex'))
 
-ec.sc25519_muladd(res, an, bn, cn)
-console.log('sc_mad:', res.toString('hex'))
+// ec.sc25519_muladd(res, an, bn, cn)
+// console.log('sc_mad:', res.toString('hex'))
 
-ec.sc25519_reduce(s)
-console.log('sc_red:', s.subarray(0, 32).toString('hex'))
+// ec.sc25519_reduce(s)
+// console.log('sc_red:', s.subarray(0, 32).toString('hex'))
 
-ec.sc25519_invert(res, cn)
-console.log('sc_inv:', res.toString('hex'))
+// ec.sc25519_invert(res, cn)
+// console.log('sc_inv:', res.toString('hex'))
 
-ec.ge25519_mont_to_ed(g, c, a, b)
-ec.fe25519_tobytes(res, g)
-console.log('g_m2ex:', res.toString('hex'))
-ec.fe25519_tobytes(res, c)
-console.log('g_m2ey:', res.toString('hex'))
+// ec.ge25519_mont_to_ed(g, c, a, b)
+// ec.fe25519_tobytes(res, g)
+// console.log('g_m2ex:', res.toString('hex'))
+// ec.fe25519_tobytes(res, c)
+// console.log('g_m2ey:', res.toString('hex'))
 
-ec.ge25519_frombytes(ge, p)
-ec.ge25519_p3_tobytes(res, ge)
-console.log("p     :", res.toString('hex'))
+// ec.ge25519_frombytes(ge, p)
+// ec.ge25519_p3_tobytes(res, ge)
+// console.log("p     :", res.toString('hex'))
 
-ec.ge25519_mul_l(gf, ge)
-ec.ge25519_p3_tobytes(res, gf)
-console.log("mul_l :", res.toString('hex'))
+// ec.ge25519_mul_l(gf, ge)
+// ec.ge25519_p3_tobytes(res, gf)
+// console.log("mul_l :", res.toString('hex'))
 
-ec.ge25519_scalarmult_base(gf, cn)
-ec.ge25519_p3_tobytes(res, gf)
-console.log("smultb:", res.toString('hex'))
+// ec.ge25519_scalarmult_base(gf, cn)
+// ec.ge25519_p3_tobytes(res, gf)
+// console.log("smultb:", res.toString('hex'))
 
-ec.ge25519_scalarmult(ge, bn, gf)
-ec.ge25519_p3_tobytes(res, ge)
-console.log("smult :", res.toString('hex'))
+// ec.ge25519_scalarmult(ge, bn, gf)
+// ec.ge25519_p3_tobytes(res, ge)
+// console.log("smult :", res.toString('hex'))
 
-ec.ge25519_double_scalarmult_vartime(gf, an, ge, bn)
-ec.ge25519_p3_tobytes(res, gf)
-console.log("smdbl :", res.toString('hex'))
+// ec.ge25519_double_scalarmult_vartime(gf, an, ge, bn)
+// ec.ge25519_p3_tobytes(res, gf)
+// console.log("smdbl :", res.toString('hex'))
+
+// ec.ge25519_frombytes_negate_vartime(gf, pk_test)
+// ec.ge25519_p3_tobytes(res, gf)
+// console.log("smdbl :", res.toString('hex'))
 
 console.log('canon :', ec.sc25519_is_canonical(bn))
 

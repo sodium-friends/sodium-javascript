@@ -14,6 +14,7 @@ const wasm = require('./fe25519_25/mult.js')({
   }
 })
 
+console.log(wasm.buffer.byteLength)
 const base = require('./fe25519_25/base.json').map(a => a.map(b => ge2(b)))
 const printbuf =Buffer.alloc(32)
 
@@ -726,7 +727,7 @@ function fe25519_mul (h, f, g) {
 
   wasm.memory.set(fbuf)
   wasm.memory.set(gbuf, 40)
-  wasm.exports.mul(80, 0, 40)
+  wasm.exports.fe255219_mul(0, 40)
 
   buf = Buffer.from(wasm.memory.slice(80, 120))
   for (let i = 0; i < 10; i++) {
