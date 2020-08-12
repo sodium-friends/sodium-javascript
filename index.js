@@ -8,7 +8,10 @@
 // Implementation derived from TweetNaCl version 20140427.
 // See for details: http://tweetnacl.cr.yp.to/
 
+forward(require('./randombytes'))
 forward(require('./memory'))
+forward(require('./helpers'))
+forward(require('./crypto_verify'))
 forward(require('./crypto_box'))
 forward(require('./crypto_generichash'))
 forward(require('./crypto_hash'))
@@ -23,8 +26,6 @@ forward(require('./crypto_shorthash'))
 forward(require('./crypto_sign'))
 forward(require('./crypto_stream'))
 forward(require('./crypto_stream_chacha20'))
-forward(require('./crypto_verify'))
-forward(require('./randombytes'))
 
 function forward (submodule) {
   Object.keys(submodule).forEach(function (prop) {
