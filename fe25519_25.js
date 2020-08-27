@@ -14,6 +14,58 @@ const wasm = require('./fe25519_25/mult.js')({
   }
 })
 
+const wasm3 = require('./fe25519_25/fe25519_invert')({
+  imports: {
+    debug: {
+      log (...args) {
+        console.log(...args.map(int => (int >>> 0).toString(16).padStart(8, '0')))
+      },
+      log_tee (arg) {
+        console.log((arg >>> 0).toString(16).padStart(8, '0'))
+        return arg
+      }
+    }
+  }
+})
+
+const wasm2 = require('./fe25519_25/fe25519_pow22523')({
+  imports: {
+    debug: {
+      log (...args) {
+        console.log(...args.map(int => (int >>> 0).toString(16).padStart(8, '0')))
+      },
+      log_tee (arg) {
+        console.log((arg >>> 0).toString(16).padStart(8, '0'))
+        return arg
+      }
+    }
+  }
+})
+
+function fe25519_invert (h, f) {
+  var buf = Buffer.from(f.buffer)
+
+  wasm3.memory.set(buf)
+  wasm3.exports.fe25519_invert(40, 0)
+
+  buf = Buffer.from(wasm3.memory.slice(40, 80))
+  for (let i = 0; i < 10; i++) {
+    h[i] = buf.readUInt32LE(4 * i)
+  }
+}
+
+function fe25519_pow22523 (h, f) {
+  var buf = Buffer.from(f.buffer)
+
+  wasm2.memory.set(buf)
+  wasm2.exports.fe25519_pow22523(40, 0)
+
+  buf = Buffer.from(wasm2.memory.slice(40, 80))
+  for (let i = 0; i < 10; i++) {
+    h[i] = buf.readUInt32LE(4 * i)
+  }
+}
+
 console.log(wasm.buffer.byteLength)
 const base = require('./fe25519_25/base.json').map(a => a.map(b => ge2(b)))
 const printbuf =Buffer.alloc(32)
@@ -42,11 +94,10 @@ module.exports = {
   fe25519_sq,
   fe25519_sqmul,
   fe25519_sq2,
-  fe25519_invert,
-  fe25519_pow22523,
+  fe25519_invert: fe25519_invert,
+  fe25519_pow22523: fe25519_pow22523,
   fe25519_unchecked_sqrt,
   fe25519_sqrt,
-  ge25519_add,
   ge25519_has_small_order,
   ge25519_frombytes,
   ge25519_tobytes,
@@ -309,7 +360,6 @@ function fe25519_frombytes (h, s) {
   var carry8
   var carry9
 
-
   carry9 = (h9_ + (1 << 8)) >> 9
   h9_ -= carry9 * (1 << 9)
   h0 += carry9 * 19
@@ -344,7 +394,6 @@ function fe25519_frombytes (h, s) {
   carry7 = (h8 + (1 << 15)) >> 16
   h8_ += carry7
   h8 -= carry7 * (1 << 16)
-
 
   carry0 = (h0_ + (1 << 9)) >>> 10
   h0_ -= carry0 * (1 << 10)
@@ -727,7 +776,7 @@ function fe25519_mul (h, f, g) {
 
   wasm.memory.set(fbuf)
   wasm.memory.set(gbuf, 40)
-  wasm.exports.fe255219_mul(0, 40)
+  wasm.exports.fe25519_mul(80, 0, 40)
 
   buf = Buffer.from(wasm.memory.slice(80, 120))
   for (let i = 0; i < 10; i++) {
@@ -753,7 +802,7 @@ function fe25519_sq (h, f, log) {
   var buf = Buffer.from(f.buffer)
 
   wasm.memory.set(buf)
-  wasm.exports.sq(40, 0, 0)
+  wasm.exports.fe25519_sq(40, 0, 0)
 
   buf = Buffer.from(wasm.memory.slice(40, 80))
   for (let i = 0; i < 10; i++) {
@@ -779,7 +828,7 @@ function fe25519_sq2 (h, f) {
   var buf = Buffer.from(f.buffer)
 
   wasm.memory.set(buf)
-  wasm.exports.sq(40, 0, 1)
+  wasm.exports.fe25519_sq(40, 0, 1)
 
   buf = Buffer.from(wasm.memory.slice(40, 80))
   for (let i = 0; i < 10; i++) {
@@ -802,7 +851,7 @@ function fe25519_sqmul (s, n, a) {
  * Inversion - returns 0 if z=0
  */
 
-function fe25519_invert (out, z) {
+function fe25519_invert_1 (out, z) {
   check_fe(out)
   check_fe(z)
 
@@ -862,7 +911,7 @@ function fe25519_invert (out, z) {
 Power 2^252 - 3 mod 2^255 - 19
 */
 
-function fe25519_pow22523 (out, z) {
+function fe25519_pow22523_1 (out, z) {
   check_fe(out)
   check_fe(z)
 

@@ -1,4 +1,4 @@
-const sha512 = require('sha512-wasm')
+const sha512 = require('sha512-universal')
 const assert = require('nanoassert')
 
 if (new Uint16Array([1])[0] !== 1) throw new Error('Big endian architecture is not supported.')

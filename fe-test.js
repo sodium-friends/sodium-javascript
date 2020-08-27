@@ -1,5 +1,32 @@
 const ec = require('./fe25519_25.js')
 const sodium = require('./')
+const wasm = require('./fe25519_25/fe25519_invert')({
+  imports: {
+    debug: {
+      log (...args) {
+        console.log(...args.map(int => (int >>> 0).toString(16).padStart(8, '0')))
+      },
+      log_tee (arg) {
+        console.log((arg >>> 0).toString(16).padStart(8, '0'))
+        return arg
+      }
+    }
+  }
+})
+const wasm2 = require('./fe25519_25/fe25519_pow22523')({
+  imports: {
+    debug: {
+      log (...args) {
+        console.log(...args.map(int => (int >>> 0).toString(16).padStart(8, '0')))
+      },
+      log_tee (arg) {
+        console.log((arg >>> 0).toString(16).padStart(8, '0'))
+        return arg
+      }
+    }
+  }
+})
+
 // const crypto = require('crypto')
 
 var f = new Int32Array(10)
@@ -8,6 +35,30 @@ var h = new Int32Array(10)
 
 var a = ec.ge3()
 var r = ec.ge3()
+
+function wasm_inv (h, f) {
+  var buf = Buffer.from(f.buffer)
+
+  wasm.memory.set(buf)
+  wasm.exports.fe25519_invert(40, 0)
+
+  buf = Buffer.from(wasm.memory.slice(40, 80))
+  for (let i = 0; i < 10; i++) {
+    h[i] = buf.readUInt32LE(4 * i)
+  }
+}
+
+function wasm_pow (h, f) {
+  var buf = Buffer.from(f.buffer)
+
+  wasm2.memory.set(buf)
+  wasm2.exports.fe25519_pow22523(40, 0)
+
+  buf = Buffer.from(wasm2.memory.slice(40, 80))
+  for (let i = 0; i < 10; i++) {
+    h[i] = buf.readUInt32LE(4 * i)
+  }
+}
 
 f[0] = 23983080
 a[2][0] = 1
@@ -102,33 +153,31 @@ const gf = ec.ge3()
 ///////////////////////////////////////////
 ec.fe25519_frombytes(a, an)
 ec.fe25519_frombytes(b, bn)
+
+ec.fe25519_mul(c, b, a)
 // // console.log('\na __________')
 // // for (let i = 0; i < 10; i++) console.log(`a${i}:`, signedInt(a[i]).toString(16).padStart(8, '0'))
 // // console.log('\nb __________')
 // // for (let i = 0; i < 10; i++) console.log(`b${i}:`, signedInt(b[i]).toString(16).padStart(8, '0'))
 // ec.fe25519_frombytes(c, bn)
-// ec.fe25519_tobytes(res, c)
-// console.log('tess  :', res.toString('hex'))
+ec.fe25519_tobytes(res, c)
+console.log('tess  :', res.toString('hex'))
 
-ec.fe25519_mul(g, a, b)
-ec.fe25519_tobytes(res, g)
-console.log('fe_mul:', res.toString('hex'))
 
-// ec.fe25519_sq(g, a)
-// ec.fe25519_tobytes(res, g)
-// console.log('fe_sq :', res.toString('hex'))
+console.time('standard')
+for (let i = 0; i < 10000; i++) ec.fe25519_pow22523(b, a)
+console.timeEnd('standard')
 
-// ec.fe25519_reduce(g, c)
-// ec.fe25519_tobytes(res, g)
-// console.log('fe_red:', res.toString('hex'))
+ec.fe25519_tobytes(res, b)
+console.log('tess  :', res.toString('hex'))
 
-// ec.fe25519_sqmul(a, 8734, b)
-// ec.fe25519_tobytes(res, a)
-// console.log('fe_sqm:', res.toString('hex'))
+console.log(wasm.buffer.length)
 
-// ec.fe25519_invert(a, a)
-// ec.fe25519_tobytes(res, a)
-// console.log('fe_inv:', res.toString('hex'))
+console.time('pure wasm')
+for (let i = 0; i < 10000; i++) wasm_pow(b, a)
+console.timeEnd('pure wasm')
+ec.fe25519_tobytes(res, b)
+console.log('tess  :', res.toString('hex'))
 
 // ec.fe25519_pow22523(a, a)
 // ec.fe25519_tobytes(res, a)
@@ -180,7 +229,7 @@ console.log('fe_mul:', res.toString('hex'))
 // ec.ge25519_p3_tobytes(res, gf)
 // console.log("smdbl :", res.toString('hex'))
 
-console.log('canon :', ec.sc25519_is_canonical(bn))
+// console.log('canon :', ec.sc25519_is_canonical(bn))
 
 /////////////////////////////////////////////////////
 
