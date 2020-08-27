@@ -9,10 +9,15 @@ const {
 } = require('./internal/ed25519')
 const { randombytes } = require('./randombytes')
 
-const crypto_sign_BYTES = 64
-const crypto_sign_PUBLICKEYBYTES = 32
-const crypto_sign_SECRETKEYBYTES = 64
-const crypto_sign_SEEDBYTES = 32
+const crypto_sign_ed25519_PUBLICKEYBYTES = 32
+const crypto_sign_ed25519_SECRETKEYBYTES = 64
+const crypto_sign_ed25519_SEEDBYTES = 32
+const crypto_sign_ed25519_BYTES = 64
+
+const crypto_sign_BYTES = crypto_sign_ed25519_BYTES
+const crypto_sign_PUBLICKEYBYTES = crypto_sign_ed25519_PUBLICKEYBYTES
+const crypto_sign_SECRETKEYBYTES = crypto_sign_ed25519_SECRETKEYBYTES
+const crypto_sign_SEEDBYTES = crypto_sign_ed25519_SEEDBYTES
 
 module.exports = {
   crypto_sign_keypair,
@@ -24,7 +29,14 @@ module.exports = {
   crypto_sign_BYTES,
   crypto_sign_PUBLICKEYBYTES,
   crypto_sign_SECRETKEYBYTES,
-  crypto_sign_SEEDBYTES
+  crypto_sign_SEEDBYTES,
+  crypto_sign_ed25519_PUBLICKEYBYTES,
+  crypto_sign_ed25519_SECRETKEYBYTES,
+  crypto_sign_ed25519_SEEDBYTES,
+  crypto_sign_ed25519_BYTES,
+  crypto_sign_ed25519_pk_to_curve25519,
+  unpackneg,
+  pack
 }
 
 function set25519 (r, a) {
@@ -316,6 +328,133 @@ function neq25519 (a, b) {
   pack25519(d, b)
   return crypto_verify_32(c, 0, d, 0)
 }
+
+function ed25519_mul_l (p, q) {
+  scalarmult(p, q, L)
+}
+
+function ed25519_is_on_main_subgroup (p) {
+  var pl = [gf(), gf(), gf(), gf()]
+
+  ed25519_mul_l(pl, p)
+
+  var zero = 0
+  for (let i = 0; i < 16; i++) {
+    zero |= (pl[0][i] & 0xffff)
+  }
+
+  return zero === 0
+}
+
+function crypto_sign_ed25519_pk_to_curve25519 (x25519_pk, ed25519_pk) {
+  check(x25519_pk, crypto_sign_PUBLICKEYBYTES)
+  check(ed25519_pk, crypto_sign_ed25519_PUBLICKEYBYTES)
+
+  // TODO load pk into internal representation
+  var a = [gf(), gf(), gf(), gf()]
+  var x = gf([1])
+  var one_minus_y = gf([1])
+
+  console.log(ed25519_pk.toString('hex'))
+  if (isSmallOrder(ed25519_pk) !== 0) return -2
+  console.log(ed25519_pk.toString('hex'))
+  if (unpackneg(a, ed25519_pk) !== 0) return -3
+  if (!ed25519_is_on_main_subgroup(a)) return -1
+  console.log(ed25519_pk.toString('hex'))
+
+  Z(one_minus_y, one_minus_y, a[1])
+  A(x, x, a[1])
+  inv25519(one_minus_y, one_minus_y)
+  M(x, x, one_minus_y)
+  pack25519(x25519_pk, x)
+
+  return 0
+}
+
+function isSmallOrder (s) {
+  Uint8Array.from([])
+
+  var bad_points = [
+    // 0 (order 4)
+    Uint8Array.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
+
+    // 1 (order 1)
+    Uint8Array.from([0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
+
+    // 2707385501144840649318225287225658788936804267575313519463743609750303402022(order 8)
+    Uint8Array.from([0x26, 0xe8, 0x95, 0x8f, 0xc2, 0xb2, 0x27, 0xb0, 0x45, 0xc3,
+      0xf4, 0x89, 0xf2, 0xef, 0x98, 0xf0, 0xd5, 0xdf, 0xac, 0x05, 0xd3,
+      0xc6, 0x33, 0x39, 0xb1, 0x38, 0x02, 0x88, 0x6d, 0x53, 0xfc, 0x05]),
+
+    // 55188659117513257062467267217118295137698188065244968500265048394206261417927 (order 8)
+    Uint8Array.from([0xc7, 0x17, 0x6a, 0x70, 0x3d, 0x4d, 0xd8, 0x4f, 0xba, 0x3c,
+      0x0b, 0x76, 0x0d, 0x10, 0x67, 0x0f, 0x2a, 0x20, 0x53, 0xfa, 0x2c,
+      0x39, 0xcc, 0xc6, 0x4e, 0xc7, 0xfd, 0x77, 0x92, 0xac, 0x03, 0x7a]),
+
+    // p-1 (order 2)
+    Uint8Array.from([0xec, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f]),
+
+    //  p (=0 order 4)
+    Uint8Array.from([0xed, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f]),
+
+    // p + 1 (=1 order 1)
+    Uint8Array.from([0xee, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f])
+  ]
+
+  var c = new Uint8Array(7)
+  var j
+
+  check (bad_points, 7)
+  for (let i = 0; i < bad_points.length; i++) {
+    for (j = 0; j < 31; j++) {
+      c[i] |= s[j] ^ bad_points[i][j]
+    }
+  }
+
+  for (let i = 0; i < bad_points.length; i++) {
+    c[i] |= (s[j] & 0x7f) ^ bad_points[i][j]
+  }
+
+  var k = 0
+  for (let i = 0; i < bad_points.length; i++) {
+    k |= (c[i] - 1)
+  }
+
+  return ((k >> 8) & 1)
+}
+
+function crypto_sign_ed25519_sk_to_pk (pk, sk) {
+  check(pk, crypto_sign_ed25519_PUBLICKEYBYTES)
+  pk.set(sk.subarray(crypto_sign_ed25519_SEEDBYTES))
+  return pk
+}
+
+function crypto_sign_ed25519_sk_to_curve25519 (curveSk, edSk) {
+  check(curveSk, crypto_sign_SECRETKEYBYTES)
+  check(edSk, crypto_sign_ed25519_SECRETKEYBYTES)
+
+  var h = Buffer.alloc(crypto_hash_sha512_BYTES);
+  crypto_hash(h, edSk, 32)
+
+  h[0] &= 248;
+  h[31] &= 127;
+  h[31] |= 64;
+
+  curveSk.set(edSk)
+  h.fill(0)
+  return curveSk
+}
+
 
 function check (buf, len) {
   if (!buf || (len && buf.length < len)) throw new Error('Argument must be a buffer' + (len ? ' of length ' + len : ''))
