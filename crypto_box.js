@@ -36,7 +36,8 @@ module.exports = {
   crypto_box_BOXZEROBYTES,
   crypto_box_SEALBYTES,
   crypto_box_SEEDBYTES,
-  crypto_box_BEFORENMBYTES
+  crypto_box_BEFORENMBYTES,
+  crypto_box_MACBYTES
 }
 
 function crypto_box_keypair (pk, sk) {
@@ -124,7 +125,9 @@ function crypto_box_beforenm (k, pk, sk) {
     return -1
   }
 
-  return xsalsa20.core_hsalsa20(k, zero, s, null)
+  xsalsa20.core_hsalsa20(k, zero, s, xsalsa20.SIGMA)
+
+  return 0
 }
 
 // int
@@ -167,6 +170,8 @@ function crypto_box_detached (c, mac, m, n, pk, sk) {
     return -1
   }
 
+  cleanup(k)
+
   return crypto_box_detached_afternm(c, mac, m, n, k)
 }
 
@@ -182,9 +187,12 @@ function crypto_box_detached (c, mac, m, n, pk, sk) {
 //                                pk, sk);
 // }
 function crypto_box_easy (c, m, n, pk, sk) {
-  assert(c.length <= crypto_box_MESSAGEBYTES_MAX, "m should not be more than 'crypto_box_MESSAGEBYTESMAX' bytes")
+  assert(c.length === m.length + crypto_box_MACBYTES, "c should be a buffer of length 'm.length + crypto_box_MACBYTES'")
+  console.log({ c, m, crypto_box_MACBYTES })
+  console.log('yep')
+  assert(c.byteLength <= crypto_box_MESSAGEBYTES_MAX, "m should not be more than 'crypto_box_MESSAGEBYTES_MAX' bytes")
 
-  return crypto_box_detached(c + crypto_box_MACBYTES, c, m, n, pk, sk)
+  return crypto_box_detached(c.subarray(crypto_box_MACBYTES), c.subarray(0, crypto_box_MACBYTES), m, n, pk, sk)
 }
 // int
 // crypto_box_open_detached_afternm(unsigned char *m, const unsigned char *c,
@@ -228,6 +236,8 @@ function crypto_box_open_detached (m, c, mac, n, pk, sk) {
     return -1
   }
 
+  cleanup(k)
+
   return crypto_box_open_detached_afternm(m, c, mac, n, k)
 }
 
@@ -244,7 +254,6 @@ function crypto_box_open_detached (m, c, mac, n, pk, sk) {
 //                                     n, pk, sk);
 // }
 function crypto_box_open_easy (m, c, n, pk, sk) {
-  check(m, crypto_box_MACBYTES)
   check(n, crypto_box_NONCEBYTES)
   check(pk, crypto_box_PUBLICKEYBYTES)
   check(sk, crypto_box_SECRETKEYBYTES)
@@ -252,8 +261,7 @@ function crypto_box_open_easy (m, c, n, pk, sk) {
   if (c.length < crypto_box_MACBYTES) {
     return -1
   }
-
-  return crypto_box_open_detached(m, c + crypto_box_MACBYTES, c, n, pk, sk)
+  return crypto_box_open_detached(m, c.subarray(crypto_box_MACBYTES), n, pk, sk)
 }
 
 function check (buf, len) {
