@@ -4,7 +4,7 @@ const { crypto_scalarmult, crypto_scalarmult_base } = require('./crypto_scalarmu
 const { randombytes } = require('./randombytes')
 const { crypto_generichash_batch } = require('./crypto_generichash')
 const { crypto_stream_xsalsa20_MESSAGEBYTES_MAX } = require('./crypto_stream')
-const { crypto_secretbox_open_easy, crypto_secretbox_easy, crypto_secretbox_detached } = require('./crypto_secretbox')
+const { crypto_secretbox_open_easy, crypto_secretbox_easy, crypto_secretbox_detached, crypto_secretbox_open_detached } = require('./crypto_secretbox')
 const xsalsa20 = require('xsalsa20')
 const assert = require('nanoassert')
 
@@ -24,6 +24,7 @@ const crypto_box_MESSAGEBYTES_MAX = crypto_stream_xsalsa20_MESSAGEBYTES_MAX - cr
 
 module.exports = {
   crypto_box_easy,
+  crypto_box_open_easy,
   crypto_box_keypair,
   crypto_box_seed_keypair,
   crypto_box_seal,
@@ -116,9 +117,6 @@ function crypto_box_seal_open (m, c, pk, sk) {
 //     return crypto_core_hsalsa20(k, zero, s, NULL);
 // }
 function crypto_box_beforenm (k, pk, sk) {
-  check(pk, crypto_box_PUBLICKEYBYTES)
-  check(sk, crypto_box_SECRETKEYBYTES)
-
   const zero = new Uint8Array(16)
   const s = new Uint8Array(32)
 
@@ -137,7 +135,7 @@ function crypto_box_beforenm (k, pk, sk) {
 //     return crypto_secretbox_detached(c, mac, m, mlen, n, k);
 // }
 function crypto_box_detached_afternm (c, mac, m, n, k) {
-  return crypto_secretbox_detached(c, mac, m, m.length, n, k)
+  return crypto_secretbox_detached(c, mac, m, n, k)
 }
 
 // crypto_box_detached(unsigned char *c, unsigned char *mac,
@@ -169,7 +167,7 @@ function crypto_box_detached (c, mac, m, n, pk, sk) {
     return -1
   }
 
-  return crypto_box_detached_afternm(c, mac, m, m.length, n, k)
+  return crypto_box_detached_afternm(c, mac, m, n, k)
 }
 
 // int
@@ -184,13 +182,78 @@ function crypto_box_detached (c, mac, m, n, pk, sk) {
 //                                pk, sk);
 // }
 function crypto_box_easy (c, m, n, pk, sk) {
+  assert(c.length <= crypto_box_MESSAGEBYTES_MAX, "m should not be more than 'crypto_box_MESSAGEBYTESMAX' bytes")
+
+  return crypto_box_detached(c + crypto_box_MACBYTES, c, m, n, pk, sk)
+}
+// int
+// crypto_box_open_detached_afternm(unsigned char *m, const unsigned char *c,
+//                                  const unsigned char *mac,
+//                                  unsigned long long clen,
+//                                  const unsigned char *n,
+//                                  const unsigned char *k)
+// {
+//     return crypto_secretbox_open_detached(m, c, mac, clen, n, k);
+// }
+function crypto_box_open_detached_afternm (m, c, mac, n, k) {
+  return crypto_secretbox_open_detached(m, c, mac, n, k)
+}
+
+// int
+// crypto_box_open_detached(unsigned char *m, const unsigned char *c,
+//                          const unsigned char *mac,
+//                          unsigned long long clen, const unsigned char *n,
+//                          const unsigned char *pk, const unsigned char *sk)
+// {
+//     unsigned char k[crypto_box_BEFORENMBYTES];
+//     int           ret;
+//
+//     if (crypto_box_beforenm(k, pk, sk) != 0) {
+//         return -1;
+//     }
+//     ret = crypto_box_open_detached_afternm(m, c, mac, clen, n, k);
+//     sodium_memzero(k, sizeof k);
+//
+//     return ret;
+// }
+function crypto_box_open_detached (m, c, mac, n, pk, sk) {
+  check(mac, crypto_box_MACBYTES)
+  check(n, crypto_box_NONCEBYTES)
+  check(pk, crypto_box_PUBLICKEYBYTES)
+  check(sk, crypto_box_SECRETKEYBYTES)
+
+  const k = Uint8Array(crypto_box_BEFORENMBYTES)
+
+  if (crypto_box_beforenm(k, pk, sk) !== 0) {
+    return -1
+  }
+
+  return crypto_box_open_detached_afternm(m, c, mac, n, k)
+}
+
+// int
+// crypto_box_open_easy(unsigned char *m, const unsigned char *c,
+//                      unsigned long long clen, const unsigned char *n,
+//                      const unsigned char *pk, const unsigned char *sk)
+// {
+//     if (clen < crypto_box_MACBYTES) {
+//         return -1;
+//     }
+//     return crypto_box_open_detached(m, c + crypto_box_MACBYTES, c,
+//                                     clen - crypto_box_MACBYTES,
+//                                     n, pk, sk);
+// }
+function crypto_box_open_easy (m, c, n, pk, sk) {
   check(m, crypto_box_MACBYTES)
   check(n, crypto_box_NONCEBYTES)
   check(pk, crypto_box_PUBLICKEYBYTES)
   check(sk, crypto_box_SECRETKEYBYTES)
 
-  assert(m.length <= crypto_box_MESSAGEBYTES_MAX, "m should not be more than 'crypto_box_MESSAGEBYTESMAX' bytes")
-  return crypto_box_detached(c + crypto_box_MACBYTES, c, m, m.length, n, pk, sk)
+  if (c.length < crypto_box_MACBYTES) {
+    return -1
+  }
+
+  return crypto_box_open_detached(m, c + crypto_box_MACBYTES, c, n, pk, sk)
 }
 
 function check (buf, len) {
