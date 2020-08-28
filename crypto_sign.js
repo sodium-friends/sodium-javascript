@@ -97,6 +97,8 @@ function pack (r, p) {
 }
 
 function scalarmult (p, q, s) {
+  // don't mutate q
+  var h = [gf(q[0]), gf(q[1]), gf(q[2]), gf(q[3])]
   var b, i
   set25519(p[0], gf0)
   set25519(p[1], gf1)
@@ -104,10 +106,10 @@ function scalarmult (p, q, s) {
   set25519(p[3], gf0)
   for (i = 255; i >= 0; --i) {
     b = (s[(i / 8) | 0] >> (i & 7)) & 1
-    cswap(p, q, b)
-    add(q, p)
+    cswap(p, h, b)
+    add(h, p)
     add(p, p)
-    cswap(p, q, b)
+    cswap(p, h, b)
   }
 }
 
@@ -228,6 +230,24 @@ function crypto_sign_detached (sig, m, sk) {
   for (let i = 0; i < crypto_sign_BYTES; i++) sig[i] = sm[i]
 }
 
+function is_zero25519 (f) {
+  var s = new Uint8Array(32)
+  pack25519(s, f)
+
+  return sodium_is_zero(s, 32)
+
+  function sodium_is_zero (n) {
+    let i
+    let d = 0
+
+    for (let i = 0; i < n.length; i++) {
+      d |= n[i]
+    }
+
+    return 1 & ((d - 1) >> 8)
+  }
+}
+
 function unpackneg (r, p) {
   var t = gf(), chk = gf(), num = gf(),
     den = gf(), den2 = gf(), den4 = gf(),
@@ -260,7 +280,9 @@ function unpackneg (r, p) {
   M(chk, chk, den)
   if (!neq25519(chk, num)) return false
 
-  if (par25519(r[0]) === (p[31] >> 7)) Z(r[0], gf0, r[0])
+  if (par25519(r[0]) === (p[31] >> 7)) {
+    Z(r[0], gf(), r[0])
+  }
 
   M(r[3], r[0], r[1])
   return true
@@ -350,17 +372,17 @@ function crypto_sign_ed25519_pk_to_curve25519 (x25519_pk, ed25519_pk) {
   check(x25519_pk, crypto_sign_PUBLICKEYBYTES)
   check(ed25519_pk, crypto_sign_ed25519_PUBLICKEYBYTES)
 
-  // TODO load pk into internal representation
   var a = [gf(), gf(), gf(), gf()]
   var x = gf([1])
   var one_minus_y = gf([1])
 
-  console.log(ed25519_pk.toString('hex'))
-  if (isSmallOrder(ed25519_pk) !== 0) return -2
-  console.log(ed25519_pk.toString('hex'))
-  if (unpackneg(a, ed25519_pk) !== 0) return -3
-  if (!ed25519_is_on_main_subgroup(a)) return -1
-  console.log(ed25519_pk.toString('hex'))
+  if (isSmallOrder(ed25519_pk) !== 0 ||
+      unpackneg(a, ed25519_pk) !== 0 ||
+      !ed25519_is_on_main_subgroup(a)) return -1
+
+  for (let i = 0; i < a.length; i++) {
+    pack25519(x25519_pk, a[i]);
+  }
 
   Z(one_minus_y, one_minus_y, a[1])
   A(x, x, a[1])
