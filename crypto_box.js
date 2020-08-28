@@ -15,6 +15,7 @@ const crypto_box_BOXZEROBYTES = 16
 const crypto_box_SEALBYTES = 48
 const crypto_box_SEEDBYTES = 32
 const crypto_box_BEFORENMBYTES = 32
+const crypto_box_MACBYTES = 16
 
 module.exports = {
   crypto_box_keypair,
