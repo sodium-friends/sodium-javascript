@@ -4,7 +4,7 @@ const { crypto_scalarmult, crypto_scalarmult_base } = require('./crypto_scalarmu
 const { randombytes } = require('./randombytes')
 const { crypto_generichash_batch } = require('./crypto_generichash')
 const { crypto_stream_xsalsa20_MESSAGEBYTES_MAX } = require('./crypto_stream')
-const { crypto_secretbox_open_easy, crypto_secretbox_easy, crypto_secretbox_detached, crypto_secretbox_open_detached } = require('./crypto_secretbox')
+const { crypto_secretbox_open_easy, crypto_secretbox_easy, crypto_secretbox_detached } = require('./crypto_secretbox')
 const xsalsa20 = require('xsalsa20')
 const assert = require('nanoassert')
 
@@ -24,7 +24,6 @@ const crypto_box_MESSAGEBYTES_MAX = crypto_stream_xsalsa20_MESSAGEBYTES_MAX - cr
 
 module.exports = {
   crypto_box_easy,
-  crypto_box_open_easy,
   crypto_box_keypair,
   crypto_box_seed_keypair,
   crypto_box_seal,
@@ -185,92 +184,13 @@ function crypto_box_detached (c, mac, m, n, pk, sk) {
 // }
 function crypto_box_easy (c, m, n, pk, sk) {
   assert(c.length >= m.length + crypto_box_MACBYTES, "c should be at least 'm.length + crypto_box_MACBYTES'")
-  assert(c.byteLength <= crypto_box_MESSAGEBYTES_MAX, "m should not be more than 'crypto_box_MESSAGEBYTES_MAX' bytes")
+
+  assert(m.byteLength <= crypto_box_MESSAGEBYTES_MAX, "m should not be more than 'crypto_box_MESSAGEBYTES_MAX' bytes")
 
   return crypto_box_detached(
     c.subarray(crypto_box_MACBYTES, m.length + crypto_box_MACBYTES),
     c.subarray(0, crypto_box_MACBYTES),
     m,
-    n,
-    pk,
-    sk
-  )
-}
-// int
-// crypto_box_open_detached_afternm(unsigned char *m, const unsigned char *c,
-//                                  const unsigned char *mac,
-//                                  unsigned long long clen,
-//                                  const unsigned char *n,
-//                                  const unsigned char *k)
-// {
-//     return crypto_secretbox_open_detached(m, c, mac, clen, n, k);
-// }
-function crypto_box_open_detached_afternm (m, c, mac, n, k) {
-  return crypto_secretbox_open_detached(m, c, mac, n, k)
-}
-
-// int
-// crypto_box_open_detached(unsigned char *m, const unsigned char *c,
-//                          const unsigned char *mac,
-//                          unsigned long long clen, const unsigned char *n,
-//                          const unsigned char *pk, const unsigned char *sk)
-// {
-//     unsigned char k[crypto_box_BEFORENMBYTES];
-//     int           ret;
-//
-//     if (crypto_box_beforenm(k, pk, sk) != 0) {
-//         return -1;
-//     }
-//     ret = crypto_box_open_detached_afternm(m, c, mac, clen, n, k);
-//     sodium_memzero(k, sizeof k);
-//
-//     return ret;
-// }
-function crypto_box_open_detached (m, c, mac, n, pk, sk) {
-  check(mac, crypto_box_MACBYTES)
-  check(n, crypto_box_NONCEBYTES)
-  check(pk, crypto_box_PUBLICKEYBYTES)
-  check(sk, crypto_box_SECRETKEYBYTES)
-
-  const k = Uint8Array(crypto_box_BEFORENMBYTES)
-
-  assert(crypto_box_beforenm(k, pk, sk))
-
-  const ret = crypto_box_open_detached_afternm(
-    m,
-    c,
-    mac,
-    n,
-    k
-  )
-
-  cleanup(k)
-
-  return ret
-}
-
-// int
-// crypto_box_open_easy(unsigned char *m, const unsigned char *c,
-//                      unsigned long long clen, const unsigned char *n,
-//                      const unsigned char *pk, const unsigned char *sk)
-// {
-//     if (clen < crypto_box_MACBYTES) {
-//         return -1;
-//     }
-//     return crypto_box_open_detached(m, c + crypto_box_MACBYTES, c,
-//                                     clen - crypto_box_MACBYTES,
-//                                     n, pk, sk);
-// }
-function crypto_box_open_easy (m, c, n, pk, sk) {
-  check(n, crypto_box_NONCEBYTES)
-  check(pk, crypto_box_PUBLICKEYBYTES)
-  check(sk, crypto_box_SECRETKEYBYTES)
-
-  assert(c.length < crypto_box_MACBYTES)
-
-  return crypto_box_open_detached(m,
-    c.subarray(crypto_box_MACBYTES, m.length + crypto_box_MACBYTES),
-    c.subarray(0, crypto_box_MACBYTES),
     n,
     pk,
     sk

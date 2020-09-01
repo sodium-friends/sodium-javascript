@@ -89,7 +89,7 @@ ret = crypto_box_easy(c, m, nonce, bobpk, alicesk)
 //     }
 for (i = 0; i < 131 + crypto_box_MACBYTES; ++i) {
   const hex = c[i].toString(16).padStart(2, '0')
-  process.stdout.write(`${hex} `)
+  process.stdout.write(`,0x${hex}`)
 }
 //     printf("\n");
 process.stdout.write('\n')
