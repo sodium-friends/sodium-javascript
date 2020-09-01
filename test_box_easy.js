@@ -69,10 +69,9 @@ const m = new Uint8Array([
 ])
 
 // static unsigned char c[147 + crypto_box_MACBYTES];
-// TODO: Is this supposed to diverge?! The original doesn't seem to match the crypto_box_easy docs.
-const c = new Uint8Array(147)
+const c = new Uint8Array(147 + crypto_box_MACBYTES)
 
-// 
+//
 // int
 // main(void)
 // {
@@ -80,7 +79,7 @@ const c = new Uint8Array(147)
 //     int    ret;
 let i
 let ret
-// 
+//
 //     ret = crypto_box_easy(c, m, 131, nonce, bobpk, alicesk);
 //     assert(ret == 0);
 ret = crypto_box_easy(c, m, nonce, bobpk, alicesk)
@@ -89,22 +88,21 @@ ret = crypto_box_easy(c, m, nonce, bobpk, alicesk)
 //         printf(",0x%02x", (unsigned int) c[i]);
 //     }
 for (i = 0; i < 131 + crypto_box_MACBYTES; ++i) {
-
   const hex = c[i].toString(16).padStart(2, '0')
-  process.stdout.write(`,0x${hex}`)
+  process.stdout.write(`${hex} `)
 }
 //     printf("\n");
 process.stdout.write('\n')
-// 
+//
 //     /* Null message */
-// 
+//
 //     ret = crypto_box_easy(c, guard_page, 0, nonce, bobpk, alicesk);
 //     assert(ret == 0);
 //     for (i = 0; i < 1 + crypto_box_MACBYTES; ++i) {
 //         printf(",0x%02x", (unsigned int) c[i]);
 //     }
 //     printf("\n");
-// 
+//
 //     ret =
 //         crypto_box_open_easy(c, c, crypto_box_MACBYTES, nonce, bobpk, alicesk);
 //     assert(ret == 0);
@@ -115,7 +113,7 @@ process.stdout.write('\n')
 //     c[randombytes_uniform(crypto_box_MACBYTES)]++;
 //     ret = crypto_box_open_easy(c, c, crypto_box_MACBYTES, nonce, bobpk, alicesk);
 //     assert(ret == -1);
-// 
+//
 //     return 0;
 // }
 

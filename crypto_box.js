@@ -121,13 +121,11 @@ function crypto_box_beforenm (k, pk, sk) {
   const zero = new Uint8Array(16)
   const s = new Uint8Array(32)
 
-  if (crypto_scalarmult(s, sk, pk) !== 0) {
-    return -1
-  }
+  assert(crypto_scalarmult(s, sk, pk) === 0)
 
   xsalsa20.core_hsalsa20(k, zero, s, xsalsa20.SIGMA)
 
-  return 0
+  return true
 }
 
 // int
@@ -166,13 +164,12 @@ function crypto_box_detached (c, mac, m, n, pk, sk) {
 
   const k = new Uint8Array(crypto_box_BEFORENMBYTES)
 
-  if (crypto_box_beforenm(k, pk, sk) !== 0) {
-    return -1
-  }
+  assert(crypto_box_beforenm(k, pk, sk))
 
+  const ret = crypto_box_detached_afternm(c, mac, m, n, k)
   cleanup(k)
 
-  return crypto_box_detached_afternm(c, mac, m, n, k)
+  return ret
 }
 
 // int
@@ -187,12 +184,17 @@ function crypto_box_detached (c, mac, m, n, pk, sk) {
 //                                pk, sk);
 // }
 function crypto_box_easy (c, m, n, pk, sk) {
-  assert(c.length === m.length + crypto_box_MACBYTES, "c should be a buffer of length 'm.length + crypto_box_MACBYTES'")
-  console.log({ c, m, crypto_box_MACBYTES })
-  console.log('yep')
+  assert(c.length >= m.length + crypto_box_MACBYTES, "c should be at least 'm.length + crypto_box_MACBYTES'")
   assert(c.byteLength <= crypto_box_MESSAGEBYTES_MAX, "m should not be more than 'crypto_box_MESSAGEBYTES_MAX' bytes")
 
-  return crypto_box_detached(c.subarray(crypto_box_MACBYTES), c.subarray(0, crypto_box_MACBYTES), m, n, pk, sk)
+  return crypto_box_detached(
+    c.subarray(crypto_box_MACBYTES, m.length + crypto_box_MACBYTES),
+    c.subarray(0, crypto_box_MACBYTES),
+    m,
+    n,
+    pk,
+    sk
+  )
 }
 // int
 // crypto_box_open_detached_afternm(unsigned char *m, const unsigned char *c,
@@ -232,13 +234,19 @@ function crypto_box_open_detached (m, c, mac, n, pk, sk) {
 
   const k = Uint8Array(crypto_box_BEFORENMBYTES)
 
-  if (crypto_box_beforenm(k, pk, sk) !== 0) {
-    return -1
-  }
+  assert(crypto_box_beforenm(k, pk, sk))
+
+  const ret = crypto_box_open_detached_afternm(
+    m,
+    c,
+    mac,
+    n,
+    k
+  )
 
   cleanup(k)
 
-  return crypto_box_open_detached_afternm(m, c, mac, n, k)
+  return ret
 }
 
 // int
@@ -258,10 +266,15 @@ function crypto_box_open_easy (m, c, n, pk, sk) {
   check(pk, crypto_box_PUBLICKEYBYTES)
   check(sk, crypto_box_SECRETKEYBYTES)
 
-  if (c.length < crypto_box_MACBYTES) {
-    return -1
-  }
-  return crypto_box_open_detached(m, c.subarray(crypto_box_MACBYTES), n, pk, sk)
+  assert(c.length < crypto_box_MACBYTES)
+
+  return crypto_box_open_detached(m,
+    c.subarray(crypto_box_MACBYTES, m.length + crypto_box_MACBYTES),
+    c.subarray(0, crypto_box_MACBYTES),
+    n,
+    pk,
+    sk
+  )
 }
 
 function check (buf, len) {
