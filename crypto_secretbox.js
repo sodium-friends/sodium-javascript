@@ -69,8 +69,8 @@ function crypto_secretbox_detached (o, mac, msg, n, k) {
 
   const tmp = new Uint8Array(msg.byteLength + mac.byteLength)
   crypto_secretbox_easy(tmp, msg, n, k)
-  o.set(tmp.subarray(0, msg.byteLength))
-  mac.set(tmp.subarray(msg.byteLength))
+  o.set(tmp.subarray(mac.byteLength))
+  mac.set(tmp.subarray(0, mac.byteLength))
   return true
 }
 
