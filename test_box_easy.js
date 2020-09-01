@@ -69,52 +69,50 @@ const m = new Uint8Array([
 ])
 
 // static unsigned char c[147 + crypto_box_MACBYTES];
-const c = new Uint8Array(147 + crypto_box_MACBYTES)
+// CHANGED: Neither Sodium-Native or Sodium-JavaScript handle when `c` is too big.
+//          I don't know why the test makes it so big, but if Sodium-Native throws
+//          then it seems like Sodium-JavaScript should throw too.
+const c = new Uint8Array(147)
 
-//
-// int
-// main(void)
-// {
-//     size_t i;
-//     int    ret;
+// size_t i;
 let i
-let ret
-//
-//     ret = crypto_box_easy(c, m, 131, nonce, bobpk, alicesk);
-//     assert(ret == 0);
-ret = crypto_box_easy(c, m, nonce, bobpk, alicesk)
 
-//     for (i = 0; i < 131 + crypto_box_MACBYTES; ++i) {
-//         printf(",0x%02x", (unsigned int) c[i]);
-//     }
+// int    ret;
+// ret = crypto_box_easy(c, m, 131, nonce, bobpk, alicesk);
+// assert(ret == 0);
+let ret = crypto_box_easy(c, m, nonce, bobpk, alicesk)
+
+// for (i = 0; i < 131 + crypto_box_MACBYTES; ++i) {
+//     printf(",0x%02x", (unsigned int) c[i]);
+// }
 for (i = 0; i < 131 + crypto_box_MACBYTES; ++i) {
   const hex = c[i].toString(16).padStart(2, '0')
   process.stdout.write(`,0x${hex}`)
 }
-//     printf("\n");
+
+// printf("\n");
 process.stdout.write('\n')
+
+// /* Null message */
 //
-//     /* Null message */
-//
-//     ret = crypto_box_easy(c, guard_page, 0, nonce, bobpk, alicesk);
-//     assert(ret == 0);
-//     for (i = 0; i < 1 + crypto_box_MACBYTES; ++i) {
-//         printf(",0x%02x", (unsigned int) c[i]);
-//     }
-//     printf("\n");
-//
-//     ret =
-//         crypto_box_open_easy(c, c, crypto_box_MACBYTES, nonce, bobpk, alicesk);
-//     assert(ret == 0);
-//     for (i = 0; i < 1 + crypto_box_MACBYTES; ++i) {
-//         printf(",0x%02x", (unsigned int) c[i]);
-//     }
-//     printf("\n");
-//     c[randombytes_uniform(crypto_box_MACBYTES)]++;
-//     ret = crypto_box_open_easy(c, c, crypto_box_MACBYTES, nonce, bobpk, alicesk);
-//     assert(ret == -1);
-//
-//     return 0;
+// ret = crypto_box_easy(c, guard_page, 0, nonce, bobpk, alicesk);
+// assert(ret == 0);
+// for (i = 0; i < 1 + crypto_box_MACBYTES; ++i) {
+//     printf(",0x%02x", (unsigned int) c[i]);
 // }
+// printf("\n");
+//
+// ret =
+//     crypto_box_open_easy(c, c, crypto_box_MACBYTES, nonce, bobpk, alicesk);
+// assert(ret == 0);
+// for (i = 0; i < 1 + crypto_box_MACBYTES; ++i) {
+//     printf(",0x%02x", (unsigned int) c[i]);
+// }
+// printf("\n");
+// c[randombytes_uniform(crypto_box_MACBYTES)]++;
+// ret = crypto_box_open_easy(c, c, crypto_box_MACBYTES, nonce, bobpk, alicesk);
+// assert(ret == -1);
+//
+// return 0;
 
 if (typeof window !== 'undefined') window.close()
