@@ -69,8 +69,8 @@ function crypto_secretbox_detached (o, mac, msg, n, k) {
 
   const tmp = new Uint8Array(msg.byteLength + mac.byteLength)
   crypto_secretbox_easy(tmp, msg, n, k)
-  o.set(tmp.subarray(mac.byteLength))
   mac.set(tmp.subarray(0, mac.byteLength))
+  o.set(tmp.subarray(mac.byteLength))
   return true
 }
 
@@ -81,8 +81,8 @@ function crypto_secretbox_open_detached (msg, o, mac, n, k) {
   assert(k.byteLength === crypto_secretbox_KEYBYTES, "k must be 'crypto_secretbox_KEYBYTES' bytes")
 
   const tmp = new Uint8Array(o.byteLength + mac.byteLength)
-  tmp.set(o, mac.byteLength)
   tmp.set(mac)
+  tmp.set(o, mac.byteLength)
   return crypto_secretbox_open_easy(msg, tmp, n, k)
 }
 
