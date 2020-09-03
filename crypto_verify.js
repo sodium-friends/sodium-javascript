@@ -22,3 +22,7 @@ function crypto_verify_16 (x, xi, y, yi) {
 function crypto_verify_32 (x, xi, y, yi) {
   return vn(x, xi, y, yi, 32)
 }
+
+function crypto_verify_64 (x, xi, y, yi) {
+  return vn(x, xi, y, yi, 64)
+}
