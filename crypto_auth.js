@@ -57,7 +57,7 @@ function crypto_auth_hmacsha512256 (out, input, k) {
 function crypto_auth_hmacsha512256_verify (h, input, k) {
   const correct = Sha512.HMAC(k).update(input).digest()
 
-  return crypto_verify_32(h, 0, correct, 0) | sodium_memcmp(correct.subarray(32), h, 32)
+  return crypto_verify_32(h, 0, correct, 0) | sodium_memcmp(correct.subarray(0, 32), h, 32)
 }
 
 function crypto_auth (out, input, k) {
