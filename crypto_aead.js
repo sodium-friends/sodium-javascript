@@ -131,7 +131,7 @@ function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad
   computed_mac.fill(0)
   slen.fill(0)
 
-  if (ret !== 0) {
+  if (!ret) {
     m.fill(0)
     throw new Error('could not verify data')
   }
