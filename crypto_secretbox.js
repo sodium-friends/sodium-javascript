@@ -37,7 +37,7 @@ function crypto_secretbox (c, m, n, k) {
     c.subarray(0, crypto_onetimeauth_KEYBYTES)
   )
   c.fill(0, 0, crypto_secretbox_BOXZEROBYTES)
-  return 0
+  return true
 }
 
 function crypto_secretbox_open (m, c, n, k) {
