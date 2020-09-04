@@ -12,7 +12,7 @@ function crypto_kx_keypair (pk, sk) {
   assert(pk.byteLength === crypto_kx_PUBLICKEYBYTES, "pk must be 'crypto_kx_PUBLICKEYBYTES' bytes")
   assert(sk.byteLength === crypto_kx_SECRETKEYBYTES, "sk must be 'crypto_kx_SECRETKEYBYTES' bytes")
 
-  randombytes_buf(sk, crypto_kx_SECRETKEYBYTES)
+  randombytes_buf(sk)
   return crypto_scalarmult_base(pk, sk)
 }
 
