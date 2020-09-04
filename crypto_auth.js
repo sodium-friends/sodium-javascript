@@ -5,14 +5,15 @@ const Sha256 = require('sha256-universal')
 const Sha512 = require('sha512-universal')
 const assert = require('nanoassert')
 
-const crypto_auth_BYTES = 32
-const crypto_auth_KEYBYTES = 32
 const crypto_auth_hmacsha256_BYTES = 32
 const crypto_auth_hmacsha256_KEYBYTES = 32
 const crypto_auth_hmacsha512_BYTES = 64
 const crypto_auth_hmacsha512_KEYBYTES = 32
 const crypto_auth_hmacsha512256_BYTES = 32
 const crypto_auth_hmacsha512256_KEYBYTES = 32
+
+const crypto_auth_BYTES = crypto_auth_hmacsha512256_BYTES
+const crypto_auth_KEYBYTES = crypto_auth_hmacsha512256_KEYBYTES
 
 function crypto_auth_hmacsha256 (out, input, k) {
   assert(out.byteLength === crypto_auth_hmacsha256_BYTES, "out should be 'crypto_auth_hmacsha256_BYTES' in length")
