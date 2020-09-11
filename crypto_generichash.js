@@ -16,7 +16,7 @@ module.exports.crypto_generichash = function (output, input, key) {
   blake2b(output.length, key).update(input).final(output)
 }
 
-module.exports.crypto_generichash_ready = blake2b.ready
+module.exports.crypto_generichash_wasm_ready = blake2b.ready
 
 module.exports.crypto_generichash_batch = function (output, inputArray, key) {
   var ctx = blake2b(output.length, key)
