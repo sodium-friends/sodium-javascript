@@ -11,7 +11,6 @@
 forward(require('./randombytes'))
 forward(require('./memory'))
 forward(require('./helpers'))
-forward(require('./crypto_verify'))
 forward(require('./crypto_box'))
 forward(require('./crypto_generichash'))
 forward(require('./crypto_hash'))
