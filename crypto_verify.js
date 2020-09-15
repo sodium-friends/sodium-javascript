@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 module.exports = {
   crypto_verify_16,
-  crypto_verify_32
+  crypto_verify_32,
+  crypto_verify_64
 }
 
 function vn (x, xi, y, yi, n) {
@@ -16,9 +17,13 @@ Object.defineProperty(module.exports, 'vn', {
 })
 
 function crypto_verify_16 (x, xi, y, yi) {
-  return vn(x, xi, y, yi, 16)
+  return vn(x, xi, y, yi, 16) === 0
 }
 
 function crypto_verify_32 (x, xi, y, yi) {
-  return vn(x, xi, y, yi, 32)
+  return vn(x, xi, y, yi, 32) === 0
+}
+
+function crypto_verify_64 (x, xi, y, yi) {
+  return vn(x, xi, y, yi, 64) === 0
 }

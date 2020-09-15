@@ -242,16 +242,16 @@ function unpackneg (r, p) {
 
   S(chk, r[0])
   M(chk, chk, den)
-  if (neq25519(chk, num)) M(r[0], r[0], I)
+  if (!neq25519(chk, num)) M(r[0], r[0], I)
 
   S(chk, r[0])
   M(chk, chk, den)
-  if (neq25519(chk, num)) return -1
+  if (!neq25519(chk, num)) return false
 
   if (par25519(r[0]) === (p[31] >> 7)) Z(r[0], gf0, r[0])
 
   M(r[3], r[0], r[1])
-  return 0
+  return true
 }
 
 /* eslint-disable no-unused-vars */
@@ -270,7 +270,7 @@ function crypto_sign_open (msg, sm, pk) {
   mlen = -1
   if (n < 64) return false
 
-  if (unpackneg(q, pk)) return false
+  if (!unpackneg(q, pk)) return false
 
   for (i = 0; i < n; i++) m[i] = sm[i]
   for (i = 0; i < 32; i++) m[i + 32] = pk[i]
@@ -283,7 +283,7 @@ function crypto_sign_open (msg, sm, pk) {
   pack(t, p)
 
   n -= 64
-  if (crypto_verify_32(sm, 0, t, 0)) {
+  if (!crypto_verify_32(sm, 0, t, 0)) {
     for (i = 0; i < n; i++) m[i] = 0
     return false
     // throw new Error('crypto_sign_open failed')
