@@ -37,7 +37,6 @@ function crypto_secretbox (c, m, n, k) {
     c.subarray(0, crypto_onetimeauth_KEYBYTES)
   )
   c.fill(0, 0, crypto_secretbox_BOXZEROBYTES)
-  return 0
 }
 
 function crypto_secretbox_open (m, c, n, k) {
@@ -94,9 +93,8 @@ function crypto_secretbox_easy (o, msg, n, k) {
   const m = new Uint8Array(crypto_secretbox_ZEROBYTES + msg.byteLength)
   const c = new Uint8Array(m.byteLength)
   m.set(msg, crypto_secretbox_ZEROBYTES)
-  if (crypto_secretbox(c, m, n, k) === false) return false
+  crypto_secretbox(c, m, n, k)
   o.set(c.subarray(crypto_secretbox_BOXZEROBYTES))
-  return true
 }
 
 function crypto_secretbox_open_easy (msg, box, n, k) {

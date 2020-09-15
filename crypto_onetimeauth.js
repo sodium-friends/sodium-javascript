@@ -23,7 +23,6 @@ function crypto_onetimeauth (mac, msg, key) {
   var s = new Poly1305(key)
   s.update(msg, 0, msg.byteLength)
   s.finish(mac, 0)
-  return true
 }
 
 function crypto_onetimeauth_verify (mac, msg, key) {
