@@ -10,16 +10,12 @@ const crypto_secretbox_BOXZEROBYTES = 16
 const crypto_secretbox_MACBYTES = 16
 
 module.exports = {
-  crypto_secretbox,
-  crypto_secretbox_open,
   crypto_secretbox_detached,
   crypto_secretbox_open_detached,
   crypto_secretbox_easy,
   crypto_secretbox_open_easy,
   crypto_secretbox_KEYBYTES,
   crypto_secretbox_NONCEBYTES,
-  crypto_secretbox_ZEROBYTES,
-  crypto_secretbox_BOXZEROBYTES,
   crypto_secretbox_MACBYTES
 }
 
