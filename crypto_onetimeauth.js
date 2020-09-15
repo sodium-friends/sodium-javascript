@@ -33,5 +33,5 @@ function crypto_onetimeauth_verify (mac, msg, key) {
 
   var tmp = new Uint8Array(16)
   crypto_onetimeauth(tmp, msg, key)
-  return crypto_verify_16(mac, 0, tmp, 0) === 0
+  return crypto_verify_16(mac, 0, tmp, 0)
 }
