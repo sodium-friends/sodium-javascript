@@ -39,6 +39,7 @@ module.exports = {
   crypto_sign_ed25519_BYTES,
   crypto_sign_ed25519_pk_to_curve25519,
   crypto_sign_ed25519_sk_to_curve25519,
+  crypto_sign_ed25519_sk_to_pk,
   unpackneg,
   pack
 }
@@ -233,24 +234,6 @@ function crypto_sign_detached (sig, m, sk) {
   for (let i = 0; i < crypto_sign_BYTES; i++) sig[i] = sm[i]
 }
 
-function is_zero25519 (f) {
-  var s = new Uint8Array(32)
-  pack25519(s, f)
-
-  return sodium_is_zero(s, 32)
-
-  function sodium_is_zero (n) {
-    let i
-    let d = 0
-
-    for (let i = 0; i < n.length; i++) {
-      d |= n[i]
-    }
-
-    return 1 & ((d - 1) >> 8)
-  }
-}
-
 function unpackneg (r, p) {
   var t = gf(), chk = gf(), num = gf(),
     den = gf(), den2 = gf(), den4 = gf(),
@@ -385,7 +368,7 @@ function crypto_sign_ed25519_pk_to_curve25519 (x25519_pk, ed25519_pk) {
     ed25519_is_on_main_subgroup(a), 'Cannot convert key: bad point')
 
   for (let i = 0; i < a.length; i++) {
-    pack25519(x25519_pk, a[i]);
+    pack25519(x25519_pk, a[i])
   }
 
   Z(one_minus_y, one_minus_y, a[1])
@@ -440,7 +423,7 @@ function isSmallOrder (s) {
   var c = new Uint8Array(7)
   var j
 
-  check (bad_points, 7)
+  check(bad_points, 7)
   for (let i = 0; i < bad_points.length; i++) {
     for (j = 0; j < 31; j++) {
       c[i] |= s[j] ^ bad_points[i][j]
@@ -469,18 +452,17 @@ function crypto_sign_ed25519_sk_to_curve25519 (curveSk, edSk) {
   assert(curveSk && curveSk.byteLength === crypto_scalarmult_BYTES, "curveSk must be 'crypto_sign_SECRETKEYBYTES' long")
   assert(edSk && edSk.byteLength === crypto_sign_ed25519_SECRETKEYBYTES, "edSk must be 'crypto_sign_ed25519_SECRETKEYBYTES' long")
 
-  var h = Buffer.alloc(crypto_hash_sha512_BYTES);
+  var h = Buffer.alloc(crypto_hash_sha512_BYTES)
   crypto_hash(h, edSk, 32)
 
-  h[0] &= 248;
-  h[31] &= 127;
-  h[31] |= 64;
+  h[0] &= 248
+  h[31] &= 127
+  h[31] |= 64
 
   curveSk.set(h.subarray(0, crypto_scalarmult_BYTES))
   h.fill(0)
   return curveSk
 }
-
 
 function check (buf, len, arg = 'Argument') {
   if (!buf || (len && buf.length < len)) throw new Error(arg + ' must be a buffer' + (len ? ' of length ' + len : ''))
