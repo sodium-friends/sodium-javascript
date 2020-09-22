@@ -30,7 +30,7 @@ function crypto_aead_chacha20poly1305_ietf_encrypt (c, m, ad, nsec, npub, k) {
 }
 
 function crypto_aead_chacha20poly1305_ietf_encrypt_detached (c, mac, m, ad, nsec, npub, k) {
-  if (ad === null) return crypto_aead_chacha20poly1305_ietf_encrypt(c, mac, m, new Uint8Array(0), nsec, npub, k)
+  if (ad === null) return crypto_aead_chacha20poly1305_ietf_encrypt_detached(c, mac, m, new Uint8Array(0), nsec, npub, k)
 
   assert(c.byteLength === m.byteLength, 'ciphertext should be same length than message')
   assert(npub.byteLength === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
@@ -91,7 +91,7 @@ function crypto_aead_chacha20poly1305_ietf_decrypt (m, nsec, c, ad, npub, k) {
 }
 
 function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad, npub, k) {
-  if (ad === null) return crypto_aead_chacha20poly1305_ietf_decrypt(m, nsec, c, mac, new Uint8Array(0), npub, k)
+  if (ad === null) return crypto_aead_chacha20poly1305_ietf_decrypt_detached(m, nsec, c, mac, new Uint8Array(0), npub, k)
 
   assert(c.byteLength === m.byteLength, 'message should be same length than ciphertext')
   assert(npub.byteLength === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
