@@ -8,6 +8,9 @@ const {
   inv25519, unpack25519
 } = require('./internal/ed25519')
 const { randombytes } = require('./randombytes')
+const { crypto_scalarmult_BYTES } = require('./crypto_scalarmult.js')
+const { crypto_hash_sha512_BYTES } = require('./crypto_hash.js')
+const assert = require('nanoassert')
 
 const crypto_sign_ed25519_PUBLICKEYBYTES = 32
 const crypto_sign_ed25519_SECRETKEYBYTES = 64
@@ -35,6 +38,7 @@ module.exports = {
   crypto_sign_ed25519_SEEDBYTES,
   crypto_sign_ed25519_BYTES,
   crypto_sign_ed25519_pk_to_curve25519,
+  crypto_sign_ed25519_sk_to_curve25519,
   unpackneg,
   pack
 }
@@ -376,9 +380,10 @@ function crypto_sign_ed25519_pk_to_curve25519 (x25519_pk, ed25519_pk) {
   var x = gf([1])
   var one_minus_y = gf([1])
 
-  if (isSmallOrder(ed25519_pk) !== 0 ||
-      unpackneg(a, ed25519_pk) !== 0 ||
-      !ed25519_is_on_main_subgroup(a)) return -1
+  assert(
+    isSmallOrder(ed25519_pk) &&
+    unpackneg(a, ed25519_pk) &&
+    ed25519_is_on_main_subgroup(a), 'Cannot convert key: bad point')
 
   for (let i = 0; i < a.length; i++) {
     pack25519(x25519_pk, a[i]);
@@ -452,7 +457,7 @@ function isSmallOrder (s) {
     k |= (c[i] - 1)
   }
 
-  return ((k >> 8) & 1)
+  return ((k >> 8) & 1) === 0
 }
 
 function crypto_sign_ed25519_sk_to_pk (pk, sk) {
@@ -462,8 +467,8 @@ function crypto_sign_ed25519_sk_to_pk (pk, sk) {
 }
 
 function crypto_sign_ed25519_sk_to_curve25519 (curveSk, edSk) {
-  check(curveSk, crypto_sign_SECRETKEYBYTES)
-  check(edSk, crypto_sign_ed25519_SECRETKEYBYTES)
+  assert(curveSk && curveSk.byteLength === crypto_scalarmult_BYTES, "curveSk must be 'crypto_sign_SECRETKEYBYTES' long")
+  assert(edSk && edSk.byteLength === crypto_sign_ed25519_SECRETKEYBYTES, "edSk must be 'crypto_sign_ed25519_SECRETKEYBYTES' long")
 
   var h = Buffer.alloc(crypto_hash_sha512_BYTES);
   crypto_hash(h, edSk, 32)
@@ -472,12 +477,12 @@ function crypto_sign_ed25519_sk_to_curve25519 (curveSk, edSk) {
   h[31] &= 127;
   h[31] |= 64;
 
-  curveSk.set(edSk)
+  curveSk.set(h.subarray(0, crypto_scalarmult_BYTES))
   h.fill(0)
   return curveSk
 }
 
 
-function check (buf, len) {
-  if (!buf || (len && buf.length < len)) throw new Error('Argument must be a buffer' + (len ? ' of length ' + len : ''))
+function check (buf, len, arg = 'Argument') {
+  if (!buf || (len && buf.length < len)) throw new Error(arg + ' must be a buffer' + (len ? ' of length ' + len : ''))
 }
