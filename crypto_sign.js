@@ -145,6 +145,8 @@ function crypto_sign_keypair (pk, sk, seeded) {
   pack(pk, p)
 
   for (i = 0; i < 32; i++) sk[i + 32] = pk[i]
+
+  return 0
 }
 
 function crypto_sign_seed_keypair (pk, sk, seed) {
