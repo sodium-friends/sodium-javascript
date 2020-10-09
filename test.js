@@ -1,3 +1,3 @@
 require('sodium-test')(require('.'))
 
-if (typeof window !== 'undefined') window.close()
+if ((typeof window !== 'undefined') && window.close) window.close()
