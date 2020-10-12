@@ -1,43 +1,54 @@
 const assert = require('nanoassert')
 const sodium = require('./')
-const wasm = require('./fe25519_25/mult.js')({
+
+const debug = {
+  log (...args) {
+    console.log(...args.map(int => (int >>> 0).toString(16).padStart(8, '0')))
+  },
+  log_tee (arg) {
+    console.log((arg >>> 0).toString(16).padStart(8, '0'))
+    return arg
+  }
+}
+
+const wasm_mul = require('./fe25519_25/fe25519_mul')({
+  imports: { debug }
+})
+const wasm_sq = require('./fe25519_25/fe25519_sq')({
+  imports: { debug }
+})
+const wasm_invert = require('./fe25519_25/fe25519_invert')({
+  imports: { debug }
+})
+const wasm_pow = require('./fe25519_25/fe25519_pow22523')({
+  imports: { debug }
+})
+
+const tbl = new WebAssembly.Table({ initial: 2, element: "anyfunc" })
+
+const wasm_sc_red = require('./fe25519_25/sc_reduce')({
   imports: {
-    debug: {
-      log (...args) {
-        console.log(...args.map(int => (int >>> 0).toString(16).padStart(8, '0')))
-      },
-      log_tee (arg) {
-        console.log((arg >>> 0).toString(16).padStart(8, '0'))
-        return arg
-      }
+    debug,
+    js: {
+      table: tbl
     }
   }
 })
 
-const wasm3 = require('./fe25519_25/fe25519_invert')({
+const wasm_sc_mul = require('./fe25519_25/sc25519_mul')({
   imports: {
-    debug: {
-      log (...args) {
-        console.log(...args.map(int => (int >>> 0).toString(16).padStart(8, '0')))
-      },
-      log_tee (arg) {
-        console.log((arg >>> 0).toString(16).padStart(8, '0'))
-        return arg
-      }
+    debug,
+    js: {
+      table: tbl
     }
   }
 })
 
-const wasm2 = require('./fe25519_25/fe25519_pow22523')({
+const wasm_sc_muladd = require('./fe25519_25/sc25519_muladd')({
   imports: {
-    debug: {
-      log (...args) {
-        console.log(...args.map(int => (int >>> 0).toString(16).padStart(8, '0')))
-      },
-      log_tee (arg) {
-        console.log((arg >>> 0).toString(16).padStart(8, '0'))
-        return arg
-      }
+    debug,
+    js: {
+      table: tbl
     }
   }
 })
@@ -45,10 +56,10 @@ const wasm2 = require('./fe25519_25/fe25519_pow22523')({
 function fe25519_invert (h, f) {
   var buf = Buffer.from(f.buffer)
 
-  wasm3.memory.set(buf)
-  wasm3.exports.fe25519_invert(40, 0)
+  wasm_invert.memory.set(buf)
+  wasm_invert.exports.fe25519_invert(40, 0)
 
-  buf = Buffer.from(wasm3.memory.slice(40, 80))
+  buf = Buffer.from(wasm_invert.memory.slice(40, 80))
   for (let i = 0; i < 10; i++) {
     h[i] = buf.readUInt32LE(4 * i)
   }
@@ -57,16 +68,15 @@ function fe25519_invert (h, f) {
 function fe25519_pow22523 (h, f) {
   var buf = Buffer.from(f.buffer)
 
-  wasm2.memory.set(buf)
-  wasm2.exports.fe25519_pow22523(40, 0)
+  wasm_pow.memory.set(buf)
+  wasm_pow.exports.fe25519_pow22523(40, 0)
 
-  buf = Buffer.from(wasm2.memory.slice(40, 80))
+  buf = Buffer.from(wasm_pow.memory.slice(40, 80))
   for (let i = 0; i < 10; i++) {
     h[i] = buf.readUInt32LE(4 * i)
   }
 }
 
-console.log(wasm.buffer.byteLength)
 const base = require('./fe25519_25/base.json').map(a => a.map(b => ge2(b)))
 const printbuf =Buffer.alloc(32)
 
@@ -147,14 +157,11 @@ const ed25519_sqrtam2 = fe25519([
 ])
 
 function print_ge (g, n = 4) {
-  console.log('__________\n')
   for (let i = 0; i < n; i++) for (let j = 0; j <10; j++) console.log(`g[${i}][${j}]:`, signedInt(g[i][j]).toString(16).padStart(8, '0'))
 }
 
 function print_fe (f) {
   for (let j = 0; j <10; j++) console.log(`f[${j}]:`, signedInt(f[j]).toString(16).padStart(8, '0'))
-  console.log('__________\n')
-  console.log('__________\n')
 }
 
 function fe25519 (arr) {
@@ -774,11 +781,11 @@ function fe25519_mul (h, f, g) {
   var fbuf = Buffer.from(f.buffer)
   var gbuf = Buffer.from(g.buffer)
 
-  wasm.memory.set(fbuf)
-  wasm.memory.set(gbuf, 40)
-  wasm.exports.fe25519_mul(80, 0, 40)
+  wasm_mul.memory.set(fbuf)
+  wasm_mul.memory.set(gbuf, 40)
+  wasm_mul.exports.fe25519_mul(80, 0, 40)
 
-  buf = Buffer.from(wasm.memory.slice(80, 120))
+  buf = Buffer.from(wasm_mul.memory.slice(80, 120))
   for (let i = 0; i < 10; i++) {
     h[i] = buf.readUInt32LE(4 * i)
   }
@@ -801,10 +808,10 @@ function fe25519_sq (h, f, log) {
 
   var buf = Buffer.from(f.buffer)
 
-  wasm.memory.set(buf)
-  wasm.exports.fe25519_sq(40, 0, 0)
+  wasm_sq.memory.set(buf)
+  wasm_sq.exports.sq(40, 0, 0)
 
-  buf = Buffer.from(wasm.memory.slice(40, 80))
+  buf = Buffer.from(wasm_sq.memory.slice(40, 80))
   for (let i = 0; i < 10; i++) {
     h[i] = buf.readUInt32LE(4 * i)
   }
@@ -827,10 +834,10 @@ function fe25519_sq2 (h, f) {
 
   var buf = Buffer.from(f.buffer)
 
-  wasm.memory.set(buf)
-  wasm.exports.fe25519_sq(40, 0, 1)
+  wasm_sq.memory.set(buf)
+  wasm_sq.exports.sq(40, 0, 1)
 
-  buf = Buffer.from(wasm.memory.slice(40, 80))
+  buf = Buffer.from(wasm_sq.memory.slice(40, 80))
   for (let i = 0; i < 10; i++) {
     h[i] = buf.readUInt32LE(4 * i)
   }
@@ -2093,12 +2100,12 @@ function sc25519_mul (s, a, b) {
   const abuf = new Uint8Array(_a.buffer)
   const bbuf = new Uint8Array(_b.buffer)
 
-  wasm.memory.set(abuf, 0)
-  wasm.memory.set(bbuf, 48)
+  wasm_sc_mul.memory.set(abuf, 0)
+  wasm_sc_mul.memory.set(bbuf, 48)
 
-  wasm.exports.sc25519_mul(96, 0, 48)
+  wasm_sc_mul.exports.sc25519_mul(96, 0, 48)
 
-  s.set(wasm.memory.slice(96, 128))
+  s.set(wasm_sc_mul.memory.slice(96, 128))
 }
 
 function sc25519_muladd (s, a, b, c) {
@@ -2154,13 +2161,13 @@ function sc25519_muladd (s, a, b, c) {
   const bbuf = new Uint8Array(_b.buffer)
   const cbuf = new Uint8Array(_c.buffer)
 
-  wasm.memory.set(abuf, 0)
-  wasm.memory.set(bbuf, 48)
-  wasm.memory.set(cbuf, 96)
+  wasm_sc_muladd.memory.set(abuf, 0)
+  wasm_sc_muladd.memory.set(bbuf, 48)
+  wasm_sc_muladd.memory.set(cbuf, 96)
 
-  wasm.exports.sc25519_muladd(144, 0, 48, 96)
+  wasm_sc_muladd.exports.sc25519_muladd(144, 0, 48, 96)
 
-  s.set(wasm.memory.slice(144, 176))
+  s.set(wasm_sc_muladd.memory.slice(144, 176))
 }
 
 /*
@@ -2303,12 +2310,12 @@ function sc25519_reduce (s) {
   _s[23] = load_4(s, 60) >>> 3
 
   var sbuf = Buffer.from(_s.buffer)
-  wasm.memory.set(sbuf, 0)
+  wasm_sc_red.memory.set(sbuf, 0)
 
-  wasm.exports.sc25519_reduce(0)
+  wasm_sc_red.exports.sc25519_reduce(0)
 
   s.fill(0)
-  s.set(wasm.memory.slice(0, 32))
+  s.set(wasm_sc_red.memory.slice(0, 32))
 }
 
 function sc25519_is_canonical (s) {

@@ -1,9 +1,12 @@
 (module
+  (import "js" "table" (table 1 anyfunc))
+  (elem (i32.const 0) $sc_reduce)
+
   (memory $0 1)
   (export "memory" (memory $0))
-  
+
   (func $sc_reduce (export "sc_reduce")
-    (param $ptr i32)
+    (param $s i32)
 
     (param $s0 i64)
     (param $s1 i64)
@@ -29,6 +32,24 @@
     (param $s21 i64)
     (param $s22 i64)
     (param $s23 i64)
+
+    (local $carry0 i64)
+    (local $carry1 i64)
+    (local $carry2 i64)
+    (local $carry3 i64)
+    (local $carry4 i64)
+    (local $carry5 i64)
+    (local $carry6 i64)
+    (local $carry7 i64)
+    (local $carry8 i64)
+    (local $carry9 i64)
+    (local $carry10 i64)
+    (local $carry11 i64)
+    (local $carry12 i64)
+    (local $carry13 i64)
+    (local $carry14 i64)
+    (local $carry15 i64)
+    (local $carry16 i64)
 
     (set_local $s11 (i64.add (get_local $s11) (i64.mul (get_local $s23) (i64.const 666643))))
     (set_local $s12 (i64.add (get_local $s12) (i64.mul (get_local $s23) (i64.const 470296))))

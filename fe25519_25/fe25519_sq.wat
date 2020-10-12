@@ -3,6 +3,7 @@
   (export "memory" (memory $0))
 
   (func $sq (export "sq") (param $h i32) (param $f i32) (param $double i32) (param $repeat i32)
+    (local $count i32)
     (local $tmp i64)
     
     (local $f0 i64)
@@ -122,16 +123,16 @@
 
     (block $end
         (loop $again
-            (set_local $f0 (i64.extend32_s (get_local $f0)))
-            (set_local $f1 (i64.extend32_s (get_local $f1)))
-            (set_local $f2 (i64.extend32_s (get_local $f2)))
-            (set_local $f3 (i64.extend32_s (get_local $f3)))
-            (set_local $f4 (i64.extend32_s (get_local $f4)))
-            (set_local $f5 (i64.extend32_s (get_local $f5)))
-            (set_local $f6 (i64.extend32_s (get_local $f6)))
-            (set_local $f7 (i64.extend32_s (get_local $f7)))
-            (set_local $f8 (i64.extend32_s (get_local $f8)))
-            (set_local $f9 (i64.extend32_s (get_local $f9)))
+            (set_local $f0 (i64.extend_s/i32 (i32.wrap/i64 (get_local $f0))))
+            (set_local $f1 (i64.extend_s/i32 (i32.wrap/i64 (get_local $f1))))
+            (set_local $f2 (i64.extend_s/i32 (i32.wrap/i64 (get_local $f2))))
+            (set_local $f3 (i64.extend_s/i32 (i32.wrap/i64 (get_local $f3))))
+            (set_local $f4 (i64.extend_s/i32 (i32.wrap/i64 (get_local $f4))))
+            (set_local $f5 (i64.extend_s/i32 (i32.wrap/i64 (get_local $f5))))
+            (set_local $f6 (i64.extend_s/i32 (i32.wrap/i64 (get_local $f6))))
+            (set_local $f7 (i64.extend_s/i32 (i32.wrap/i64 (get_local $f7))))
+            (set_local $f8 (i64.extend_s/i32 (i32.wrap/i64 (get_local $f8))))
+            (set_local $f9 (i64.extend_s/i32 (i32.wrap/i64 (get_local $f9))))
 
             (set_local $f0_2 (i64.mul (i64.const 2 (get_local $f0))))
             (set_local $f1_2 (i64.mul (i64.const 2 (get_local $f1))))

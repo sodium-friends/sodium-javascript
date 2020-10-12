@@ -1,6 +1,6 @@
 const ec = require('./fe25519_25.js')
 const sodium = require('./')
-const wasm = require('./fe25519_25/fe25519_invert')({
+const invert = require('./fe25519_25/fe25519_invert')({
   imports: {
     debug: {
       log (...args) {
@@ -13,7 +13,7 @@ const wasm = require('./fe25519_25/fe25519_invert')({
     }
   }
 })
-const wasm2 = require('./fe25519_25/fe25519_pow22523')({
+const pow = require('./fe25519_25/fe25519_pow22523')({
   imports: {
     debug: {
       log (...args) {
@@ -39,10 +39,10 @@ var r = ec.ge3()
 function wasm_inv (h, f) {
   var buf = Buffer.from(f.buffer)
 
-  wasm.memory.set(buf)
-  wasm.exports.fe25519_invert(40, 0)
+  invert.memory.set(buf)
+  invert.exports.fe25519_invert(40, 0)
 
-  buf = Buffer.from(wasm.memory.slice(40, 80))
+  buf = Buffer.from(invert.memory.slice(40, 80))
   for (let i = 0; i < 10; i++) {
     h[i] = buf.readUInt32LE(4 * i)
   }
@@ -51,10 +51,10 @@ function wasm_inv (h, f) {
 function wasm_pow (h, f) {
   var buf = Buffer.from(f.buffer)
 
-  wasm2.memory.set(buf)
-  wasm2.exports.fe25519_pow22523(40, 0)
+  pow.memory.set(buf)
+  pow.exports.fe25519_pow22523(40, 0)
 
-  buf = Buffer.from(wasm2.memory.slice(40, 80))
+  buf = Buffer.from(pow.memory.slice(40, 80))
   for (let i = 0; i < 10; i++) {
     h[i] = buf.readUInt32LE(4 * i)
   }
@@ -171,65 +171,63 @@ console.timeEnd('standard')
 ec.fe25519_tobytes(res, b)
 console.log('tess  :', res.toString('hex'))
 
-console.log(wasm.buffer.length)
-
-console.time('pure wasm')
+console.time('pure invert')
 for (let i = 0; i < 10000; i++) wasm_pow(b, a)
-console.timeEnd('pure wasm')
+console.timeEnd('pure invert')
 ec.fe25519_tobytes(res, b)
 console.log('tess  :', res.toString('hex'))
 
-// ec.fe25519_pow22523(a, a)
-// ec.fe25519_tobytes(res, a)
-// console.log('fe_p25:', res.toString('hex'))
+ec.fe25519_pow22523(a, a)
+ec.fe25519_tobytes(res, a)
+console.log('fe_p25:', res.toString('hex'))
 
-// ec.fe25519_cneg(a, a, 1)
-// ec.fe25519_tobytes(res, a)
-// console.log('fe_cng:', res.toString('hex'))
+ec.fe25519_cneg(a, a, 1)
+ec.fe25519_tobytes(res, a)
+console.log('fe_cng:', res.toString('hex'))
 
-// ec.sc25519_mul(res, an, bn)
-// console.log('sc_mul:', res.toString('hex'))
+ec.sc25519_mul(res, an, bn)
+console.log('sc_mul:', res.toString('hex'))
 
-// ec.sc25519_muladd(res, an, bn, cn)
-// console.log('sc_mad:', res.toString('hex'))
+ec.sc25519_muladd(res, an, bn, cn)
+console.log('sc_mad:', res.toString('hex'))
 
-// ec.sc25519_reduce(s)
-// console.log('sc_red:', s.subarray(0, 32).toString('hex'))
+ec.sc25519_reduce(s)
+console.log('sc_red:', s.subarray(0, 32).toString('hex'))
 
-// ec.sc25519_invert(res, cn)
-// console.log('sc_inv:', res.toString('hex'))
+ec.sc25519_invert(res, cn)
+console.log('sc_inv:', res.toString('hex'))
 
-// ec.ge25519_mont_to_ed(g, c, a, b)
-// ec.fe25519_tobytes(res, g)
-// console.log('g_m2ex:', res.toString('hex'))
-// ec.fe25519_tobytes(res, c)
-// console.log('g_m2ey:', res.toString('hex'))
+ec.ge25519_mont_to_ed(g, c, a, b)
+ec.fe25519_tobytes(res, g)
+console.log('g_m2ex:', res.toString('hex'))
+ec.fe25519_tobytes(res, c)
+console.log('g_m2ey:', res.toString('hex'))
 
-// ec.ge25519_frombytes(ge, p)
-// ec.ge25519_p3_tobytes(res, ge)
-// console.log("p     :", res.toString('hex'))
+ec.ge25519_frombytes(ge, p)
+ec.ge25519_p3_tobytes(res, ge)
+console.log("p     :", res.toString('hex'))
 
-// ec.ge25519_mul_l(gf, ge)
-// ec.ge25519_p3_tobytes(res, gf)
-// console.log("mul_l :", res.toString('hex'))
+ec.ge25519_mul_l(gf, ge)
+ec.ge25519_p3_tobytes(res, gf)
+console.log("mul_l :", res.toString('hex'))
 
-// ec.ge25519_scalarmult_base(gf, cn)
-// ec.ge25519_p3_tobytes(res, gf)
-// console.log("smultb:", res.toString('hex'))
+ec.ge25519_scalarmult_base(gf, cn)
+ec.ge25519_p3_tobytes(res, gf)
+console.log("smultb:", res.toString('hex'))
 
-// ec.ge25519_scalarmult(ge, bn, gf)
-// ec.ge25519_p3_tobytes(res, ge)
-// console.log("smult :", res.toString('hex'))
+ec.ge25519_scalarmult(ge, bn, gf)
+ec.ge25519_p3_tobytes(res, ge)
+console.log("smult :", res.toString('hex'))
 
-// ec.ge25519_double_scalarmult_vartime(gf, an, ge, bn)
-// ec.ge25519_p3_tobytes(res, gf)
-// console.log("smdbl :", res.toString('hex'))
+ec.ge25519_double_scalarmult_vartime(gf, an, ge, bn)
+ec.ge25519_p3_tobytes(res, gf)
+console.log("smdbl :", res.toString('hex'))
 
-// ec.ge25519_frombytes_negate_vartime(gf, pk_test)
-// ec.ge25519_p3_tobytes(res, gf)
-// console.log("smdbl :", res.toString('hex'))
+ec.ge25519_frombytes_negate_vartime(gf, pk_test)
+ec.ge25519_p3_tobytes(res, gf)
+console.log("smdbl :", res.toString('hex'))
 
-// console.log('canon :', ec.sc25519_is_canonical(bn))
+console.log('canon :', ec.sc25519_is_canonical(bn))
 
 /////////////////////////////////////////////////////
 
