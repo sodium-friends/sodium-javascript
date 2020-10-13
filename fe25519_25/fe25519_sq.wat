@@ -1,21 +1,29 @@
 (module
+  (import "js" "table" (table 1 anyfunc))
+  (elem (i32.const 2) $fe_sq)
+
   (memory $0 1)
   (export "memory" (memory $0))
 
-  (func $sq (export "sq") (param $h i32) (param $f i32) (param $double i32) (param $repeat i32)
+  (func $fe_sq 
+    (param $f0 i64)
+    (param $f1 i64)
+    (param $f2 i64)
+    (param $f3 i64)
+    (param $f4 i64)
+    (param $f5 i64)
+    (param $f6 i64)
+    (param $f7 i64)
+    (param $f8 i64)
+    (param $f9 i64)
+    
+    (param $double i32)
+    (param $repeat i32)
+    
+    (param $h i32)
+
     (local $count i32)
     (local $tmp i64)
-    
-    (local $f0 i64)
-    (local $f1 i64)
-    (local $f2 i64)
-    (local $f3 i64)
-    (local $f4 i64)
-    (local $f5 i64)
-    (local $f6 i64)
-    (local $f7 i64)
-    (local $f8 i64)
-    (local $f9 i64)
 
     (local $h0 i64)
     (local $h1 i64)
@@ -109,17 +117,6 @@
     (local $f8f8_19 i64)
     (local $f8f9_38 i64)
     (local $f9f9_38 i64)
-
-    (set_local $f0 (i64.load32_u offset=0  (get_local $f)))
-    (set_local $f1 (i64.load32_u offset=4  (get_local $f)))
-    (set_local $f2 (i64.load32_u offset=8  (get_local $f)))
-    (set_local $f3 (i64.load32_u offset=12 (get_local $f)))
-    (set_local $f4 (i64.load32_u offset=16 (get_local $f)))
-    (set_local $f5 (i64.load32_u offset=20 (get_local $f)))
-    (set_local $f6 (i64.load32_u offset=24 (get_local $f)))
-    (set_local $f7 (i64.load32_u offset=28 (get_local $f)))
-    (set_local $f8 (i64.load32_u offset=32 (get_local $f)))
-    (set_local $f9 (i64.load32_u offset=36 (get_local $f)))
 
     (block $end
         (loop $again
@@ -285,4 +282,20 @@
     (i64.store32 offset=24 (get_local $h) (get_local $h6))
     (i64.store32 offset=28 (get_local $h) (get_local $h7))
     (i64.store32 offset=32 (get_local $h) (get_local $h8))
-    (i64.store32 offset=36 (get_local $h) (get_local $h9))))
+    (i64.store32 offset=36 (get_local $h) (get_local $h9)))
+    
+  (func $sq (export "sq")  (param $f i32) (param $double i32) (param $repeat i32) (param $h i32)
+    (i64.load32_u offset=0  (get_local $f))
+    (i64.load32_u offset=4  (get_local $f))
+    (i64.load32_u offset=8  (get_local $f))
+    (i64.load32_u offset=12 (get_local $f))
+    (i64.load32_u offset=16 (get_local $f))
+    (i64.load32_u offset=20 (get_local $f))
+    (i64.load32_u offset=24 (get_local $f))
+    (i64.load32_u offset=28 (get_local $f))
+    (i64.load32_u offset=32 (get_local $f))
+    (i64.load32_u offset=36 (get_local $f))
+    (get_local $double)
+    (get_local $repeat)
+    (get_local $h)
+    (call $fe_sq)))
