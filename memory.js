@@ -1,13 +1,20 @@
 /* eslint-disable camelcase */
 var MessageChannel = global.MessageChannel
-if (MessageChannel == null) ({ MessageChannel } = require('worker' + '_threads'))
+if (MessageChannel == null) {
+  try {
+    ({ MessageChannel } = require('worker' + '_threads'))
+  } catch (e) {
+    // Must not be supported
+  }
+}
 
 function sodium_malloc (n) {
   return new Uint8Array(n)
 }
 
-const sink = new MessageChannel()
+const sink = MessageChannel ? new MessageChannel() : null
 function sodium_free (n) {
+  if (!sink) return
   sodium_memzero(n)
   sink.port1.postMessage(n.buffer, [n.buffer])
 }
