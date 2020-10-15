@@ -6,6 +6,7 @@ module.exports = {
   crypto_scalarmult_ed25519,
   crypto_scalarmult_ed25519_base,
   crypto_scalarmult_curve25519,
+  crypto_scalarmult_curve25519_1,
   crypto_scalarmult_curve25519_base
 }
 
@@ -284,6 +285,44 @@ function crypto_scalarmult_curve25519 (q, n, p) {
     ec.fe25519_mul(z3, x1, z2)
     ec.fe25519_mul(z2, tmp1, tmp0)
   }
+  ec.fe25519_cswap(x2, x3, swap)
+  ec.fe25519_cswap(z2, z3, swap)
+
+  ec.fe25519_invert(z2, z2)
+  ec.fe25519_mul(x2, x2, z2)
+  ec.fe25519_tobytes(q, x2)
+
+  return 0
+}
+
+function crypto_scalarmult_curve25519_1 (q, n, p) {
+  var t = q.slice()
+  var i
+  var x1 = ec.fe25519()
+  var x2 = ec.fe25519()
+  var z2 = ec.fe25519()
+  var x3 = ec.fe25519()
+  var z3 = ec.fe25519()
+  var pos
+  var swap
+  var b
+
+  if (has_small_order(p)) {
+    return -1;
+  }
+  for (i = 0; i < 32; i++) {
+    t[i] = n[i]
+  }
+  t[0] &= 248
+  t[31] &= 127
+  t[31] |= 64
+  ec.fe25519_frombytes(x1, p)
+  ec.fe25519_1(x2)
+  ec.fe25519_0(z2)
+  ec.fe25519_copy(x3, x1)
+  ec.fe25519_1(z3)
+
+  swap = ec.scalarmult_curve25519_inner_loop(x1, x2, x3, z2, z3, t)
   ec.fe25519_cswap(x2, x3, swap)
   ec.fe25519_cswap(z2, z3, swap)
 

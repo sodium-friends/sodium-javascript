@@ -11,50 +11,26 @@ const debug = {
   }
 }
 
-const wasm_mul = require('./fe25519_25/fe25519_mul')({
-  imports: { debug }
-})
-const wasm_sq = require('./fe25519_25/fe25519_sq')({
-  imports: { debug }
-})
-const wasm_invert = require('./fe25519_25/fe25519_invert')({
-  imports: { debug }
-})
-const wasm_pow = require('./fe25519_25/fe25519_pow22523')({
-  imports: { debug }
-})
-
-const tbl = new WebAssembly.Table({ initial: 2, element: "anyfunc" })
-
-const wasm_sc_red = require('./fe25519_25/sc_reduce')({
-  imports: {
-    debug,
+const importObject = {
+  imports: { 
     js: {
-      table: tbl
-    }
+      table: new WebAssembly.Table({ initial: 3, element: "anyfunc" })
+    },
+    debug
   }
-})
+}
 
-const wasm_sc_mul = require('./fe25519_25/sc25519_mul')({
-  imports: {
-    debug,
-    js: {
-      table: tbl
-    }
-  }
-})
-
-const wasm_sc_muladd = require('./fe25519_25/sc25519_muladd')({
-  imports: {
-    debug,
-    js: {
-      table: tbl
-    }
-  }
-})
+const wasm_mul = require('./fe25519_25/fe25519_mul')(importObject)
+const wasm_sq = require('./fe25519_25/fe25519_sq')(importObject)
+const wasm_invert = require('./fe25519_25/fe25519_invert')()
+const wasm_pow = require('./fe25519_25/fe25519_pow22523')()
+const wasm_sc_red = require('./fe25519_25/sc_reduce')(importObject)
+const wasm_sc_mul = require('./fe25519_25/sc25519_mul')(importObject)
+const wasm_sc_muladd = require('./fe25519_25/sc25519_muladd')(importObject)
+const wasm_scalaramult_internal = require('./fe25519_25/scalarmult_curve25519')(importObject)
 
 function fe25519_invert (h, f) {
-  var buf = Buffer.from(f.buffer)
+  var buf = new Uint8Array(f.buffer)
 
   wasm_invert.memory.set(buf)
   wasm_invert.exports.fe25519_invert(40, 0)
@@ -63,15 +39,21 @@ function fe25519_invert (h, f) {
   for (let i = 0; i < 10; i++) {
     h[i] = buf.readUInt32LE(4 * i)
   }
+  for (let i = 0; i < 10; i++) {
+    h[i] = buf.readUInt32LE(4 * i)
+  }
 }
 
 function fe25519_pow22523 (h, f) {
-  var buf = Buffer.from(f.buffer)
+  var buf = new Uint8Array(f.buffer)
 
   wasm_pow.memory.set(buf)
   wasm_pow.exports.fe25519_pow22523(40, 0)
 
   buf = Buffer.from(wasm_pow.memory.slice(40, 80))
+  for (let i = 0; i < 10; i++) {
+    h[i] = buf.readUInt32LE(4 * i)
+  }
   for (let i = 0; i < 10; i++) {
     h[i] = buf.readUInt32LE(4 * i)
   }
@@ -104,9 +86,10 @@ module.exports = {
   fe25519_sq,
   fe25519_sqmul,
   fe25519_sq2,
-  fe25519_invert: fe25519_invert,
-  fe25519_pow22523: fe25519_pow22523,
-  fe25519_unchecked_sqrt,
+  fe25519_invert,
+  fe25519_invert_1,
+  fe25519_pow22523,
+  fe25519_pow22523_1,
   fe25519_sqrt,
   ge25519_has_small_order,
   ge25519_frombytes,
@@ -132,6 +115,7 @@ module.exports = {
   ge25519_elligator2,
   ge25519_from_uniform,
   ge25519_from_hash,
+  scalarmult_curve25519_inner_loop,
   ristretto255_sqrt_ratio_m1,
   ristretto255_is_canonical,
   ristretto255_frombytes,
@@ -778,8 +762,8 @@ function fe25519_mul (h, f, g) {
   // printFe(f, 'f')
   // printFe(g, 'g')
 
-  var fbuf = Buffer.from(f.buffer)
-  var gbuf = Buffer.from(g.buffer)
+  var fbuf = new Uint8Array(f.buffer)
+  var gbuf = new Uint8Array(g.buffer)
 
   wasm_mul.memory.set(fbuf)
   wasm_mul.memory.set(gbuf, 40)
@@ -806,7 +790,7 @@ function fe25519_sq (h, f, log) {
   check_fe(h)
   check_fe(f)
 
-  var buf = Buffer.from(f.buffer)
+  var buf = new Uint8Array(f.buffer)
 
   wasm_sq.memory.set(buf)
   wasm_sq.exports.sq(40, 0, 0)
@@ -832,7 +816,7 @@ function fe25519_sq2 (h, f) {
   check_fe(h)
   check_fe(f)
 
-  var buf = Buffer.from(f.buffer)
+  var buf = new Uint8Array(f.buffer)
 
   wasm_sq.memory.set(buf)
   wasm_sq.exports.sq(40, 0, 1)
@@ -998,7 +982,6 @@ function fe25519_sqrt (x, x2) {
 
   fe25519_copy(x2_copy, x2)
   fe25519_unchecked_sqrt(x, x2)
-  console.log(x, 'sqrt')
   fe25519_sq(check, x)
   fe25519_sub(check, check, x2_copy)
 
@@ -2309,7 +2292,7 @@ function sc25519_reduce (s) {
   _s[22] = 2097151 & (load_4(s, 57) >>> 6)
   _s[23] = load_4(s, 60) >>> 3
 
-  var sbuf = Buffer.from(_s.buffer)
+  var sbuf = new Uint8Array(_s.buffer)
   wasm_sc_red.memory.set(sbuf, 0)
 
   wasm_sc_red.exports.sc25519_reduce(0)
@@ -2833,6 +2816,48 @@ function ristretto255_from_hash (s, h) {
   ge25519_add_cached(p_p1p1, p0, p1_cached)
   ge25519_p1p1_to_p3(p, p_p1p1)
   ristretto255_p3_tobytes(s, p)
+}
+
+function scalarmult_curve25519_inner_loop (x1, x2, x3, z2, z3, t) {
+  check_fe(x1)
+  check_fe(x2)
+  check_fe(x3)
+  check_fe(z2)
+  check_fe(z3)
+  assert(t instanceof Uint8Array && t.byteLength === 32)
+
+  // printFe(f, 'f')
+  // printFe(g, 'g')
+  const x1buf = new Uint8Array(x1.buffer)
+  const x2buf = new Uint8Array(x2.buffer)
+  const x3buf = new Uint8Array(x3.buffer)
+  const z2buf = new Uint8Array(z2.buffer)
+  const z3buf = new Uint8Array(z3.buffer)
+  const tbuf = new Uint8Array(t.buffer)
+
+  wasm_scalaramult_internal.memory.set(x1buf, 0)
+  wasm_scalaramult_internal.memory.set(x2buf, 40)
+  wasm_scalaramult_internal.memory.set(x3buf, 80)
+  wasm_scalaramult_internal.memory.set(z2buf, 120)
+  wasm_scalaramult_internal.memory.set(z3buf, 160)
+  wasm_scalaramult_internal.memory.set(tbuf, 200)
+  const swap = wasm_scalaramult_internal.exports.scalarmult(0, 40, 80, 120, 160, 200, 240, 280, 320, 360)
+
+  buf = Buffer.from(wasm_scalaramult_internal.memory.slice(240, 400))
+  for (let i = 0; i < 10; i++) {
+    x2[i] = buf.readInt32LE(4 * i)
+  }
+  for (let i = 10; i < 20; i++) {
+    x3[i % 10] = buf.readInt32LE(4 * i)
+  }
+  for (let i = 20; i < 30; i++) {
+    z2[i % 10] = buf.readInt32LE(4 * i)
+  }
+  for (let i = 30; i < 40; i++) {
+    z3[i % 10] = buf.readInt32LE(4 * i)
+  }
+
+  return swap
 }
 
 function check_fe (h) {

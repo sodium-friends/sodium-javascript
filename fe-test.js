@@ -165,14 +165,14 @@ console.log('tess  :', res.toString('hex'))
 
 
 console.time('standard')
-for (let i = 0; i < 10000; i++) ec.fe25519_pow22523(b, a)
+for (let i = 0; i < 10000; i++) ec.fe25519_invert(b, a)
 console.timeEnd('standard')
 
 ec.fe25519_tobytes(res, b)
 console.log('tess  :', res.toString('hex'))
 
 console.time('pure invert')
-for (let i = 0; i < 10000; i++) wasm_pow(b, a)
+for (let i = 0; i < 10000; i++) ec.fe25519_invert_1(b, a)
 console.timeEnd('pure invert')
 ec.fe25519_tobytes(res, b)
 console.log('tess  :', res.toString('hex'))

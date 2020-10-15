@@ -1,34 +1,6 @@
-(module
-  (func $i32.log (import "debug" "log") (param i32))
-  (func $i32.log_tee (import "debug" "log_tee") (param i32) (result i32))
-  ;; No i64 interop with JS yet - but maybe coming with WebAssembly BigInt
-  ;; So we can instead fake this by splitting the i64 into two i32 limbs,
-  ;; however these are WASM functions using i32x2.log:
-  (func $i32x2.log (import "debug" "log") (param i32) (param i32))
-  (func $f32.log (import "debug" "log") (param f32))
-  (func $f32.log_tee (import "debug" "log_tee") (param f32) (result f32))
-  (func $f64.log (import "debug" "log") (param f64))
-  (func $f64.log_tee (import "debug" "log_tee") (param f64) (result f64))
-  
+(module  
   (memory $0 1)
   (export "memory" (memory $0))
-  
-  ;; i64 logging by splitting into two i32 limbs
-  (func $i64.log
-    (param $0 i64)
-    (call $i32x2.log
-      ;; Upper limb
-      (i32.wrap/i64
-        (i64.shr_s (get_local $0)
-          (i64.const 32)))
-      ;; Lower limb
-      (i32.wrap/i64 (get_local $0))))
-
-  (func $i64.log_tee
-    (param $0 i64)
-    (result i64)
-    (call $i64.log (get_local $0))
-    (return (get_local $0)))
 
   (global $tmp0 (mut i64) (i64.const 0))
   (global $tmp1 (mut i64) (i64.const 0))

@@ -1,5 +1,5 @@
 const sodium = require('./')
-const { crypto_scalarmult_ed25519, crypto_scalarmult_ed25519_base, crypto_scalarmult_curve25519, crypto_scalarmult_curve25519_base } = require('./crypto_scalarmult_ed25519')
+const { crypto_scalarmult_ed25519, crypto_scalarmult_ed25519_base, crypto_scalarmult_curve25519, crypto_scalarmult_curve25519_1, crypto_scalarmult_curve25519_base } = require('./crypto_scalarmult_ed25519')
 const { crypto_sign, crypto_sign_open } = require('./crypto_sign_ed25519')
 
 console.log(crypto_scalarmult_ed25519)
@@ -102,12 +102,23 @@ for (let test of fixtures) {
   sodium.crypto_scalarmult(res, test.sk, test.pk)
 }
 console.timeEnd('hello')
+console.log(res.toString('hex'))
 
+const res1 = Buffer.from(res)
 console.time('ed')
 for (let test of fixtures) {
   crypto_scalarmult_curve25519(res, test.sk, test.pk)
 }
 console.timeEnd('ed')
+
+console.time('wasm')
+for (let test of fixtures) {
+  crypto_scalarmult_curve25519_1(res1, test.sk, test.pk)
+}
+console.timeEnd('wasm')
+
+console.log(res.toString('hex'))
+console.log(res1.toString('hex'))
 
 // console.log(sm.toString('hex'))
 
