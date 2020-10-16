@@ -27,9 +27,6 @@
     "crypto": false,
     "worker_threads": false
   },
-  "react-native": {
-    "crypto": "crypto"
-  },
   "scripts": {
     "pretest": "standard",
     "test": "node test.js",
