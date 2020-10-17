@@ -1,6 +1,10 @@
 const assert = require('nanoassert')
 const sodium = require('./')
 
+const memory = new WebAssembly.Memory({ initial: 1 })
+const mem = Buffer.from(memory.buffer)
+const table = new WebAssembly.Table({ initial: 4, element: "anyfunc" })
+
 const debug = {
   log (...args) {
     console.log(...args.map(int => (int >>> 0).toString(16).padStart(8, '0')))
@@ -14,34 +18,39 @@ const debug = {
 const importObject = {
   imports: { 
     js: {
-      table: new WebAssembly.Table({ initial: 3, element: "anyfunc" })
+      table
     },
     debug
   }
 }
 
-const wasm_mul = require('./fe25519_25/fe25519_mul')(importObject)
-const wasm_sq = require('./fe25519_25/fe25519_sq')(importObject)
-const wasm_invert = require('./fe25519_25/fe25519_invert')()
+const importWithMemory = {
+  imports: {
+    js: {
+      table,
+      mem: memory
+    },
+    debug
+  }
+}
+
+const wasm_mul = require('./fe25519_25/fe25519_mul')(importWithMemory)
+const wasm_sq = require('./fe25519_25/fe25519_sq')(importWithMemory)
+const wasm_invert = require('./fe25519_25/fe25519_invert')(importWithMemory)
 const wasm_pow = require('./fe25519_25/fe25519_pow22523')()
 const wasm_sc_red = require('./fe25519_25/sc_reduce')(importObject)
 const wasm_sc_mul = require('./fe25519_25/sc25519_mul')(importObject)
 const wasm_sc_muladd = require('./fe25519_25/sc25519_muladd')(importObject)
-const wasm_scalaramult_internal = require('./fe25519_25/scalarmult_curve25519')(importObject)
+const wasm_scalaramult_internal = require('./fe25519_25/scalarmult_curve25519')(importWithMemory)
 
 function fe25519_invert (h, f) {
   var buf = new Uint8Array(f.buffer)
 
-  wasm_invert.memory.set(buf)
-  wasm_invert.exports.fe25519_invert(40, 0)
+  // shared memory - invert takes 280 - 360
+  mem.set(buf, 280)
+  wasm_invert.exports.fe25519_invert(320, 280)
 
-  buf = Buffer.from(wasm_invert.memory.slice(40, 80))
-  for (let i = 0; i < 10; i++) {
-    h[i] = buf.readUInt32LE(4 * i)
-  }
-  for (let i = 0; i < 10; i++) {
-    h[i] = buf.readUInt32LE(4 * i)
-  }
+  parse_fe(h, mem, 320)
 }
 
 function fe25519_pow22523 (h, f) {
@@ -765,14 +774,12 @@ function fe25519_mul (h, f, g) {
   var fbuf = new Uint8Array(f.buffer)
   var gbuf = new Uint8Array(g.buffer)
 
-  wasm_mul.memory.set(fbuf)
-  wasm_mul.memory.set(gbuf, 40)
+  // shared memory, mul takes 0 - 120
+  mem.set(fbuf)
+  mem.set(gbuf, 40)
   wasm_mul.exports.fe25519_mul(80, 0, 40)
 
-  buf = Buffer.from(wasm_mul.memory.slice(80, 120))
-  for (let i = 0; i < 10; i++) {
-    h[i] = buf.readUInt32LE(4 * i)
-  }
+  parse_fe(h, mem, 80)
 }
 
 /*
@@ -792,13 +799,11 @@ function fe25519_sq (h, f, log) {
 
   var buf = new Uint8Array(f.buffer)
 
-  wasm_sq.memory.set(buf)
-  wasm_sq.exports.sq(40, 0, 0)
+  // shared memory, mul takes 120 - 200
+  mem.set(buf, 120)
+  wasm_sq.exports.sq(160, 120, 0)
 
-  buf = Buffer.from(wasm_sq.memory.slice(40, 80))
-  for (let i = 0; i < 10; i++) {
-    h[i] = buf.readUInt32LE(4 * i)
-  }
+  parse_fe(h, mem, 160)
 }
 
 /*
@@ -818,13 +823,10 @@ function fe25519_sq2 (h, f) {
 
   var buf = new Uint8Array(f.buffer)
 
-  wasm_sq.memory.set(buf)
-  wasm_sq.exports.sq(40, 0, 1)
+  mem.set(buf)
+  wasm_sq.exports.sq(160, 120, 1)
 
-  buf = Buffer.from(wasm_sq.memory.slice(40, 80))
-  for (let i = 0; i < 10; i++) {
-    h[i] = buf.readUInt32LE(4 * i)
-  }
+  parse_fe(h, mem, 160)
 }
 
 function fe25519_sqmul (s, n, a) {
@@ -971,8 +973,6 @@ function fe25519_unchecked_sqrt (x, x2) {
   fe25519_sq(m_root2, m_root)
   fe25519_sub(e, x2, m_root2)
   fe25519_copy(x, p_root)
-  console.log(e)
-  console.log(fe25519_iszero(e))
   fe25519_cmov(x, m_root, fe25519_iszero(e))
 }
 
@@ -2818,46 +2818,20 @@ function ristretto255_from_hash (s, h) {
   ristretto255_p3_tobytes(s, p)
 }
 
-function scalarmult_curve25519_inner_loop (x1, x2, x3, z2, z3, t) {
+function scalarmult_curve25519_inner_loop (x1, x2, t) {
   check_fe(x1)
   check_fe(x2)
-  check_fe(x3)
-  check_fe(z2)
-  check_fe(z3)
   assert(t instanceof Uint8Array && t.byteLength === 32)
 
-  // printFe(f, 'f')
-  // printFe(g, 'g')
   const x1buf = new Uint8Array(x1.buffer)
-  const x2buf = new Uint8Array(x2.buffer)
-  const x3buf = new Uint8Array(x3.buffer)
-  const z2buf = new Uint8Array(z2.buffer)
-  const z3buf = new Uint8Array(z3.buffer)
   const tbuf = new Uint8Array(t.buffer)
 
-  wasm_scalaramult_internal.memory.set(x1buf, 0)
-  wasm_scalaramult_internal.memory.set(x2buf, 40)
-  wasm_scalaramult_internal.memory.set(x3buf, 80)
-  wasm_scalaramult_internal.memory.set(z2buf, 120)
-  wasm_scalaramult_internal.memory.set(z3buf, 160)
-  wasm_scalaramult_internal.memory.set(tbuf, 200)
-  const swap = wasm_scalaramult_internal.exports.scalarmult(0, 40, 80, 120, 160, 200, 240, 280, 320, 360)
+  // shared memory, mul takes 200 - 280
+  mem.set(x1buf, 200)
+  mem.set(tbuf, 240)
+  wasm_scalaramult_internal.exports.scalarmult(280, 200, 240)
 
-  buf = Buffer.from(wasm_scalaramult_internal.memory.slice(240, 400))
-  for (let i = 0; i < 10; i++) {
-    x2[i] = buf.readInt32LE(4 * i)
-  }
-  for (let i = 10; i < 20; i++) {
-    x3[i % 10] = buf.readInt32LE(4 * i)
-  }
-  for (let i = 20; i < 30; i++) {
-    z2[i % 10] = buf.readInt32LE(4 * i)
-  }
-  for (let i = 30; i < 40; i++) {
-    z3[i % 10] = buf.readInt32LE(4 * i)
-  }
-
-  return swap
+  parse_fe(x2, mem, 280)
 }
 
 function check_fe (h) {
@@ -2881,4 +2855,10 @@ function intDivide (a, b) {
 
 function signedInt (i) {
   return i < 0 ? 2 ** 32 + i : i
+}
+
+function parse_fe (res, buf, offset = 0) {
+  for (let i = 0; i < 10; i++) {
+    res[i] = buf.readInt32LE(4 * i + offset)
+  }
 }

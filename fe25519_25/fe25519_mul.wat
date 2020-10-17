@@ -1,5 +1,7 @@
 (module
   (import "js" "table" (table 1 anyfunc))
+  (import "js" "mem" (memory 1))
+  
   (elem (i32.const 1) $fe_mul)
 
   ;; (func $i32.log (import "debug" "log") (param i32))
@@ -11,10 +13,7 @@
   ;; (func $f32.log (import "debug" "log") (param f32))
   ;; (func $f32.log_tee (import "debug" "log_tee") (param f32) (result f32))
   ;; (func $f64.log (import "debug" "log") (param f64))
-  ;; (func $f64.log_tee (import "debug" "log_tee") (param f64) (result f64))
-  
-  (memory $0 1)
-  (export "memory" (memory $0))
+  ;; (func $f64.log_tee (import "debug" "log_tee") (param f64) (result f64))  
   
   ;; ;; i64 logging by splitting into two i32 limbs
   ;; (func $i64.log

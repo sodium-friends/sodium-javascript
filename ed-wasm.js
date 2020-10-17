@@ -1,6 +1,9 @@
 const sodium = require('./')
+const native = require('sodium-native')
 const { crypto_scalarmult_ed25519, crypto_scalarmult_ed25519_base, crypto_scalarmult_curve25519, crypto_scalarmult_curve25519_1, crypto_scalarmult_curve25519_base } = require('./crypto_scalarmult_ed25519')
 const { crypto_sign, crypto_sign_open } = require('./crypto_sign_ed25519')
+const sign = require('./crypto_sign')
+const ed = require('./ed25519')
 
 console.log(crypto_scalarmult_ed25519)
 let sig = Buffer.alloc(sodium.crypto_sign_BYTES)
@@ -17,18 +20,18 @@ let test
 sig.fill(0)
 
 var an = Buffer.from([
-  171,  69, 129,  47,  90,  82, 223, 134,
-    6, 147,  54,  76,  55, 148, 252,  37,
-  234, 216, 113,  62, 223,  49,  33,  36,
-  172, 246,  18, 226,  50, 249, 198, 231
+  0x77, 0x07, 0x6d, 0x0a, 0x73, 0x18, 0xa5, 0x7d, 0x3c, 0x16, 0xc1,
+  0x72, 0x51, 0xb2, 0x66, 0x45, 0xdf, 0x4c, 0x2f, 0x87, 0xeb, 0xc0,
+  0x99, 0x2a, 0xb1, 0x77, 0xfb, 0xa5, 0x1d, 0xb9, 0x2c, 0x2a
 ])
 
 var bn = Buffer.from([
-  226,  38,  16,  80, 186, 183, 134, 239,
-  190,  24, 150, 125,  14, 254,  19,  44,
-   55, 112, 156,   5, 141, 230,  91,  84,
-  110, 130, 213,  39, 249, 107, 145, 140
+  0x5d, 0xab, 0x08, 0x7e, 0x62, 0x4a, 0x8a, 0x4b, 0x79, 0xe1, 0x7f,
+  0x8b, 0x83, 0x80, 0x0e, 0xe6, 0x6f, 0x3b, 0xb1, 0x29, 0x26, 0x18,
+  0xb6, 0xfd, 0x1c, 0x2f, 0x8b, 0x27, 0xff, 0x88, 0xe0, 0xeb
 ])
+
+var bobpk = Buffer.from('de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f', 'hex')
 
 var cn = Buffer.from([
   190,  24, 150, 125,  14, 254,  19,  44,
@@ -79,16 +82,44 @@ var pass = true
 //   if (Buffer.compare(sm, sm1) !== 0 || !pass) console.log('test fails at fixture #' + i)
 // }
 
-sodium.crypto_scalarmult(res, an, bn)
+// //////////////////////////////
+// sodium.crypto_scalarmult(res, an, bn)
+// console.log(res.toString('hex'))
+
+res.fill(0)
+crypto_scalarmult_curve25519(res, an, bobpk)
 console.log(res.toString('hex'))
 
-crypto_scalarmult_ed25519(res, an, bn)
+// console.time('whole')
+crypto_scalarmult_curve25519_1(res, an, bobpk)
+// console.timeEnd('whole')
+console.log(res.toString('hex'))
+
+native.crypto_scalarmult(res, an, bobpk)
 console.log(res.toString('hex'))
 
 sodium.crypto_scalarmult_base(res, an)
 console.log(res.toString('hex'))
 
-sodium.crypto_scalarmult_base(res, an)
+native.crypto_scalarmult_base(res, an)
+console.log(res.toString('hex'))
+
+crypto_scalarmult_curve25519_base(res, an)
+console.log(res.toString('hex'))
+
+native.crypto_scalarmult(res, fixtures[1].sk, fixtures[1].pk)
+console.log(res.toString('hex'))
+
+crypto_scalarmult_curve25519(res, fixtures[1].sk, fixtures[1].pk)
+console.log('wasm naive', res.toString('hex'))
+
+crypto_scalarmult_curve25519_1(res, fixtures[1].sk, fixtures[1].pk)
+console.log('wasm inner loop', res.toString('hex'))
+
+native.crypto_scalarmult(res, fixtures[1].sk, fixtures[1].pk)
+console.log('native', res.toString('hex'))
+
+crypto_scalarmult_ed25519(res, fixtures[1].sk, fixtures[1].pk)
 console.log(res.toString('hex'))
 
 const a = Buffer.alloc(32)
@@ -117,6 +148,11 @@ for (let test of fixtures) {
 }
 console.timeEnd('wasm')
 
+console.time('native')
+for (let test of fixtures) {
+  native.crypto_scalarmult(res1, test.sk, test.pk)
+}
+console.timeEnd('native')
 console.log(res.toString('hex'))
 console.log(res1.toString('hex'))
 

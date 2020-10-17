@@ -256,15 +256,16 @@ function crypto_scalarmult_curve25519 (q, n, p) {
   ec.fe25519_copy(x3, x1)
   ec.fe25519_1(z3)
 
-  swap = 0
   for (pos = 254; pos >= 0; --pos) {
-    b = t[pos / 8] >> (pos & 7)
+    b = t[Math.floor(pos / 8)] >> (pos & 7)
     b &= 1
     swap ^= b
+
     ec.fe25519_cswap(x2, x3, swap)
     ec.fe25519_cswap(z2, z3, swap)
     swap = b
     ec.fe25519_sub(tmp0, x3, z3)
+
     ec.fe25519_sub(tmp1, x2, z2)
     ec.fe25519_add(x2, x2, z2)
     ec.fe25519_add(z2, x3, z3)
@@ -285,6 +286,7 @@ function crypto_scalarmult_curve25519 (q, n, p) {
     ec.fe25519_mul(z3, x1, z2)
     ec.fe25519_mul(z2, tmp1, tmp0)
   }
+
   ec.fe25519_cswap(x2, x3, swap)
   ec.fe25519_cswap(z2, z3, swap)
 
@@ -306,28 +308,19 @@ function crypto_scalarmult_curve25519_1 (q, n, p) {
   var pos
   var swap
   var b
+  var _q = Buffer.alloc(32)
 
   if (has_small_order(p)) {
     return -1;
   }
-  for (i = 0; i < 32; i++) {
-    t[i] = n[i]
-  }
+  t.set(n)
   t[0] &= 248
   t[31] &= 127
   t[31] |= 64
+
   ec.fe25519_frombytes(x1, p)
-  ec.fe25519_1(x2)
-  ec.fe25519_0(z2)
-  ec.fe25519_copy(x3, x1)
-  ec.fe25519_1(z3)
+  swap = ec.scalarmult_curve25519_inner_loop(x1, x2, t)
 
-  swap = ec.scalarmult_curve25519_inner_loop(x1, x2, x3, z2, z3, t)
-  ec.fe25519_cswap(x2, x3, swap)
-  ec.fe25519_cswap(z2, z3, swap)
-
-  ec.fe25519_invert(z2, z2)
-  ec.fe25519_mul(x2, x2, z2)
   ec.fe25519_tobytes(q, x2)
 
   return 0
@@ -361,4 +354,13 @@ function crypto_scalarmult_curve25519_base (q, n) {
   ec.fe25519_tobytes(q, pk)
 
   return 0
+}
+
+function print32 (num) {
+  if (num < 0) return print32(0x100000000 + num)
+  console.log(num.toString(16).padStart(16, '0'))
+}
+
+function printfe (fe) {
+  for (let i of fe) print32(i)
 }
