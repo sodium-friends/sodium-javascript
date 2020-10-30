@@ -36,7 +36,9 @@ module.exports = {
   crypto_sign_ed25519_BYTES,
   crypto_sign_ed25519_pk_to_curve25519,
   unpackneg,
-  pack
+  pack,
+  scalarbase,
+  scalarmult
 }
 
 function set25519 (r, a) {
@@ -315,6 +317,7 @@ function crypto_sign_open (msg, sm, pk) {
   for (i = 0; i < 32; i++) m[i + 32] = pk[i]
   crypto_hash(h, m, n)
   reduce(h)
+  console.log('h so -->', Buffer.from(h).subarray(0, 32).toString('hex'))
   scalarmult(p, q, h)
 
   scalarbase(q, sm.subarray(32))

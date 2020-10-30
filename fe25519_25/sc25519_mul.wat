@@ -304,3 +304,5 @@
     (get_local $s23)
     (i32.const 0)
     (call_indirect (type $to_void))))
+
+;;  TODO: export muladd and call in reduce

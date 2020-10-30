@@ -1,5 +1,5 @@
 (module
-  (import "js" "table" (table 1 anyfunc))
+  (import "js" "table" (table 4 anyfunc))
   (import "js" "mem" (memory 1))
   
   (elem (i32.const 1) $fe_mul)

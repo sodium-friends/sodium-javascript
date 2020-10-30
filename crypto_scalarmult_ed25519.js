@@ -1,13 +1,14 @@
 const assert = require('nanoassert')
 const ec = require('./fe25519_25')
-const { sodium_is_zero } = require('./')
 
 module.exports = {
   crypto_scalarmult_ed25519,
   crypto_scalarmult_ed25519_base,
   crypto_scalarmult_curve25519,
   crypto_scalarmult_curve25519_1,
-  crypto_scalarmult_curve25519_base
+  crypto_scalarmult_curve25519_base,
+  crypto_scalarmult_ristretto255,
+  crypto_scalarmult_ristretto255_base
 }
 
 const _121666buf = Buffer.alloc(32)
@@ -338,8 +339,9 @@ function edwards_to_montgomery(montgomeryX, edwardsY, edwardsZ) {
 
 function crypto_scalarmult_curve25519_base (q, n) {
   var t = q.slice()
-  var A = ec.ge3()
-  var pk = ec.fe25519()
+  var Q = ec.ge3()
+  const pk = ec.fe25519()
+
   var i
 
   for (i = 0; i < 32; i++) {
@@ -347,10 +349,11 @@ function crypto_scalarmult_curve25519_base (q, n) {
   }
 
   t[0] &= 248
-  t[31] &= 127
   t[31] |= 64
-  ec.ge25519_scalarmult_base(A, t)
-  edwards_to_montgomery(pk, A[1], A[2])
+  t[31] &= 127
+
+  ec.ge25519_scalarmult_base(Q, t)
+  edwards_to_montgomery(pk, Q[1], Q[2]);
   ec.fe25519_tobytes(q, pk)
 
   return 0
@@ -363,4 +366,15 @@ function print32 (num) {
 
 function printfe (fe) {
   for (let i of fe) print32(i)
+}
+
+function sodium_is_zero (n) {
+  let i
+  let d = 0
+
+  for (let i = 0; i < n.length; i++) {
+    d |= n[i]
+  }
+
+  return 1 & ((d - 1) >> 8)
 }

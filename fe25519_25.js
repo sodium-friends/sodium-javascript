@@ -71,11 +71,38 @@ function fe25519_pow22523 (h, f) {
 const base = require('./fe25519_25/base.json').map(a => a.map(b => ge2(b)))
 const printbuf =Buffer.alloc(32)
 
+const ed25519_d = fe25519([
+  -10913610, 13857413, -15372611, 6949391, 114729, -8787816, -6275908, -3247719, -18696448, -12055116
+])
+
+const ed25519_d2 = fe25519([
+  -21827239, -5839606, -30745221, 13898782, 229458, 15978800, -12551817, -6495438, 29715968, 9444199
+])
+
+const fe25519_sqrtm1 = fe25519([
+  -32595792, -7943725, 9377950, 3500415, 12389472, -272473, -25146209, -2005654, 326686, 11406482
+])
+
+const ed25519_sqrtam2 = fe25519([
+  -12222970, -8312128, -11511410, 9067497, -15300785, -241793, 25456130, 14121551, -12187136, 3972024
+])
+
+/* 1 / sqrt(a - d) */
+const ed25519_invsqrtamd = fe25519([
+  6111485, 4156064, -27798727, 12243468, -25904040, 120897, 20826367, -7060776, 6093568, -1986012
+])
+
+const one = fe25519()
+fe25519_1(one)
+const basepoint = Buffer.alloc(32)
+fe25519_tobytes(basepoint, one)
+
 module.exports = {
   fe25519,
   ge2,
   ge3,
   print_ge,
+  basepoint,
   fe25519_0,
   fe25519_1,
   fe25519_reduce,
@@ -102,8 +129,14 @@ module.exports = {
   fe25519_sqrt,
   ge25519_has_small_order,
   ge25519_frombytes,
+  ge25519_add_cached,
+  ge25519_sub_cached,
   ge25519_tobytes,
+  ge25519_cmov8_base,
+  ge25519_p3_to_cached,
+  ge25519_p1p1_to_p3,
   ge25519_p3_tobytes,
+  ge25519_p3_add,
   ge25519_p3_dbl,
   ge25519_scalarmult,
   ge25519_scalarmult_base,
@@ -132,22 +165,6 @@ module.exports = {
   ristretto255_elligator,
   ristretto255_from_hash
 }
-
-const ed25519_d = fe25519([
-  -10913610, 13857413, -15372611, 6949391, 114729, -8787816, -6275908, -3247719, -18696448, -12055116
-])
-
-const ed25519_d2 = fe25519([
-  -21827239, -5839606, -30745221, 13898782, 229458, 15978800, -12551817, -6495438, 29715968, 9444199
-])
-
-const fe25519_sqrtm1 = fe25519([
-  -32595792, -7943725, 9377950, 3500415, 12389472, -272473, -25146209, -2005654, 326686, 11406482
-])
-
-const ed25519_sqrtam2 = fe25519([
-  -12222970, -8312128, -11511410, 9067497, -15300785, -241793, 25456130, 14121551, -12187136, 3972024
-])
 
 function print_ge (g, n = 4) {
   for (let i = 0; i < n; i++) for (let j = 0; j <10; j++) console.log(`g[${i}][${j}]:`, signedInt(g[i][j]).toString(16).padStart(8, '0'))
@@ -823,7 +840,7 @@ function fe25519_sq2 (h, f) {
 
   var buf = new Uint8Array(f.buffer)
 
-  mem.set(buf)
+  mem.set(buf, 120)
   wasm_sq.exports.sq(160, 120, 1)
 
   parse_fe(h, mem, 160)
@@ -859,42 +876,42 @@ function fe25519_invert_1 (out, z) {
   fe25519_sq(t2, t0)
   fe25519_mul(t1, t1, t2)
   fe25519_sq(t2, t1)
-  for (i = 1; i < 5; ++i) {
+  for (i = 1; i < 5; i++) {
     fe25519_sq(t2, t2)
   }
   fe25519_mul(t1, t2, t1)
   fe25519_sq(t2, t1)
-  for (i = 1; i < 10; ++i) {
+  for (i = 1; i < 10; i++) {
     fe25519_sq(t2, t2)
   }
   fe25519_mul(t2, t2, t1)
   fe25519_sq(t3, t2)
-  for (i = 1; i < 20; ++i) {
+  for (i = 1; i < 20; i++) {
     fe25519_sq(t3, t3)
   }
   fe25519_mul(t2, t3, t2)
   fe25519_sq(t2, t2)
-  for (i = 1; i < 10; ++i) {
+  for (i = 1; i < 10; i++) {
     fe25519_sq(t2, t2)
   }
   fe25519_mul(t1, t2, t1)
   fe25519_sq(t2, t1)
-  for (i = 1; i < 50; ++i) {
+  for (i = 1; i < 50; i++) {
     fe25519_sq(t2, t2)
   }
   fe25519_mul(t2, t2, t1)
   fe25519_sq(t3, t2)
-  for (i = 1; i < 100; ++i) {
+  for (i = 1; i < 100; i++) {
     fe25519_sq(t3, t3)
   }
   fe25519_mul(t2, t3, t2)
   fe25519_sq(t2, t2)
-  for (i = 1; i < 50; ++i) {
+  for (i = 1; i < 50; i++) {
     fe25519_sq(t2, t2)
   }
   fe25519_mul(t1, t2, t1)
   fe25519_sq(t1, t1)
-  for (i = 1; i < 5; ++i) {
+  for (i = 1; i < 5; i++) {
     fe25519_sq(t1, t1)
   }
   fe25519_mul(out, t1, t0)
@@ -919,37 +936,37 @@ function fe25519_pow22523_1 (out, z) {
   fe25519_sq(t0, t0)
   fe25519_mul(t0, t1, t0)
   fe25519_sq(t1, t0)
-  for (i = 1; i < 5; ++i) {
+  for (i = 1; i < 5; i++) {
     fe25519_sq(t1, t1)
   }
   fe25519_mul(t0, t1, t0)
   fe25519_sq(t1, t0)
-  for (i = 1; i < 10; ++i) {
+  for (i = 1; i < 10; i++) {
     fe25519_sq(t1, t1)
   }
   fe25519_mul(t1, t1, t0)
   fe25519_sq(t2, t1)
-  for (i = 1; i < 20; ++i) {
+  for (i = 1; i < 20; i++) {
     fe25519_sq(t2, t2)
   }
   fe25519_mul(t1, t2, t1)
   fe25519_sq(t1, t1)
-  for (i = 1; i < 10; ++i) {
+  for (i = 1; i < 10; i++) {
     fe25519_sq(t1, t1)
   }
   fe25519_mul(t0, t1, t0)
   fe25519_sq(t1, t0)
-  for (i = 1; i < 50; ++i) {
+  for (i = 1; i < 50; i++) {
     fe25519_sq(t1, t1)
   }
   fe25519_mul(t1, t1, t0)
   fe25519_sq(t2, t1)
-  for (i = 1; i < 100; ++i) {
+  for (i = 1; i < 100; i++) {
     fe25519_sq(t2, t2)
   }
   fe25519_mul(t1, t2, t1)
   fe25519_sq(t1, t1)
-  for (i = 1; i < 50; ++i) {
+  for (i = 1; i < 50; i++) {
     fe25519_sq(t1, t1)
   }
   fe25519_mul(t0, t1, t0)
@@ -992,25 +1009,37 @@ function fe25519_sqrt (x, x2) {
 r = p + q
 */
 
-function ge25519_add (r, p, q) {
-  check_ge3(r)
-  check_ge3(p)
-  check_ge3(q)
+// function ge25519_add (r, p, q) {
+//   let Aa = fe25519(),
+//       Ab = fe25519(),
+//       Ac = fe25519(),
+//       Ad = fe25519(),
+//       Ae = fe25519(),
+//       Af = fe25519(),
+//       Ag = fe25519(),
+//       Ah = fe25519(),
+//       At = fe25519();
 
-  var t0 = fe25519()
+//   fe25519_sub(Aa, p[0], p[1]);
+//   fe25519_sub(At, q[0], q[1]);
+//   fe25519_mul(Aa, Aa, At);
+//   fe25519_add(Ab, p[0], p[1]);
+//   fe25519_add(At, q[0], q[1]);
+//   fe25519_mul(Ab, Ab, At);
+//   fe25519_mul(Ac, p[3], q[3]);
+//   fe25519_mul(Ac, Ac, ed25519_d2);
+//   fe25519_mul(Ad, p[2], q[2]);
+//   fe25519_add(Ad, Ad, Ad);
+//   fe25519_sub(Ae, Ab, Aa);
+//   fe25519_sub(Af, Ad, Ac);
+//   fe25519_add(Ag, Ad, Ac);
+//   fe25519_add(Ah, Ab, Aa);
 
-  fe25519_add(r[0], p[1], p[0])
-  fe25519_sub(r[1], p[1], p[0])
-  fe25519_mul(r[2], r[0], q[0])
-  fe25519_mul(r[1], r[1], q[1])
-  fe25519_mul(r[3], q[3], p[3])
-  fe25519_mul(r[0], p[2], q[2])
-  fe25519_add(t0, r[0], r[0])
-  fe25519_sub(r[0], r[2], r[1])
-  fe25519_add(r[1], r[2], r[1])
-  fe25519_add(r[2], t0, r[3])
-  fe25519_sub(r[3], t0, r[3])
-}
+//   fe25519_mul(p[0], Ae, Af);
+//   fe25519_mul(p[1], Ah, Ag);
+//   fe25519_mul(p[2], Ag, Af);
+//   fe25519_mul(p[3], Ae, Ah);
+// }
 
 /*
  r = p - q
@@ -1063,11 +1092,11 @@ function slide_vartime (r, a) {
   var ribs
   var cmp
 
-  for (i = 0; i < 256; ++i) {
+  for (i = 0; i < 256; i++) {
     r[i] = 1 & (a[i >> 3] >> (i & 7))
   }
 
-  for (i = 0; i < 256; ++i) {
+  for (i = 0; i < 256; i++) {
     if (!r[i]) {
       continue
     }
@@ -1248,6 +1277,7 @@ function ge25519_p1p1_to_p2 (r, p) {
   fe25519_mul(r[0], p[0], p[3])
   fe25519_mul(r[1], p[1], p[2])
   fe25519_mul(r[2], p[2], p[3])
+  // console.log(r[0])
 }
 
 /*
@@ -1647,31 +1677,31 @@ function ge25519_double_scalarmult_vartime (r, a, A, b) {
   ge25519_p3_dbl(t, A)
   ge25519_p1p1_to_p3(A2, t)
 
-  ge25519_add(t, A2, Ai[0])
+  ge25519_add_cached(t, A2, Ai[0])
   ge25519_p1p1_to_p3(u, t)
   ge25519_p3_to_cached(Ai[1], u)
 
-  ge25519_add(t, A2, Ai[1])
+  ge25519_add_cached(t, A2, Ai[1])
   ge25519_p1p1_to_p3(u, t)
   ge25519_p3_to_cached(Ai[2], u)
 
-  ge25519_add(t, A2, Ai[2])
+  ge25519_add_cached(t, A2, Ai[2])
   ge25519_p1p1_to_p3(u, t)
   ge25519_p3_to_cached(Ai[3], u)
 
-  ge25519_add(t, A2, Ai[3])
+  ge25519_add_cached(t, A2, Ai[3])
   ge25519_p1p1_to_p3(u, t)
   ge25519_p3_to_cached(Ai[4], u)
 
-  ge25519_add(t, A2, Ai[4])
+  ge25519_add_cached(t, A2, Ai[4])
   ge25519_p1p1_to_p3(u, t)
   ge25519_p3_to_cached(Ai[5], u)
 
-  ge25519_add(t, A2, Ai[5])
+  ge25519_add_cached(t, A2, Ai[5])
   ge25519_p1p1_to_p3(u, t)
   ge25519_p3_to_cached(Ai[6], u)
 
-  ge25519_add(t, A2, Ai[6])
+  ge25519_add_cached(t, A2, Ai[6])
   ge25519_p1p1_to_p3(u, t)
   ge25519_p3_to_cached(Ai[7], u)
 
@@ -1737,7 +1767,7 @@ function ge25519_scalarmult (h, a, p) {
   ge25519_p1p1_to_p3(p2, t2)
   ge25519_p3_to_cached(pi[2 - 1], p2) /* 2p = 2*p */
 
-  ge25519_add(t3, p, pi[2 - 1])
+  ge25519_add_cached(t3, p, pi[2 - 1])
   ge25519_p1p1_to_p3(p3, t3)
   ge25519_p3_to_cached(pi[3 - 1], p3) /* 3p = 2p+p */
 
@@ -1745,7 +1775,7 @@ function ge25519_scalarmult (h, a, p) {
   ge25519_p1p1_to_p3(p4, t4)
   ge25519_p3_to_cached(pi[4 - 1], p4) /* 4p = 2*2p */
 
-  ge25519_add(t5, p, pi[4 - 1])
+  ge25519_add_cached(t5, p, pi[4 - 1])
   ge25519_p1p1_to_p3(p5, t5)
   ge25519_p3_to_cached(pi[5 - 1], p5) /* 5p = 4p+p */
 
@@ -1753,7 +1783,7 @@ function ge25519_scalarmult (h, a, p) {
   ge25519_p1p1_to_p3(p6, t6)
   ge25519_p3_to_cached(pi[6 - 1], p6) /* 6p = 2*3p */
 
-  ge25519_add(t7, p, pi[6 - 1])
+  ge25519_add_cached(t7, p, pi[6 - 1])
   ge25519_p1p1_to_p3(p7, t7)
   ge25519_p3_to_cached(pi[7 - 1], p7) /* 7p = 6p+p */
 
@@ -1761,7 +1791,7 @@ function ge25519_scalarmult (h, a, p) {
   ge25519_p1p1_to_p3(p8, t8)
   ge25519_p3_to_cached(pi[8 - 1], p8) /* 8p = 2*4p */
 
-  for (let i = 0; i < 32; ++i) {
+  for (let i = 0; i < 32; i++) {
     e[2 * i + 0] = (a[i] >> 0) & 15
     e[2 * i + 1] = (a[i] >> 4) & 15
   }
@@ -1769,7 +1799,7 @@ function ge25519_scalarmult (h, a, p) {
   /* e[63] is between 0 and 7 */
 
   carry[0] = 0
-  for (let i = 0; i < 63; ++i) {
+  for (let i = 0; i < 63; i++) {
     e[i] += carry[0]
     carry[0] = e[i] + 8
     carry[0] >>= 4
@@ -1782,7 +1812,7 @@ function ge25519_scalarmult (h, a, p) {
 
   for (i = 63; i != 0; i--) {
     ge25519_cmov8_cached(t, pi, e[i])
-    ge25519_add(r, h, t)
+    ge25519_add_cached(r, h, t)
 
     ge25519_p1p1_to_p2(s, r)
     ge25519_p2_dbl(r, s)
@@ -1797,7 +1827,7 @@ function ge25519_scalarmult (h, a, p) {
   }
 
   ge25519_cmov8_cached(t, pi, e[i])
-  ge25519_add(r, h, t)
+  ge25519_add_cached(r, h, t)
 
   ge25519_p1p1_to_p3(h, r)
 }
@@ -1814,27 +1844,28 @@ function ge25519_scalarmult (h, a, p) {
 function ge25519_scalarmult_base (h, a) {
   check_ge3(h)
 
+  var i
   var e = new Int8Array(64)
-  var carry = new Int8Array(1)
+  var carry = 0
   var r = ge3()
   var s = ge2()
   var t = ge2()
 
-  for (i = 0; i < 32; ++i) {
+  for (i = 0; i < 32; i++) {
     e[2 * i + 0] = (a[i] >> 0) & 15
     e[2 * i + 1] = (a[i] >> 4) & 15
   }
   /* each e[i] is between 0 and 15 */
   /* e[63] is between 0 and 7 */
 
-  carry[0] = 0
-  for (i = 0; i < 63; ++i) {
-    e[i] += carry[0]
-    carry[0] = e[i] + 8
-    carry[0] >>= 4
-    e[i] -= carry[0] * (1 << 4)
+  carry = 0
+  for (i = 0; i < 63; i++) {
+    e[i] += carry
+    carry = e[i] + 8
+    carry >>= 4
+    e[i] -= carry * (1 << 4)
   }
-  e[63] += carry[0]
+  e[63] += carry
   /* each e[i] is between -8 and 8 */
 
   ge25519_p3_0(h)
@@ -2150,7 +2181,7 @@ function sc25519_muladd (s, a, b, c) {
 
   wasm_sc_muladd.exports.sc25519_muladd(144, 0, 48, 96)
 
-  s.set(wasm_sc_muladd.memory.slice(144, 176))
+  s.set(wasm_sc_red.memory.slice(144, 176))
 }
 
 /*
@@ -2623,7 +2654,7 @@ function ristretto255_is_canonical (s) {
   return 1 - (((c & d) | e | s[0]) & 1)
 }
 
-function ristretto255_frombytes (h, s) {
+function ristretto255_frombytes (h, s, neg = false) {
   check_ge3(h)
   assert(s instanceof Uint8Array)
 
@@ -2671,9 +2702,14 @@ function ristretto255_frombytes (h, s) {
   fe25519_abs(h[0], h[0])
   fe25519_mul(h[1], u1, h[1])
   fe25519_1(h[2])
+
+  if (neg) {
+    fe25519_neg(h[1], h[1])
+  }
+
   fe25519_mul(h[3], h[0], h[1])
 
-  return -((1 - was_square) | fe25519_isnegative(h[3]) | fe25519_iszero(h[1]))
+  return -((1 - was_square) | fe25519_isnegative(h[3]) ^ neg | fe25519_iszero(h[1]))
 }
 
 function ristretto255_p3_tobytes (s, h) {
@@ -2861,4 +2897,16 @@ function parse_fe (res, buf, offset = 0) {
   for (let i = 0; i < 10; i++) {
     res[i] = buf.readInt32LE(4 * i + offset)
   }
+}
+
+function print_fe_hex (p) {
+  const buf = Buffer.alloc(32)
+  fe25519_tobytes(buf, p)
+  console.log(buf.toString('hex'))
+}
+
+function print_ge_hex (p) {
+  const buf = Buffer.alloc(32)
+  ge25519_tobytes(buf, p)
+  console.log(buf.toString('hex'))
 }
