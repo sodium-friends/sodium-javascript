@@ -14,8 +14,8 @@ function sodium_malloc (n) {
 
 const sink = MessageChannel ? new MessageChannel() : null
 function sodium_free (n) {
-  if (!sink) return
   sodium_memzero(n)
+  if (!sink) return
   sink.port1.postMessage(n.buffer, [n.buffer])
 }
 
