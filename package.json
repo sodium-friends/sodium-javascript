@@ -24,7 +24,8 @@
     ]
   },
   "browser": {
-    "crypto": false
+    "crypto": false,
+    "worker_threads": false
   },
   "react-native": {
     "crypto": "crypto"
