@@ -33,7 +33,7 @@ console.log('Plaintext:', plainText.toString())
 ## API
 
 See [sodium-native](https://github.com/sodium-friends/sodium-native).
-This is a work in progress so all functions are not implemented yet.
+This is a work in progress so not all functions are implemented yet.
 
 This module is organised into individual submodules which can be required
 independently for smaller bundles in the browser. To leverage automatic
