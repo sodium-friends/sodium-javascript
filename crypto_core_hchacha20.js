@@ -179,6 +179,7 @@ function tv_hchacha20 () {
 tv_hchacha20()
 
 module.exports = {
+  crypto_core_hchacha20_INPUTBYTES,
   LOAD32_LE,
   STORE32_LE,
   QUARTERROUND,
