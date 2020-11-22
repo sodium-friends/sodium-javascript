@@ -112,15 +112,15 @@ function crypto_secretstream_xchacha20poly1305_init_push (state, out, k) {
 
 //     return 0;
 // }
-function crypto_secretstream_xchacha20poly1305_init_pull(state, _in, k) {
+function crypto_secretstream_xchacha20poly1305_init_pull (state, _in, k) {
   assert(state instanceof crypto_secretstream_xchacha20poly1305_state,
     'state not instance of crypto_secretstream_xchacha20poly1305_state')
-  assert(_in instanceof Uint8Array && out.length === crypto_secretstream_xchacha20poly1305_HEADERBYTES,
+  assert(_in instanceof Uint8Array && _in.length === crypto_secretstream_xchacha20poly1305_HEADERBYTES,
     '_in not byte array of length crypto_secretstream_xchacha20poly1305_HEADERBYTES')
   assert(k instanceof Uint8Array && k.length === crypto_secretstream_xchacha20poly1305_KEYBYTES,
     'k not byte array of length crypto_secretstream_xchacha20poly1305_KEYBYTES')
-  crypto_core_hchacha20(state.k, _in, k, null);
-  _crypto_secretstream_xchacha20poly1305_counter_reset(state);
+  crypto_core_hchacha20(state.k, _in, k, null)
+  _crypto_secretstream_xchacha20poly1305_counter_reset(state)
 
   for (let i = 0; i < crypto_secretstream_xchacha20poly1305_INONCEBYTES; i++) {
     state.nonce[i + crypto_secretstream_xchacha20poly1305_COUNTERBYTES] = _in[i + crypto_core_hchacha20_INPUTBYTES]
@@ -128,7 +128,6 @@ function crypto_secretstream_xchacha20poly1305_init_pull(state, _in, k) {
   state.pad.fill(0)
   return 0
 }
-
 
 // void
 // crypto_secretstream_xchacha20poly1305_rekey
@@ -157,28 +156,28 @@ function crypto_secretstream_xchacha20poly1305_init_pull(state, _in, k) {
 //     }
 //     _crypto_secretstream_xchacha20poly1305_counter_reset(state);
 // }
-function crypto_secretstream_xchacha20poly1305_rekey(state) {
+function crypto_secretstream_xchacha20poly1305_rekey (state) {
   assert(state instanceof crypto_secretstream_xchacha20poly1305_state,
     'state not instance of crypto_secretstream_xchacha20poly1305_state')
   const new_key_and_inonce = new Uint8Array(
     crypto_stream_chacha20_ietf_KEYBYTES + crypto_secretstream_xchacha20poly1305_INONCEBYTES)
-    let i
-    for (i = 0; i < crypto_stream_chacha20_ietf_KEYBYTES; i++) {
-      new_key_and_inonce[i] = state.k[i]
-    }
-    for (i = 0; i < crypto_secretstream_xchacha20poly1305_INONCEBYTES; i++) {
-      new_key_and_inonce[crypto_stream_chacha20_ietf_KEYBYTES + i] = 
-        state.nonce[crypto_secretstream_xchacha20poly1305_COUNTERBYTES + i]
-    }
-    crypto_stream_chacha20_ietf_xor(new_key_and_inonce, new_key_and_inonce, state.nonce, state.k)
-    for (i = 0; i < crypto_stream_chacha20_ietf_KEYBYTES; i++) {
-      state.k[i] = new_key_and_inonce[i];
-    }
-    for (i = 0; i < crypto_secretstream_xchacha20poly1305_INONCEBYTES; i++) {
-      state.nonce[crypto_secretstream_xchacha20poly1305_COUNTERBYTES + i] = 
-        new_key_and_inonce[crypto_stream_chacha20_ietf_KEYBYTES + i]
-    }
-    _crypto_secretstream_xchacha20poly1305_counter_reset(state)
+  let i
+  for (i = 0; i < crypto_stream_chacha20_ietf_KEYBYTES; i++) {
+    new_key_and_inonce[i] = state.k[i]
+  }
+  for (i = 0; i < crypto_secretstream_xchacha20poly1305_INONCEBYTES; i++) {
+    new_key_and_inonce[crypto_stream_chacha20_ietf_KEYBYTES + i] =
+      state.nonce[crypto_secretstream_xchacha20poly1305_COUNTERBYTES + i]
+  }
+  crypto_stream_chacha20_ietf_xor(new_key_and_inonce, new_key_and_inonce, state.nonce, state.k)
+  for (i = 0; i < crypto_stream_chacha20_ietf_KEYBYTES; i++) {
+    state.k[i] = new_key_and_inonce[i]
+  }
+  for (i = 0; i < crypto_secretstream_xchacha20poly1305_INONCEBYTES; i++) {
+    state.nonce[crypto_secretstream_xchacha20poly1305_COUNTERBYTES + i] =
+      new_key_and_inonce[crypto_stream_chacha20_ietf_KEYBYTES + i]
+  }
+  _crypto_secretstream_xchacha20poly1305_counter_reset(state)
 }
 
 // int
@@ -388,10 +387,9 @@ function crypto_secretstream_xchacha20poly1305_rekey(state) {
 //     return crypto_secretstream_xchacha20poly1305_TAG_FINAL;
 // }
 
-
 module.exports = {
   crypto_secretstream_xchacha20poly1305_keygen,
   crypto_secretstream_xchacha20poly1305_init_push,
   crypto_secretstream_xchacha20poly1305_init_pull,
-  crypto_secretstream_xchacha20poly1305_rekey,
+  crypto_secretstream_xchacha20poly1305_rekey
 }
