@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 const { assert } = require('nanoassert')
 const { randombytes_buf } = require('./randombytes')
-const { crypto_stream_chacha20_ietf_KEYBYTES, crypto_stream_chacha20_ietf_NONCEBYTES, crypto_stream_chacha20_ietf_xor } = require('./crypto_stream_chacha20')
+const { crypto_stream_chacha20_ietf, crypto_stream_chacha20_ietf_xor, crypto_stream_chacha20_ietf_KEYBYTES, crypto_stream_chacha20_ietf_NONCEBYTES, } = require('./crypto_stream_chacha20')
 const { crypto_core_hchacha20, crypto_core_hchacha20_INPUTBYTES } = require('./crypto_core_hchacha20')
 
 const crypto_secretstream_xchacha20poly1305_COUNTERBYTES = 4
@@ -14,6 +14,17 @@ const crypto_secretstream_xchacha20poly1305_KEYBYTES = crypto_aead_xchacha20poly
 // crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
 const crypto_aead_xchacha20poly1305_ietf_NPUBBYTES = 24
 const crypto_secretstream_xchacha20poly1305_HEADERBYTES = crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
+
+// #define crypto_aead_xchacha20poly1305_ietf_ABYTES 16U
+const crypto_aead_xchacha20poly1305_ietf_ABYTES = 16
+// #define crypto_secretstream_xchacha20poly1305_ABYTES \
+//     (1U + crypto_aead_xchacha20poly1305_ietf_ABYTES)
+const crypto_secretstream_xchacha20poly1305_ABYTES = 1 + crypto_aead_xchacha20poly1305_ietf_ABYTES
+
+// #define crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX \
+//     SODIUM_MIN(SODIUM_SIZE_MAX - crypto_secretstream_xchacha20poly1305_ABYTES, \
+//               (64ULL * ((1ULL << 32) - 2ULL)))
+const crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEGER
 
 // #define STATE_COUNTER(STATE) ((STATE)->nonce)
 // #define STATE_INONCE(STATE)  ((STATE)->nonce + \
@@ -248,6 +259,19 @@ function crypto_secretstream_xchacha20poly1305_rekey (state) {
 //     }
 //     return 0;
 // }
+function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
+  // assert(out instanceof Uint8Array && out.length === outlen, "out is not byte array of length outlen")
+  // assert(m instanceof Uint8Array && m.length === mlen, "m is not byte array of length mlen")
+  // assert(ad instanceof Uint8Array && ad.length === adlen, "ad is not byte array of length adlen")
+
+  const block = new Uint8Array(64)
+  const slen = new Uint8Array(8)
+  
+  assert(crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX
+    <= crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX)
+  
+  crypto_stream_chacha20_ietf(block, state.nonce, state.k)
+}
 
 // int
 // crypto_secretstream_xchacha20poly1305_pull
