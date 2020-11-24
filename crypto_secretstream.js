@@ -4,27 +4,18 @@ const { randombytes_buf } = require('./randombytes')
 const { crypto_stream_chacha20_ietf, crypto_stream_chacha20_ietf_xor, crypto_stream_chacha20_ietf_xor_ic, crypto_stream_chacha20_ietf_KEYBYTES, crypto_stream_chacha20_ietf_NONCEBYTES } = require('./crypto_stream_chacha20')
 const { crypto_core_hchacha20, crypto_core_hchacha20_INPUTBYTES } = require('./crypto_core_hchacha20')
 const Poly1305 = require('./internal/poly1305')
+const { STORE64_LE } = require('./crypto_kdf')
+const { sodium_increment } = require('./helpers')
 
+const crypto_onetimeauth_poly1305_BYTES = 16
 const crypto_secretstream_xchacha20poly1305_COUNTERBYTES = 4
 const crypto_secretstream_xchacha20poly1305_INONCEBYTES = 8
-
 const crypto_aead_xchacha20poly1305_ietf_KEYBYTES = 32
 const crypto_secretstream_xchacha20poly1305_KEYBYTES = crypto_aead_xchacha20poly1305_ietf_KEYBYTES
-
-// #define crypto_secretstream_xchacha20poly1305_HEADERBYTES \
-// crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
 const crypto_aead_xchacha20poly1305_ietf_NPUBBYTES = 24
 const crypto_secretstream_xchacha20poly1305_HEADERBYTES = crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
-
-// #define crypto_aead_xchacha20poly1305_ietf_ABYTES 16U
 const crypto_aead_xchacha20poly1305_ietf_ABYTES = 16
-// #define crypto_secretstream_xchacha20poly1305_ABYTES \
-//     (1U + crypto_aead_xchacha20poly1305_ietf_ABYTES)
 const crypto_secretstream_xchacha20poly1305_ABYTES = 1 + crypto_aead_xchacha20poly1305_ietf_ABYTES
-
-// #define crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX \
-//     SODIUM_MIN(SODIUM_SIZE_MAX - crypto_secretstream_xchacha20poly1305_ABYTES, \
-//               (64ULL * ((1ULL << 32) - 2ULL)))
 const crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEGER
 const crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEGER
 
@@ -53,9 +44,9 @@ class crypto_secretstream_xchacha20poly1305_state {
 function _crypto_secretstream_xchacha20poly1305_counter_reset (state) {
   assert(state instanceof crypto_secretstream_xchacha20poly1305_state, 'state is not an instance of crypto_secretstream_xchacha20poly1305_state')
   for (let i = 0; i < crypto_secretstream_xchacha20poly1305_COUNTERBYTES; i++) {
-    state[i] = 0
+    state.nonce[i] = 0
   }
-  state[0] = 1
+  state.nonce[0] = 1
 }
 
 // void
@@ -263,6 +254,7 @@ function crypto_secretstream_xchacha20poly1305_rekey (state) {
 // }
 function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
   const block = new Uint8Array(64)
+  const slen = new Uint8Array(8)
 
   assert(crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX <=
     crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX)
@@ -278,13 +270,33 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
   crypto_stream_chacha20_ietf_xor_ic(block, state.nonce, 1, state.k)
 
   poly.update(block, 0, block.byteLength)
-  out[0] = block[0];
+  out[0] = block[0]
 
   // block is 64 bytes. sizeof tag is 1, as it's a byte, so c is the subarray starting at out[1]
   // c = out + (sizeof tag);
-  let c = out.subarray(1, out.byteLength)
+  const c = out.subarray(1, out.byteLength)
   crypto_stream_chacha20_ietf_xor_ic(c, m, state.nonce, 2, state.key)
+  poly.update(c, 0, m.byteLength)
+  poly.update(_pad0, (0x10 - block.byteLength + m.byteLength) & 0xf)
 
+  STORE64_LE(slen, ad.byteLength)
+  poly.update(slen, slen.byteLength)
+  STORE64_LE(slen, block.byteLength + m.byteLength)
+  poly.update(slen, slen.byteLength)
+
+  const mac = out.subarray(1 + m.byteLength, out.byteLength)
+  poly.finish(mac, 0)
+
+  assert(crypto_onetimeauth_poly1305_BYTES >=
+    crypto_secretstream_xchacha20poly1305_INONCEBYTES)
+  xor_buf(state.nonce.subarray(crypto_secretstream_xchacha20poly1305_COUNTERBYTES, state.nonce.length),
+    mac, crypto_secretstream_xchacha20poly1305_INONCEBYTES)
+  sodium_increment(state.nonce)
+
+  if ((tag & crypto_secretstream_xchacha20poly1305_TAG_REKEY) != 0 ||
+    sodium_is_zero(STATE_COUNTER(state), crypto_secretstream_xchacha20poly1305_COUNTERBYTES)) {
+      crypto_secretstream_xchacha20poly1305_rekey(state)
+  }
 }
 
 // int
@@ -424,6 +436,12 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
 // {
 //     return crypto_secretstream_xchacha20poly1305_TAG_FINAL;
 // }
+
+function xor_buf (out, _in, n) {
+    for (let i = 0; i < n; i++) {
+        out[i] ^= _in[i]
+    }
+}
 
 module.exports = {
   crypto_aead_xchacha20poly1305_ietf_ABYTES,
