@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 const { assert } = require('nanoassert')
 const { randombytes_buf } = require('./randombytes')
-const { crypto_stream_chacha20_ietf, crypto_stream_chacha20_ietf_xor, crypto_stream_chacha20_ietf_KEYBYTES, crypto_stream_chacha20_ietf_NONCEBYTES } = require('./crypto_stream_chacha20')
+const { crypto_stream_chacha20_ietf, crypto_stream_chacha20_ietf_xor, crypto_stream_chacha20_ietf_xor_ic, crypto_stream_chacha20_ietf_KEYBYTES, crypto_stream_chacha20_ietf_NONCEBYTES } = require('./crypto_stream_chacha20')
 const { crypto_core_hchacha20, crypto_core_hchacha20_INPUTBYTES } = require('./crypto_core_hchacha20')
 const Poly1305 = require('./internal/poly1305')
 
@@ -262,12 +262,7 @@ function crypto_secretstream_xchacha20poly1305_rekey (state) {
 //     return 0;
 // }
 function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
-  // assert(out instanceof Uint8Array && out.length === outlen, "out is not byte array of length outlen")
-  // assert(m instanceof Uint8Array && m.length === mlen, "m is not byte array of length mlen")
-  // assert(ad instanceof Uint8Array && ad.length === adlen, "ad is not byte array of length adlen")
-
   const block = new Uint8Array(64)
-  // const slen = new Uint8Array(8)
 
   assert(crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX <=
     crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX)
@@ -278,6 +273,18 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
 
   poly.update(ad, 0, ad.byteLength)
   poly.update(_pad0, 0, (0x10 - ad.byteLength) & 0xf)
+
+  block[0] = tag
+  crypto_stream_chacha20_ietf_xor_ic(block, state.nonce, 1, state.k)
+
+  poly.update(block, 0, block.byteLength)
+  out[0] = block[0];
+
+  // block is 64 bytes. sizeof tag is 1, as it's a byte, so c is the subarray starting at out[1]
+  // c = out + (sizeof tag);
+  let c = out.subarray(1, out.byteLength)
+  crypto_stream_chacha20_ietf_xor_ic(c, m, state.nonce, 2, state.key)
+
 }
 
 // int
