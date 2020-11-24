@@ -297,6 +297,10 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
     sodium_is_zero(STATE_COUNTER(state), crypto_secretstream_xchacha20poly1305_COUNTERBYTES)) {
       crypto_secretstream_xchacha20poly1305_rekey(state)
   }
+  //   if (outlen_p != NULL) {
+  //     *outlen_p = crypto_secretstream_xchacha20poly1305_ABYTES + mlen;
+  // }
+  return 0
 }
 
 // int
@@ -382,6 +386,11 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
 //     }
 //     return 0;
 // }
+function crypto_secretstream_xchacha20poly1305_pull (state, m, tag, _in, ad) {
+  const block = new Uint8Array(64)
+  const slen = new Uint8Array(8)
+  const mac = new Uint8Array(crypto_onetimeauth_poly1305_BYTES)
+}
 
 // size_t
 // crypto_secretstream_xchacha20poly1305_statebytes(void)
@@ -450,5 +459,6 @@ module.exports = {
   crypto_secretstream_xchacha20poly1305_init_push,
   crypto_secretstream_xchacha20poly1305_init_pull,
   crypto_secretstream_xchacha20poly1305_rekey,
-  crypto_secretstream_xchacha20poly1305_push
+  crypto_secretstream_xchacha20poly1305_push,
+  crypto_secretstream_xchacha20poly1305_pull
 }
