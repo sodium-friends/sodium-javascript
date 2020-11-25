@@ -117,6 +117,7 @@ function crypto_secretstream_xchacha20poly1305_rekey (state) {
 }
 
 function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag, outputs) {
+  console.log('pushin')
   const block = new Uint8Array(64)
   const slen = new Uint8Array(8)
 
@@ -169,11 +170,13 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag, out
 }
 
 function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, outputs) {
+  console.log('pullin')
   const block = new Uint8Array(64)
   const slen = new Uint8Array(8)
   const mac = new Uint8Array(crypto_onetimeauth_poly1305_BYTES)
 
   if (_in.byteLength < crypto_secretstream_xchacha20poly1305_ABYTES) {
+    console.log('bailing at _in.byteLength < crypto_secretstream_xchacha20poly1305_ABYTES')
     return -1
   }
 
@@ -210,6 +213,7 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, outputs)
   const stored_mac = _in.subarray(c + mlen, _in.length)
   for (let i = 0; i < mac.length; i++) {
     if (mac[i] !== stored_mac[i]) {
+      console.log(`mac length: ${mac.length}\nmac: ${mac}\nstored_mac: ${stored_mac}`)
       mac.fill(0)
       return -1
     }
@@ -352,7 +356,7 @@ function test_secretstream () {
   ret = crypto_secretstream_xchacha20poly1305_push(state, c2, m2, ad, 0, outputs)
   assert(ret === 0, 'second push failed')
 
-  ret = crypto_secretstream_xchacha20poly1305_push(state, c3, 0, m3, ad, crypto_secretstream_xchacha20poly1305_TAG_FINAL)
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c3, m3, ad, crypto_secretstream_xchacha20poly1305_TAG_FINAL, outputs)
   assert(ret === 0, 'third push failed')
 
   /* pull */
@@ -360,7 +364,7 @@ function test_secretstream () {
   ret = crypto_secretstream_xchacha20poly1305_init_pull(state, header, k)
   assert(ret === 0)
 
-  ret = crypto_secretstream_xchacha20poly1305_pull(state, m1, c1, null, outputs)
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m1, c1, 0, outputs)
   assert(ret === 0, 'first pull failed')
   assert(outputs.tag === 0, 'tag pull failed')
   assert(sodium_memcmp(m1, m1_), 'failed m1 memcmp')
