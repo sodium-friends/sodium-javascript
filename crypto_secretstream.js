@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 const { assert } = require('nanoassert')
-const { randombytes_buf } = require('./randombytes')
+const crypto = require('crypto')
+const { randombytes_buf, randombytes } = require('./randombytes')
 const {
   crypto_stream_chacha20_ietf,
   crypto_stream_chacha20_ietf_xor,
@@ -160,7 +161,7 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
     sodium_is_zero(state.nonce, crypto_secretstream_xchacha20poly1305_COUNTERBYTES)) {
     crypto_secretstream_xchacha20poly1305_rekey(state)
   }
-  //   if (outlen_p != NULL) {
+  // if (outlen_p != NULL) {
   //     *outlen_p = crypto_secretstream_xchacha20poly1305_ABYTES + mlen;
   // }
   return 0
@@ -268,8 +269,8 @@ function xor_buf (out, _in, n) {
 }
 
 module.exports = {
-  crypto_aead_xchacha20poly1305_ietf_ABYTES,
-  crypto_secretstream_xchacha20poly1305_ABYTES,
+  // crypto_aead_xchacha20poly1305_ietf_ABYTES,
+  // crypto_secretstream_xchacha20poly1305_ABYTES,
   crypto_secretstream_xchacha20poly1305_keygen,
   crypto_secretstream_xchacha20poly1305_init_push,
   crypto_secretstream_xchacha20poly1305_init_pull,
@@ -286,3 +287,73 @@ module.exports = {
   crypto_secretstream_xchacha20poly1305_tag_rekey,
   crypto_secretstream_xchacha20poly1305_tag_final
 }
+
+// test
+
+function memcpy (dest, src, n) {
+  assert(dest.length >= n && src.length >= n, 'n longer than source or destination')
+  for (let i = 0; i < n; i++) {
+    dest[i] = src[i]
+  }
+}
+
+function test_secretstream () {
+  const state = new crypto_secretstream_xchacha20poly1305_state()
+  const statesave = new crypto_secretstream_xchacha20poly1305_state()
+  // const state_copy = new crypto_secretstream_xchacha20poly1305_state()
+  const header = new Uint8Array(crypto_secretstream_xchacha20poly1305_HEADERBYTES)
+  
+  const ad_len = crypto.randomInt(100)
+  const m1_len = crypto.randomInt(1000)
+  const m2_len = crypto.randomInt(1000)
+  const m3_len = crypto.randomInt(1000)
+
+  const c1 = new Uint8Array(m1_len + crypto_secretstream_xchacha20poly1305_ABYTES)
+  const c2 = new Uint8Array(m2_len + crypto_secretstream_xchacha20poly1305_ABYTES)
+  const c3 = new Uint8Array(m3_len + crypto_secretstream_xchacha20poly1305_ABYTES)
+  const csave = new Uint8Array((m1_len | m2_len | m3_len) + crypto_secretstream_xchacha20poly1305_ABYTES)
+
+  const ad = new Uint8Array(ad_len)
+  const m1 = new Uint8Array(m1_len)
+  const m2 = new Uint8Array(m2_len)
+  const m3 = new Uint8Array(m3_len)
+  const m1_ = new Uint8Array(m1_len)
+  const m2_ = new Uint8Array(m2_len)
+  const m3_ = new Uint8Array(m3_len)
+
+  randombytes_buf(ad, ad_len)
+
+  randombytes_buf(m1, m1_len)
+  memcpy(m1_, m1, m1_len)
+  randombytes_buf(m2, m2_len)
+  memcpy(m2_, m2, m2_len)
+  randombytes_buf(m3, m3_len)
+  memcpy(m3_, m3, m3_len)
+
+  const k = new Uint8Array(crypto_secretstream_xchacha20poly1305_KEYBYTES)
+  crypto_secretstream_xchacha20poly1305_keygen(k)
+
+  /* push */
+
+  let ret = crypto_secretstream_xchacha20poly1305_init_push(state, header, k)
+  assert(ret === 0, 'init_push failed')
+
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c1, m1, null, 0) // how can ad be null here?
+  assert(ret === 0, 'push failed')
+  // assert(res_len == m1_len + crypto_secretstream_xchacha20poly1305_ABYTES);
+
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c2, m2, ad, 0)
+  assert(ret === 0, 'second push failed')
+
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c3, null, m3, ad, crypto_secretstream_xchacha20poly1305_TAG_FINAL)
+  assert(ret === 0, 'third push failed')
+
+  /* pull */
+
+  ret = crypto_secretstream_xchacha20poly1305_init_pull(state, header, k)
+  assert(ret === 0)
+
+  
+}
+
+test_secretstream()
