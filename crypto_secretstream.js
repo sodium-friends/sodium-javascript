@@ -117,7 +117,6 @@ function crypto_secretstream_xchacha20poly1305_rekey (state) {
 }
 
 function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag, outputs) {
-  console.log('pushin')
   const block = new Uint8Array(64)
   const slen = new Uint8Array(8)
 
@@ -170,13 +169,11 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag, out
 }
 
 function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, outputs) {
-  console.log('pullin')
   const block = new Uint8Array(64)
   const slen = new Uint8Array(8)
   const mac = new Uint8Array(crypto_onetimeauth_poly1305_BYTES)
 
   if (_in.byteLength < crypto_secretstream_xchacha20poly1305_ABYTES) {
-    console.log('bailing at _in.byteLength < crypto_secretstream_xchacha20poly1305_ABYTES')
     return -1
   }
 
@@ -210,16 +207,15 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, outputs)
   poly.update(slen, slen.byteLength)
 
   poly.finish(mac, 0)
-  const stored_mac = _in.subarray(c + mlen, _in.length)
+  const stored_mac = _in.subarray(1 + mlen, _in.length)
   for (let i = 0; i < mac.length; i++) {
     if (mac[i] !== stored_mac[i]) {
-      console.log(`mac length: ${mac.length}\nmac: ${mac}\nstored_mac: ${stored_mac}`)
       mac.fill(0)
       return -1
     }
   }
 
-  crypto_stream_chacha20_ietf_xor_ic(m, c, state.nonce, 2, state.k)
+  crypto_stream_chacha20_ietf_xor_ic(m, c.subarray(m.length), state.nonce, 2, state.k)
   xor_buf(state.nonce.subarray(crypto_secretstream_xchacha20poly1305_COUNTERBYTES, state.nonce.length),
     mac, crypto_secretstream_xchacha20poly1305_INONCEBYTES)
   sodium_increment(state.nonce)
@@ -367,6 +363,7 @@ function test_secretstream () {
   ret = crypto_secretstream_xchacha20poly1305_pull(state, m1, c1, 0, outputs)
   assert(ret === 0, 'first pull failed')
   assert(outputs.tag === 0, 'tag pull failed')
+  console.log(`m1: ${m1}\n\nm1_: ${m1_}`)
   assert(sodium_memcmp(m1, m1_), 'failed m1 memcmp')
   assert(outputs.res_len === m1_len)
 }

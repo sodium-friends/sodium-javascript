@@ -70,7 +70,6 @@ exports.crypto_stream_chacha20_ietf_xor_ic = function (c, m, n, ic, k) {
     'k should be crypto_stream_chacha20_ietf_KEYBYTES')
 
   const xor = new Chacha20(n, k, ic)
-  console.log(`c len: ${c.length}, m len: ${m.length}`)
   xor.update(c, m)
   xor.final()
 }
