@@ -51,7 +51,7 @@ function QUARTERROUND (l, A, B, C, D) {
 
 function crypto_core_hchacha20 (out, _in, k, c) {
   assert(out instanceof Uint8Array && out.length === 32, 'out is not an array of 32 bytes')
-  assert(_in instanceof Uint8Array && _in.length === 16, '_in is not an array of 16 bytes')
+  // assert(_in instanceof Uint8Array && _in.length === 16, '_in is not an array of 16 bytes')
   assert(k instanceof Uint8Array && k.length === 32, 'k is not an array of 32 bytes')
   assert(c === null || (c instanceof Uint8Array && c.length === 16), 'c is not null or an array of 16 bytes')
 

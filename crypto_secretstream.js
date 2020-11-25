@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
-const { assert } = require('nanoassert')
+const assert = require('nanoassert')
 const crypto = require('crypto')
-const { randombytes_buf, randombytes } = require('./randombytes')
+const { randombytes_buf } = require('./randombytes')
 const {
   crypto_stream_chacha20_ietf,
   crypto_stream_chacha20_ietf_xor,
@@ -12,7 +12,7 @@ const {
 const { crypto_core_hchacha20, crypto_core_hchacha20_INPUTBYTES } = require('./crypto_core_hchacha20')
 const Poly1305 = require('./internal/poly1305')
 const { STORE64_LE } = require('./crypto_kdf')
-const { sodium_increment, sodium_is_zero } = require('./helpers')
+const { sodium_increment, sodium_is_zero, sodium_memcmp } = require('./helpers')
 
 const crypto_onetimeauth_poly1305_BYTES = 16
 const crypto_secretstream_xchacha20poly1305_COUNTERBYTES = 4
@@ -36,16 +36,16 @@ const crypto_secretstream_xchacha20poly1305_TAG_FINAL = crypto_secretstream_xcha
 
 const _pad0 = new Uint8Array(16).fill(0)
 
-class crypto_secretstream_xchacha20poly1305_state {
+class Crypto_secretstream_xchacha20poly1305_state {
   constructor (k, nonce, pad) {
-    this.k = Uint8Array(crypto_stream_chacha20_ietf_KEYBYTES).fill(0)
-    this.nonce = Uint8Array(crypto_stream_chacha20_ietf_NONCEBYTES).fill(0)
-    this.pad = Uint8Array(8).fill(0)
+    this.k = new Uint8Array(crypto_stream_chacha20_ietf_KEYBYTES).fill(0)
+    this.nonce = new Uint8Array(crypto_stream_chacha20_ietf_NONCEBYTES).fill(0)
+    this.pad = new Uint8Array(8).fill(0)
   }
 }
 
 function _crypto_secretstream_xchacha20poly1305_counter_reset (state) {
-  assert(state instanceof crypto_secretstream_xchacha20poly1305_state, 'state is not an instance of crypto_secretstream_xchacha20poly1305_state')
+  assert(state instanceof Crypto_secretstream_xchacha20poly1305_state, 'state is not an instance of Crypto_secretstream_xchacha20poly1305_state')
   for (let i = 0; i < crypto_secretstream_xchacha20poly1305_COUNTERBYTES; i++) {
     state.nonce[i] = 0
   }
@@ -58,7 +58,7 @@ function crypto_secretstream_xchacha20poly1305_keygen (k) {
 }
 
 function crypto_secretstream_xchacha20poly1305_init_push (state, out, k) {
-  assert(state instanceof crypto_secretstream_xchacha20poly1305_state, 'state not instance of crypto_secretstream_xchacha20poly1305_state')
+  assert(state instanceof Crypto_secretstream_xchacha20poly1305_state, 'state not instance of Crypto_secretstream_xchacha20poly1305_state')
   assert(out instanceof Uint8Array && out.length === crypto_secretstream_xchacha20poly1305_HEADERBYTES, 'out not byte array of length crypto_secretstream_xchacha20poly1305_HEADERBYTES')
   assert(k instanceof Uint8Array && k.length === crypto_secretstream_xchacha20poly1305_KEYBYTES, 'k not byte array of length crypto_secretstream_xchacha20poly1305_KEYBYTES')
   assert(crypto_secretstream_xchacha20poly1305_HEADERBYTES === crypto_core_hchacha20_INPUTBYTES + crypto_secretstream_xchacha20poly1305_INONCEBYTES)
@@ -76,8 +76,8 @@ function crypto_secretstream_xchacha20poly1305_init_push (state, out, k) {
 }
 
 function crypto_secretstream_xchacha20poly1305_init_pull (state, _in, k) {
-  assert(state instanceof crypto_secretstream_xchacha20poly1305_state,
-    'state not instance of crypto_secretstream_xchacha20poly1305_state')
+  assert(state instanceof Crypto_secretstream_xchacha20poly1305_state,
+    'state not instance of Crypto_secretstream_xchacha20poly1305_state')
   assert(_in instanceof Uint8Array && _in.length === crypto_secretstream_xchacha20poly1305_HEADERBYTES,
     '_in not byte array of length crypto_secretstream_xchacha20poly1305_HEADERBYTES')
   assert(k instanceof Uint8Array && k.length === crypto_secretstream_xchacha20poly1305_KEYBYTES,
@@ -93,8 +93,8 @@ function crypto_secretstream_xchacha20poly1305_init_pull (state, _in, k) {
 }
 
 function crypto_secretstream_xchacha20poly1305_rekey (state) {
-  assert(state instanceof crypto_secretstream_xchacha20poly1305_state,
-    'state not instance of crypto_secretstream_xchacha20poly1305_state')
+  assert(state instanceof Crypto_secretstream_xchacha20poly1305_state,
+    'state not instance of Crypto_secretstream_xchacha20poly1305_state')
   const new_key_and_inonce = new Uint8Array(
     crypto_stream_chacha20_ietf_KEYBYTES + crypto_secretstream_xchacha20poly1305_INONCEBYTES)
   let i
@@ -116,7 +116,7 @@ function crypto_secretstream_xchacha20poly1305_rekey (state) {
   _crypto_secretstream_xchacha20poly1305_counter_reset(state)
 }
 
-function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
+function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag, outputs) {
   const block = new Uint8Array(64)
   const slen = new Uint8Array(8)
 
@@ -164,10 +164,11 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
   // if (outlen_p != NULL) {
   //     *outlen_p = crypto_secretstream_xchacha20poly1305_ABYTES + mlen;
   // }
+  outputs.res_len = crypto_secretstream_xchacha20poly1305_ABYTES + m.byteLength
   return 0
 }
 
-function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad) {
+function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, outputs) {
   const block = new Uint8Array(64)
   const slen = new Uint8Array(8)
   const mac = new Uint8Array(crypto_onetimeauth_poly1305_BYTES)
@@ -223,6 +224,8 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad) {
     sodium_is_zero(state.nonce, crypto_secretstream_xchacha20poly1305_COUNTERBYTES)) {
     crypto_secretstream_xchacha20poly1305_rekey(state)
   }
+  outputs.res_len = mlen
+  outputs.tag = tag
   return tag
 }
 
@@ -298,11 +301,15 @@ function memcpy (dest, src, n) {
 }
 
 function test_secretstream () {
-  const state = new crypto_secretstream_xchacha20poly1305_state()
-  const statesave = new crypto_secretstream_xchacha20poly1305_state()
-  // const state_copy = new crypto_secretstream_xchacha20poly1305_state()
+  const state = new Crypto_secretstream_xchacha20poly1305_state()
+  // const statesave = new Crypto_secretstream_xchacha20poly1305_state()
+  // const state_copy = new Crypto_secretstream_xchacha20poly1305_state()
   const header = new Uint8Array(crypto_secretstream_xchacha20poly1305_HEADERBYTES)
-  
+  const outputs = {
+    res_len: null,
+    tag: null
+  }
+
   const ad_len = crypto.randomInt(100)
   const m1_len = crypto.randomInt(1000)
   const m2_len = crypto.randomInt(1000)
@@ -311,7 +318,7 @@ function test_secretstream () {
   const c1 = new Uint8Array(m1_len + crypto_secretstream_xchacha20poly1305_ABYTES)
   const c2 = new Uint8Array(m2_len + crypto_secretstream_xchacha20poly1305_ABYTES)
   const c3 = new Uint8Array(m3_len + crypto_secretstream_xchacha20poly1305_ABYTES)
-  const csave = new Uint8Array((m1_len | m2_len | m3_len) + crypto_secretstream_xchacha20poly1305_ABYTES)
+  // const csave = new Uint8Array((m1_len | m2_len | m3_len) + crypto_secretstream_xchacha20poly1305_ABYTES)
 
   const ad = new Uint8Array(ad_len)
   const m1 = new Uint8Array(m1_len)
@@ -338,14 +345,14 @@ function test_secretstream () {
   let ret = crypto_secretstream_xchacha20poly1305_init_push(state, header, k)
   assert(ret === 0, 'init_push failed')
 
-  ret = crypto_secretstream_xchacha20poly1305_push(state, c1, m1, null, 0) // how can ad be null here?
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c1, m1, 0, 0, outputs) // how can ad be null here?
   assert(ret === 0, 'push failed')
-  // assert(res_len == m1_len + crypto_secretstream_xchacha20poly1305_ABYTES);
+  assert(outputs.res_len === m1_len + crypto_secretstream_xchacha20poly1305_ABYTES)
 
-  ret = crypto_secretstream_xchacha20poly1305_push(state, c2, m2, ad, 0)
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c2, m2, ad, 0, outputs)
   assert(ret === 0, 'second push failed')
 
-  ret = crypto_secretstream_xchacha20poly1305_push(state, c3, null, m3, ad, crypto_secretstream_xchacha20poly1305_TAG_FINAL)
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c3, 0, m3, ad, crypto_secretstream_xchacha20poly1305_TAG_FINAL)
   assert(ret === 0, 'third push failed')
 
   /* pull */
@@ -353,7 +360,11 @@ function test_secretstream () {
   ret = crypto_secretstream_xchacha20poly1305_init_pull(state, header, k)
   assert(ret === 0)
 
-  
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m1, c1, null, outputs)
+  assert(ret === 0, 'first pull failed')
+  assert(outputs.tag === 0, 'tag pull failed')
+  assert(sodium_memcmp(m1, m1_), 'failed m1 memcmp')
+  assert(outputs.res_len === m1_len)
 }
 
 test_secretstream()
