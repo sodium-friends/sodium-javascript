@@ -211,7 +211,7 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, adlen, o
   const stored_mac = _in.subarray(1 + mlen, _in.length)
   for (let i = 0; i < mac.length; i++) {
     if (mac[i] !== stored_mac[i]) {
-      console.log(`mac: ${mac}\n\nstored_mac: ${stored_mac}\n`)
+      console.log(`mac: ${mac}\nstored_mac: ${stored_mac}\n`)
       mac.fill(0)
       return -1
     }
@@ -228,7 +228,7 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, adlen, o
   }
   outputs.res_len = mlen
   outputs.tag = tag
-  return tag
+  return 0
 }
 
 function crypto_secretstream_xchacha20poly1305_statebytes () {
@@ -372,6 +372,17 @@ function test_secretstream () {
   assert(ret === 0, 'second pull failed')
   assert(outputs.tag === 0, 'second tag pull failed')
   assert(sodium_memcmp(m2, m2_, m2_len), 'failed m2 memcmp')
+
+  if (ad_len > 0) {
+    ret = crypto_secretstream_xchacha20poly1305_pull(state, m3, c3, 0, 0, outputs)
+    assert(ret === -1, 'failed third pull')
+  }
+  console.log('past third check')
+
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m3, c3, ad, ad_len, outputs)
+  assert(ret === 0, 'failed fourth pull')
+  assert(outputs.tag === crypto_secretstream_xchacha20poly1305_TAG_FINAL, 'failed final tag pull')
+  assert(sodium_memcmp(m3, m3_, m3_len), 'failed m3 memcmp')
 }
 
 test_secretstream()
