@@ -215,7 +215,7 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, outputs)
     }
   }
 
-  crypto_stream_chacha20_ietf_xor_ic(m, c.subarray(m.length), state.nonce, 2, state.k)
+  crypto_stream_chacha20_ietf_xor_ic(m, c.subarray(0, m.length), state.nonce, 2, state.k)
   xor_buf(state.nonce.subarray(crypto_secretstream_xchacha20poly1305_COUNTERBYTES, state.nonce.length),
     mac, crypto_secretstream_xchacha20poly1305_INONCEBYTES)
   sodium_increment(state.nonce)
@@ -363,7 +363,6 @@ function test_secretstream () {
   ret = crypto_secretstream_xchacha20poly1305_pull(state, m1, c1, 0, outputs)
   assert(ret === 0, 'first pull failed')
   assert(outputs.tag === 0, 'tag pull failed')
-  console.log(`m1: ${m1}\n\nm1_: ${m1_}`)
   assert(sodium_memcmp(m1, m1_), 'failed m1 memcmp')
   assert(outputs.res_len === m1_len)
 }
