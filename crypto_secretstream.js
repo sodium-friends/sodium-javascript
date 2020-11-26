@@ -158,7 +158,7 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, adlen, t
   sodium_increment(state.nonce)
 
   if ((tag & crypto_secretstream_xchacha20poly1305_TAG_REKEY) !== 0 ||
-    sodium_is_zero(state.nonce, crypto_secretstream_xchacha20poly1305_COUNTERBYTES)) {
+    sodium_is_zero(state.nonce.subarray(0, crypto_secretstream_xchacha20poly1305_COUNTERBYTES))) {
     crypto_secretstream_xchacha20poly1305_rekey(state)
   }
   // if (outlen_p != NULL) {
@@ -174,7 +174,6 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, adlen, o
   const mac = new Uint8Array(crypto_onetimeauth_poly1305_BYTES)
 
   if (_in.byteLength < crypto_secretstream_xchacha20poly1305_ABYTES) {
-    console.log('bailing at _in.byteLength < crypto_secretstream_xchacha20poly1305_ABYTES')
     return -1
   }
 
@@ -211,7 +210,6 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, adlen, o
   const stored_mac = _in.subarray(1 + mlen, _in.length)
   for (let i = 0; i < mac.length; i++) {
     if (mac[i] !== stored_mac[i]) {
-      console.log(`mac: ${mac}\nstored_mac: ${stored_mac}\n`)
       mac.fill(0)
       return -1
     }
@@ -223,7 +221,7 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, adlen, o
   sodium_increment(state.nonce)
 
   if ((tag & crypto_secretstream_xchacha20poly1305_TAG_REKEY) !== 0 ||
-    sodium_is_zero(state.nonce, crypto_secretstream_xchacha20poly1305_COUNTERBYTES)) {
+    sodium_is_zero(state.nonce.subarray(0, crypto_secretstream_xchacha20poly1305_COUNTERBYTES))) {
     crypto_secretstream_xchacha20poly1305_rekey(state)
   }
   outputs.res_len = mlen
@@ -377,7 +375,6 @@ function test_secretstream () {
     ret = crypto_secretstream_xchacha20poly1305_pull(state, m3, c3, 0, 0, outputs)
     assert(ret === -1, 'failed third pull')
   }
-  console.log('past third check')
 
   ret = crypto_secretstream_xchacha20poly1305_pull(state, m3, c3, ad, ad_len, outputs)
   assert(ret === 0, 'failed fourth pull')
@@ -496,7 +493,7 @@ function test_secretstream () {
   assert(ret === 0)
 
   ret = crypto_secretstream_xchacha20poly1305_push(state, c1, m1, 0, 0,
-        crypto_secretstream_xchacha20poly1305_TAG_PUSH, outputs)
+    crypto_secretstream_xchacha20poly1305_TAG_PUSH, outputs)
   assert(ret === 0)
   assert(outputs.res_len === m1_len + crypto_secretstream_xchacha20poly1305_ABYTES)
 
@@ -512,31 +509,48 @@ function test_secretstream () {
 
   ret = crypto_secretstream_xchacha20poly1305_push(state, c2, m2, ad, 0, 0, outputs)
   assert(ret === 0)
-
-  assert(!memcmp(state_copy.k, state.k))
-  assert(!memcmp(state_copy.nonce, state.nonce))
+  assert(!sodium_memcmp(state_copy.k, state.k))
+  assert(!sodium_memcmp(state_copy.nonce, state.nonce))
   assert(state.nonce[0] === 1)
   assert(sodium_is_zero(state.nonce.subarray(1, 4)))
 
   ret = crypto_secretstream_xchacha20poly1305_init_pull(state, header, k)
   assert(ret === 0)
 
-  ret = crypto_secretstream_xchacha20poly1305_pull
-      (state, m1, &res_len, &tag,
-        c1, m1_len + crypto_secretstream_xchacha20poly1305_ABYTES, NULL, 0)
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m1, c1, 0, 0, outputs)
   assert(ret === 0)
-  assert(tag === crypto_secretstream_xchacha20poly1305_TAG_PUSH)
-  assert(memcmp(m1, m1_, m1_len) === 0)
-  assert(res_len === m1_len)
+  assert(outputs.tag === crypto_secretstream_xchacha20poly1305_TAG_PUSH)
+  assert(sodium_memcmp(m1, m1_))
+  assert(outputs.res_len === m1_len)
 
-  memset(state->nonce, 0xff, 4U)
+  for (let i = 0; i < 4; i++) {
+    state.nonce[i] = 0xff
+  }
 
-  ret = crypto_secretstream_xchacha20poly1305_pull
-      (state, m2, NULL, &tag,
-        c2, m2_len + crypto_secretstream_xchacha20poly1305_ABYTES, NULL, 0)
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2, 0, 0, outputs)
   assert(ret === 0)
-  assert(tag === 0)
-  assert(memcmp(m2, m2_, m2_len) === 0)
+  assert(outputs.tag === 0)
+  assert(sodium_memcmp(m2, m2_))
+
+  assert(crypto_secretstream_xchacha20poly1305_abytes() ===
+    crypto_secretstream_xchacha20poly1305_ABYTES)
+  assert(crypto_secretstream_xchacha20poly1305_headerbytes() ===
+    crypto_secretstream_xchacha20poly1305_HEADERBYTES)
+  assert(crypto_secretstream_xchacha20poly1305_keybytes() ===
+    crypto_secretstream_xchacha20poly1305_KEYBYTES)
+  assert(crypto_secretstream_xchacha20poly1305_messagebytes_max() ===
+    crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX)
+
+  assert(crypto_secretstream_xchacha20poly1305_tag_message() ===
+    crypto_secretstream_xchacha20poly1305_TAG_MESSAGE)
+  assert(crypto_secretstream_xchacha20poly1305_tag_push() ===
+    crypto_secretstream_xchacha20poly1305_TAG_PUSH)
+  assert(crypto_secretstream_xchacha20poly1305_tag_rekey() ===
+    crypto_secretstream_xchacha20poly1305_TAG_REKEY)
+  assert(crypto_secretstream_xchacha20poly1305_tag_final() ===
+    crypto_secretstream_xchacha20poly1305_TAG_FINAL)
+
+  console.log('OK')
 }
 
 test_secretstream()
