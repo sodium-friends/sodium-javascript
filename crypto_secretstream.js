@@ -383,6 +383,24 @@ function test_secretstream () {
   assert(ret === 0, 'failed fourth pull')
   assert(outputs.tag === crypto_secretstream_xchacha20poly1305_TAG_FINAL, 'failed final tag pull')
   assert(sodium_memcmp(m3, m3_, m3_len), 'failed m3 memcmp')
+
+  /* previous with FINAL tag */
+
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m3, c3, ad, ad_len, outputs)
+  assert(ret === -1)
+
+  /* previous without a tag */
+
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2, 0, 0, outputs)
+  assert(ret === -1)
+
+  /* short ciphertext */
+
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2,
+    crypto.randomInt(crypto_secretstream_xchacha20poly1305_ABYTES), 0, 0, outputs)
+  assert(ret === -1)
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2, 0, 0, 0, outputs)
+  assert(ret === -1)
 }
 
 test_secretstream()
