@@ -37,7 +37,7 @@ const crypto_secretstream_xchacha20poly1305_TAG_FINAL = crypto_secretstream_xcha
 const _pad0 = new Uint8Array(16).fill(0)
 
 class Crypto_secretstream_xchacha20poly1305_state {
-  constructor (k, nonce, pad) {
+  constructor () {
     this.k = new Uint8Array(crypto_stream_chacha20_ietf_KEYBYTES).fill(0)
     this.nonce = new Uint8Array(crypto_stream_chacha20_ietf_NONCEBYTES).fill(0)
     this.pad = new Uint8Array(8).fill(0)
@@ -304,8 +304,8 @@ function memcpy (dest, src, n) {
 
 function test_secretstream () {
   const state = new Crypto_secretstream_xchacha20poly1305_state()
-  // const statesave = new Crypto_secretstream_xchacha20poly1305_state()
-  // const state_copy = new Crypto_secretstream_xchacha20poly1305_state()
+  const statesave = new Crypto_secretstream_xchacha20poly1305_state()
+  const state_copy = new Crypto_secretstream_xchacha20poly1305_state()
   const header = new Uint8Array(crypto_secretstream_xchacha20poly1305_HEADERBYTES)
   const outputs = {
     res_len: null,
@@ -320,7 +320,7 @@ function test_secretstream () {
   const c1 = new Uint8Array(m1_len + crypto_secretstream_xchacha20poly1305_ABYTES)
   const c2 = new Uint8Array(m2_len + crypto_secretstream_xchacha20poly1305_ABYTES)
   const c3 = new Uint8Array(m3_len + crypto_secretstream_xchacha20poly1305_ABYTES)
-  // const csave = new Uint8Array((m1_len | m2_len | m3_len) + crypto_secretstream_xchacha20poly1305_ABYTES)
+  const csave = new Uint8Array((m1_len | m2_len | m3_len) + crypto_secretstream_xchacha20poly1305_ABYTES)
 
   const ad = new Uint8Array(ad_len)
   const m1 = new Uint8Array(m1_len)
@@ -396,11 +396,147 @@ function test_secretstream () {
 
   /* short ciphertext */
 
-  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2,
-    crypto.randomInt(crypto_secretstream_xchacha20poly1305_ABYTES), 0, 0, outputs)
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2,
+    c2.subarray(0, crypto.randomInt(crypto_secretstream_xchacha20poly1305_ABYTES)), 0, 0, outputs)
   assert(ret === -1)
-  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2, 0, 0, 0, outputs)
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2, 0, 0, outputs)
   assert(ret === -1)
+
+  /* empty ciphertext */
+
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2,
+    c2.subarray(0, crypto_secretstream_xchacha20poly1305_ABYTES), 0, 0, outputs)
+  assert(ret === -1)
+
+  /* without explicit rekeying */
+
+  ret = crypto_secretstream_xchacha20poly1305_init_push(state, header, k)
+  assert(ret === 0)
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c1, m1, 0, 0, 0, outputs)
+  assert(ret === 0)
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c2, m2, 0, 0, 0, outputs)
+  assert(ret === 0)
+
+  ret = crypto_secretstream_xchacha20poly1305_init_pull(state, header, k)
+  assert(ret === 0)
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m1, c1, 0, 0, outputs)
+  assert(ret === 0)
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2, 0, 0, outputs)
+  assert(ret === 0)
+
+  /* with explicit rekeying */
+
+  ret = crypto_secretstream_xchacha20poly1305_init_push(state, header, k)
+  assert(ret === 0)
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c1, m1, 0, 0, 0, outputs)
+  assert(ret === 0)
+
+  crypto_secretstream_xchacha20poly1305_rekey(state)
+
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c2, m2, 0, 0, 0, outputs)
+  assert(ret === 0)
+
+  ret = crypto_secretstream_xchacha20poly1305_init_pull(state, header, k)
+  assert(ret === 0)
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m1, c1, 0, 0, outputs)
+  assert(ret === 0)
+
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2, 0, 0, outputs)
+  assert(ret === -1)
+
+  crypto_secretstream_xchacha20poly1305_rekey(state)
+
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2, 0, 0, outputs)
+  assert(ret === 0)
+
+  /* with explicit rekeying using TAG_REKEY */
+
+  ret = crypto_secretstream_xchacha20poly1305_init_push(state, header, k)
+  assert(ret === 0)
+
+  statesave.k = new Uint8Array(state.k)
+  statesave.nonce = new Uint8Array(state.nonce)
+  statesave.pad = new Uint8Array(state.pad)
+
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c1, m1, 0, 0, crypto_secretstream_xchacha20poly1305_TAG_REKEY, outputs)
+  assert(ret === 0)
+
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c2, m2, 0, 0, 0, outputs)
+  assert(ret === 0)
+
+  memcpy(csave, c2, m2_len + crypto_secretstream_xchacha20poly1305_ABYTES)
+
+  ret = crypto_secretstream_xchacha20poly1305_init_pull(state, header, k)
+  assert(ret === 0)
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m1, c1, 0, 0, outputs)
+  assert(ret === 0)
+  assert(outputs.tag === crypto_secretstream_xchacha20poly1305_TAG_REKEY)
+
+  ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2, 0, 0, outputs)
+  assert(ret === 0)
+  assert(outputs.tag === 0)
+
+  state.k = new Uint8Array(statesave.k)
+  state.nonce = new Uint8Array(statesave.nonce)
+  state.pad = new Uint8Array(statesave.pad)
+
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c1, m1, 0, 0, 0, outputs)
+  assert(ret === 0)
+
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c2, m2, 0, 0, 0, outputs)
+  assert(ret === 0)
+  assert(!sodium_memcmp(
+    csave.subarray(0, m2_len + crypto_secretstream_xchacha20poly1305_ABYTES),
+    c2.subarray(0, m2_len + crypto_secretstream_xchacha20poly1305_ABYTES)
+  ))
+
+  /* New stream */
+
+  ret = crypto_secretstream_xchacha20poly1305_init_push(state, header, k)
+  assert(ret === 0)
+
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c1, m1, 0, 0,
+        crypto_secretstream_xchacha20poly1305_TAG_PUSH, outputs)
+  assert(ret === 0)
+  assert(outputs.res_len === m1_len + crypto_secretstream_xchacha20poly1305_ABYTES)
+
+  /* Force a counter overflow, check that the key has been updated
+    * even though the tag was not changed to REKEY */
+
+  for (let i = 0; i < 4; i++) {
+    state.nonce[i] = 0xff
+  }
+  state_copy.k = new Uint8Array(state.k)
+  state_copy.nonce = new Uint8Array(state.nonce)
+  state_copy.pad = new Uint8Array(state.pad)
+
+  ret = crypto_secretstream_xchacha20poly1305_push(state, c2, m2, ad, 0, 0, outputs)
+  assert(ret === 0)
+
+  assert(!memcmp(state_copy.k, state.k))
+  assert(!memcmp(state_copy.nonce, state.nonce))
+  assert(state.nonce[0] === 1)
+  assert(sodium_is_zero(state.nonce.subarray(1, 4)))
+
+  ret = crypto_secretstream_xchacha20poly1305_init_pull(state, header, k)
+  assert(ret === 0)
+
+  ret = crypto_secretstream_xchacha20poly1305_pull
+      (state, m1, &res_len, &tag,
+        c1, m1_len + crypto_secretstream_xchacha20poly1305_ABYTES, NULL, 0)
+  assert(ret === 0)
+  assert(tag === crypto_secretstream_xchacha20poly1305_TAG_PUSH)
+  assert(memcmp(m1, m1_, m1_len) === 0)
+  assert(res_len === m1_len)
+
+  memset(state->nonce, 0xff, 4U)
+
+  ret = crypto_secretstream_xchacha20poly1305_pull
+      (state, m2, NULL, &tag,
+        c2, m2_len + crypto_secretstream_xchacha20poly1305_ABYTES, NULL, 0)
+  assert(ret === 0)
+  assert(tag === 0)
+  assert(memcmp(m2, m2_, m2_len) === 0)
 }
 
 test_secretstream()
