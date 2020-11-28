@@ -272,8 +272,7 @@ function xor_buf (out, _in, n) {
 }
 
 module.exports = {
-  // crypto_aead_xchacha20poly1305_ietf_ABYTES,
-  // crypto_secretstream_xchacha20poly1305_ABYTES,
+  Crypto_secretstream_xchacha20poly1305_state,
   crypto_secretstream_xchacha20poly1305_keygen,
   crypto_secretstream_xchacha20poly1305_init_push,
   crypto_secretstream_xchacha20poly1305_init_pull,
