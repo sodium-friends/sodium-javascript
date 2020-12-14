@@ -141,12 +141,12 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, adlen, t
   const c = out.subarray(1, out.byteLength)
   crypto_stream_chacha20_ietf_xor_ic(c, m, state.nonce, 2, state.k)
   poly.update(c, 0, m.byteLength)
-  poly.update(_pad0, (0x10 - block.byteLength + m.byteLength) & 0xf)
+  poly.update(_pad0, 0, (0x10 - block.byteLength + m.byteLength) & 0xf)
 
   STORE64_LE(slen, adlen)
-  poly.update(slen, slen.byteLength)
+  poly.update(slen, 0, slen.byteLength)
   STORE64_LE(slen, block.byteLength + m.byteLength)
-  poly.update(slen, slen.byteLength)
+  poly.update(slen, 0, slen.byteLength)
 
   const mac = out.subarray(1 + m.byteLength, out.byteLength)
   poly.finish(mac, 0)
@@ -199,12 +199,12 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, adlen, o
   const c = _in.subarray(1, _in.length)
   poly.update(c, 0, mlen)
   // poly.update(_in, 1, mlen)
-  poly.update(_pad0, (0x10 - block.byteLength + mlen) & 0xf)
+  poly.update(_pad0, 0, (0x10 - block.byteLength + mlen) & 0xf)
 
   STORE64_LE(slen, adlen)
-  poly.update(slen, slen.byteLength)
+  poly.update(slen, 0, slen.byteLength)
   STORE64_LE(slen, block.byteLength + m.byteLength)
-  poly.update(slen, slen.byteLength)
+  poly.update(slen, 0, slen.byteLength)
 
   poly.finish(mac, 0)
   const stored_mac = _in.subarray(1 + mlen, _in.length)
