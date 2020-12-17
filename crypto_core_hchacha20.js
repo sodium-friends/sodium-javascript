@@ -15,9 +15,6 @@ function ROTL32 (x, b) {
   return (x << b) | (x >>> (64 - b))
 }
 
-// In C, we know how the uint32 is laid out in memory, so on LE systems, it makes sense to memcpy the 4 bytes, and on BE to reconstruct with bitshifts.
-// In JS, we're assuming a LE array as input into this function, and we want the user-facing representation of the number, and JS numbers are 64-bit Frankensteins,
-// so we bitshift, even though that looks like the BE thing to do in the C code.
 function LOAD32_LE (src, offset) {
   assert(src instanceof Uint8Array, 'src not byte array')
   let w = src[offset]
@@ -46,12 +43,10 @@ function QUARTERROUND (l, A, B, C, D) {
   l[D] = ROTL32(l[D] ^ l[A], 8)
   l[C] += l[D]
   l[B] = ROTL32(l[B] ^ l[C], 7)
-  return [l[A], l[B], l[C], l[D]]
 }
 
 function crypto_core_hchacha20 (out, _in, k, c) {
   assert(out instanceof Uint8Array && out.length === 32, 'out is not an array of 32 bytes')
-  // assert(_in instanceof Uint8Array && _in.length === 16, '_in is not an array of 16 bytes')
   assert(k instanceof Uint8Array && k.length === 32, 'k is not an array of 32 bytes')
   assert(c === null || (c instanceof Uint8Array && c.length === 16), 'c is not null or an array of 16 bytes')
 
@@ -174,6 +169,7 @@ function tv_hchacha20 () {
     }
   }
   assert(outs_equal, 'hchacha20 test with constant failed')
+  console.log('hchacha20 test OK')
 }
 
 tv_hchacha20()

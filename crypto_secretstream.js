@@ -34,17 +34,17 @@ const crypto_secretstream_xchacha20poly1305_TAG_FINAL = crypto_secretstream_xcha
 // #define STATE_INONCE(STATE)  ((STATE)->nonce + \
 //                               crypto_secretstream_xchacha20poly1305_COUNTERBYTES)
 
-const _pad0 = new Uint8Array(16).fill(0)
+const _pad0 = new Uint8Array(16)
 
 class Crypto_secretstream_xchacha20poly1305_state {
   constructor () {
-    this.k = new Uint8Array(crypto_stream_chacha20_ietf_KEYBYTES).fill(0)
-    this.nonce = new Uint8Array(crypto_stream_chacha20_ietf_NONCEBYTES).fill(0)
-    this.pad = new Uint8Array(8).fill(0)
+    this.k = new Uint8Array(crypto_stream_chacha20_ietf_KEYBYTES)
+    this.nonce = new Uint8Array(crypto_stream_chacha20_ietf_NONCEBYTES)
+    this.pad = new Uint8Array(8)
   }
 }
 
-function _crypto_secretstream_xchacha20poly1305_counter_reset (state) {
+function crypto_secretstream_xchacha20poly1305_counter_reset (state) {
   assert(state instanceof Crypto_secretstream_xchacha20poly1305_state, 'state is not an instance of Crypto_secretstream_xchacha20poly1305_state')
   for (let i = 0; i < crypto_secretstream_xchacha20poly1305_COUNTERBYTES; i++) {
     state.nonce[i] = 0
@@ -67,7 +67,7 @@ function crypto_secretstream_xchacha20poly1305_init_push (state, out, k) {
 
   randombytes_buf(out, crypto_secretstream_xchacha20poly1305_HEADERBYTES)
   crypto_core_hchacha20(state.k, out, k, null)
-  _crypto_secretstream_xchacha20poly1305_counter_reset(state)
+  crypto_secretstream_xchacha20poly1305_counter_reset(state)
   for (let i = 0; i < crypto_secretstream_xchacha20poly1305_INONCEBYTES; i++) {
     state.nonce[i + crypto_secretstream_xchacha20poly1305_COUNTERBYTES] = out[i + crypto_core_hchacha20_INPUTBYTES]
   }
@@ -83,7 +83,7 @@ function crypto_secretstream_xchacha20poly1305_init_pull (state, _in, k) {
   assert(k instanceof Uint8Array && k.length === crypto_secretstream_xchacha20poly1305_KEYBYTES,
     'k not byte array of length crypto_secretstream_xchacha20poly1305_KEYBYTES')
   crypto_core_hchacha20(state.k, _in, k, null)
-  _crypto_secretstream_xchacha20poly1305_counter_reset(state)
+  crypto_secretstream_xchacha20poly1305_counter_reset(state)
 
   for (let i = 0; i < crypto_secretstream_xchacha20poly1305_INONCEBYTES; i++) {
     state.nonce[i + crypto_secretstream_xchacha20poly1305_COUNTERBYTES] = _in[i + crypto_core_hchacha20_INPUTBYTES]
@@ -113,7 +113,7 @@ function crypto_secretstream_xchacha20poly1305_rekey (state) {
     state.nonce[crypto_secretstream_xchacha20poly1305_COUNTERBYTES + i] =
       new_key_and_inonce[crypto_stream_chacha20_ietf_KEYBYTES + i]
   }
-  _crypto_secretstream_xchacha20poly1305_counter_reset(state)
+  crypto_secretstream_xchacha20poly1305_counter_reset(state)
 }
 
 function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, adlen, tag, outputs) {
@@ -161,9 +161,7 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, adlen, t
     sodium_is_zero(state.nonce.subarray(0, crypto_secretstream_xchacha20poly1305_COUNTERBYTES))) {
     crypto_secretstream_xchacha20poly1305_rekey(state)
   }
-  // if (outlen_p != NULL) {
-  //     *outlen_p = crypto_secretstream_xchacha20poly1305_ABYTES + mlen;
-  // }
+
   outputs.res_len = crypto_secretstream_xchacha20poly1305_ABYTES + m.byteLength
   return 0
 }
@@ -178,9 +176,6 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, adlen, o
   }
 
   const mlen = _in.byteLength - crypto_secretstream_xchacha20poly1305_ABYTES
-  // if (mlen > crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX) {
-  //   sodium_misuse()
-  // }
   crypto_stream_chacha20_ietf(block, state.nonce, state.k)
   const poly = new Poly1305(block)
   block.fill(0) // sodium_memzero(block, sizeof block);
@@ -549,7 +544,7 @@ function test_secretstream () {
   assert(crypto_secretstream_xchacha20poly1305_tag_final() ===
     crypto_secretstream_xchacha20poly1305_TAG_FINAL)
 
-  console.log('OK')
+  console.log('secretstream test OK')
 }
 
 test_secretstream()
