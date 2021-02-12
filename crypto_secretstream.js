@@ -294,6 +294,12 @@ function memcpy (dest, src, n) {
   }
 }
 
+function getRandomInt (min, max) {
+  min = Math.ceil(min)
+  max = Math.floor(max)
+  return Math.floor(Math.random() * (max - min) + min) // The maximum is exclusive and the minimum is inclusive
+}
+
 function test_secretstream () {
   const state = new Crypto_secretstream_xchacha20poly1305_state()
   const statesave = new Crypto_secretstream_xchacha20poly1305_state()
@@ -304,10 +310,10 @@ function test_secretstream () {
     tag: null
   }
 
-  const ad_len = crypto.randomInt(100)
-  const m1_len = crypto.randomInt(1000)
-  const m2_len = crypto.randomInt(1000)
-  const m3_len = crypto.randomInt(1000)
+  const ad_len = getRandomInt(0, 100)
+  const m1_len = getRandomInt(0, 1000)
+  const m2_len = getRandomInt(0, 1000)
+  const m3_len = getRandomInt(0, 1000)
 
   const c1 = new Uint8Array(m1_len + crypto_secretstream_xchacha20poly1305_ABYTES)
   const c2 = new Uint8Array(m2_len + crypto_secretstream_xchacha20poly1305_ABYTES)
