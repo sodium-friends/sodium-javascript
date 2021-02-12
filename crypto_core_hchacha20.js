@@ -12,7 +12,7 @@ const crypto_core_hchacha20_CONSTBYTES = 16
 function ROTL32 (x, b) {
   x &= 0xFFFFFFFF
   b &= 0xFFFFFFFF
-  return (x << b) | (x >>> (64 - b))
+  return (x << b) | (x >>> (32 - b))
 }
 
 function LOAD32_LE (src, offset) {
