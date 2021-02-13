@@ -553,4 +553,4 @@ function test_secretstream () {
   console.log('secretstream test OK')
 }
 
-test_secretstream()
+test_secretstream() // test
