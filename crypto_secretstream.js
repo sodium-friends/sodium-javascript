@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 const assert = require('nanoassert')
-const crypto = require('crypto')
 const { randombytes_buf } = require('./randombytes')
 const {
   crypto_stream_chacha20_ietf,
@@ -394,7 +393,7 @@ function test_secretstream () {
   /* short ciphertext */
 
   ret = crypto_secretstream_xchacha20poly1305_pull(state, m2,
-    c2.subarray(0, crypto.randomInt(crypto_secretstream_xchacha20poly1305_ABYTES)), 0, 0, outputs)
+    c2.subarray(0, getRandomInt(0, crypto_secretstream_xchacha20poly1305_ABYTES)), 0, 0, outputs)
   assert(ret === -1)
   ret = crypto_secretstream_xchacha20poly1305_pull(state, m2, c2, 0, 0, outputs)
   assert(ret === -1)
@@ -553,4 +552,4 @@ function test_secretstream () {
   console.log('secretstream test OK')
 }
 
-test_secretstream() // test
+test_secretstream()
