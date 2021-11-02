@@ -2,7 +2,7 @@ var assert = require('nanoassert')
 
 var randombytes = (function () {
   var QUOTA = 65536 // limit for QuotaExceededException
-  var crypto = global.crypto || global.msCrypto
+  var crypto = globalThis.crypto || globalThis.msCrypto
 
   function browserBytes (out, n) {
     for (let i = 0; i < n; i += QUOTA) {

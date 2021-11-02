@@ -17,7 +17,7 @@ var sink
 
 function loadSink () {
   if (sink) return sink
-  var MessageChannel = global.MessageChannel
+  var MessageChannel = globalThis.MessageChannel
   if (MessageChannel == null) ({ MessageChannel } = require('worker' + '_threads'))
   sink = new MessageChannel()
   return sink
