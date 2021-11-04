@@ -452,7 +452,7 @@ function crypto_sign_ed25519_sk_to_curve25519 (curveSk, edSk) {
   assert(curveSk && curveSk.byteLength === crypto_scalarmult_BYTES, "curveSk must be 'crypto_sign_SECRETKEYBYTES' long")
   assert(edSk && edSk.byteLength === crypto_sign_ed25519_SECRETKEYBYTES, "edSk must be 'crypto_sign_ed25519_SECRETKEYBYTES' long")
 
-  var h = Buffer.alloc(crypto_hash_sha512_BYTES)
+  var h = new Uint8Array(crypto_hash_sha512_BYTES)
   crypto_hash(h, edSk, 32)
 
   h[0] &= 248
