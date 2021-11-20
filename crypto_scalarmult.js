@@ -1,4 +1,6 @@
 /* eslint-disable camelcase, one-var */
+const ristretto255 = require('ristretto255')
+const { crypto_core_ristretto255_BYTES, crypto_core_ristretto255_SCALARBYTES } = require('./crypto_core_ristretto255')
 const { _9, _121665, gf, inv25519, pack25519, unpack25519, sel25519, A, M, Z, S } = require('./internal/ed25519')
 
 const crypto_scalarmult_BYTES = 32
@@ -8,7 +10,34 @@ module.exports = {
   crypto_scalarmult,
   crypto_scalarmult_base,
   crypto_scalarmult_BYTES,
-  crypto_scalarmult_SCALARBYTES
+  crypto_scalarmult_SCALARBYTES,
+  crypto_scalarmult_ristretto255,
+  crypto_scalarmult_ristretto255_base,
+  crypto_scalarmult_ristretto255_bytes,
+  crypto_scalarmult_ristretto255_scalarbytes,
+  crypto_scalarmult_ristretto255_BYTES: crypto_core_ristretto255_BYTES,
+  crypto_scalarmult_ristretto255_SCALARBYTES: crypto_core_ristretto255_SCALARBYTES
+}
+
+function crypto_scalarmult_ristretto255 (q, n, p) {
+  check(q, crypto_core_ristretto255_BYTES)
+  check(n, crypto_core_ristretto255_SCALARBYTES)
+  check(p, crypto_core_ristretto255_BYTES)
+  return q.set(ristretto255.scalarMult(n, p))
+}
+
+function crypto_scalarmult_ristretto255_base (q, n) {
+  check(q, crypto_core_ristretto255_BYTES)
+  check(n, crypto_core_ristretto255_SCALARBYTES)
+  return q.set(ristretto255.scalarMultBase(n))
+}
+
+function crypto_scalarmult_ristretto255_bytes () {
+  return crypto_scalarmult_ristretto255_BYTES
+}
+
+function crypto_scalarmult_ristretto255_scalarbytes () {
+  return crypto_scalarmult_ristretto255_SCALARBYTES
 }
 
 function crypto_scalarmult (q, n, p) {
