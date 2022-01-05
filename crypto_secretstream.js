@@ -5,8 +5,7 @@ const {
   crypto_stream_chacha20_ietf,
   crypto_stream_chacha20_ietf_xor,
   crypto_stream_chacha20_ietf_xor_ic,
-  crypto_stream_chacha20_ietf_KEYBYTES,
-  crypto_stream_chacha20_ietf_NONCEBYTES
+  crypto_stream_chacha20_ietf_KEYBYTES
 } = require('./crypto_stream_chacha20')
 const { crypto_core_hchacha20, crypto_core_hchacha20_INPUTBYTES } = require('./internal/hchacha20')
 const Poly1305 = require('./internal/poly1305')
@@ -28,8 +27,8 @@ const crypto_secretstream_xchacha20poly1305_TAG_MESSAGE = new Uint8Array([0])
 const crypto_secretstream_xchacha20poly1305_TAG_PUSH = new Uint8Array([1])
 const crypto_secretstream_xchacha20poly1305_TAG_REKEY = new Uint8Array([2])
 const crypto_secretstream_xchacha20poly1305_TAG_FINAL = new Uint8Array([crypto_secretstream_xchacha20poly1305_TAG_PUSH | crypto_secretstream_xchacha20poly1305_TAG_REKEY])
-const crypto_secretstream_xchacha20poly1305_STATEBYTES = crypto_secretstream_xchacha20poly1305_KEYBYTES
-  + crypto_secretstream_xchacha20poly1305_INONCEBYTES + crypto_secretstream_xchacha20poly1305_COUNTERBYTES + 8
+const crypto_secretstream_xchacha20poly1305_STATEBYTES = crypto_secretstream_xchacha20poly1305_KEYBYTES +
+  crypto_secretstream_xchacha20poly1305_INONCEBYTES + crypto_secretstream_xchacha20poly1305_COUNTERBYTES + 8
 
 const KEY_OFFSET = 0
 const NONCE_OFFSET = crypto_secretstream_xchacha20poly1305_KEYBYTES
