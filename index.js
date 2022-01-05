@@ -28,7 +28,6 @@ forward(require('./crypto_shorthash'))
 forward(require('./crypto_sign'))
 forward(require('./crypto_stream'))
 forward(require('./crypto_stream_chacha20'))
-forward(require('./crypto_core_hchacha20'))
 
 function forward (submodule) {
   Object.keys(submodule).forEach(function (prop) {
