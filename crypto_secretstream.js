@@ -23,10 +23,11 @@ const crypto_aead_xchacha20poly1305_ietf_ABYTES = 16
 const crypto_secretstream_xchacha20poly1305_ABYTES = 1 + crypto_aead_xchacha20poly1305_ietf_ABYTES
 const crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEGER
 const crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX = Number.MAX_SAFE_INTEGER
-const crypto_secretstream_xchacha20poly1305_TAG_MESSAGE = 0
-const crypto_secretstream_xchacha20poly1305_TAG_PUSH = 1
-const crypto_secretstream_xchacha20poly1305_TAG_REKEY = 2
-const crypto_secretstream_xchacha20poly1305_TAG_FINAL = crypto_secretstream_xchacha20poly1305_TAG_PUSH | crypto_secretstream_xchacha20poly1305_TAG_REKEY
+const crypto_secretstream_xchacha20poly1305_TAGBYTES = 1
+const crypto_secretstream_xchacha20poly1305_TAG_MESSAGE = new Uint8Array([0])
+const crypto_secretstream_xchacha20poly1305_TAG_PUSH = new Uint8Array([1])
+const crypto_secretstream_xchacha20poly1305_TAG_REKEY = new Uint8Array([2])
+const crypto_secretstream_xchacha20poly1305_TAG_FINAL = new Uint8Array([crypto_secretstream_xchacha20poly1305_TAG_PUSH | crypto_secretstream_xchacha20poly1305_TAG_REKEY])
 const crypto_secretstream_xchacha20poly1305_STATEBYTES = crypto_secretstream_xchacha20poly1305_KEYBYTES
   + crypto_secretstream_xchacha20poly1305_INONCEBYTES + crypto_secretstream_xchacha20poly1305_COUNTERBYTES + 8
 
@@ -65,8 +66,6 @@ function crypto_secretstream_xchacha20poly1305_init_push (state, out, key) {
   assert(state.byteLength === crypto_secretstream_xchacha20poly1305_STATEBYTES,
     'state is should be crypto_secretstream_xchacha20poly1305_STATEBYTES long')
   assert(out instanceof Uint8Array && out.length === crypto_secretstream_xchacha20poly1305_HEADERBYTES, 'out not byte array of length crypto_secretstream_xchacha20poly1305_HEADERBYTES')
-  assert(crypto_secretstream_xchacha20poly1305_HEADERBYTES === crypto_core_hchacha20_INPUTBYTES + crypto_secretstream_xchacha20poly1305_INONCEBYTES)
-  assert(crypto_secretstream_xchacha20poly1305_HEADERBYTES === crypto_aead_xchacha20poly1305_ietf_NPUBBYTES)
   assert(key instanceof Uint8Array && key.length === crypto_secretstream_xchacha20poly1305_KEYBYTES, 'key not byte array of length crypto_secretstream_xchacha20poly1305_KEYBYTES')
 
   const k = state.subarray(KEY_OFFSET, NONCE_OFFSET)
@@ -131,7 +130,7 @@ function crypto_secretstream_xchacha20poly1305_rekey (state) {
   crypto_secretstream_xchacha20poly1305_counter_reset(state)
 }
 
-function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, adlen, tag, outputs) {
+function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, tag) {
   assert(state.byteLength === crypto_secretstream_xchacha20poly1305_STATEBYTES,
     'state is should be crypto_secretstream_xchacha20poly1305_STATEBYTES long')
   if (!ad) ad = new Uint8Array(0)
@@ -152,7 +151,7 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, adlen, t
   poly.update(ad, 0, ad.byteLength)
   poly.update(_pad0, 0, (0x10 - ad.byteLength) & 0xf)
 
-  block[0] = tag
+  block[0] = tag[0]
   crypto_stream_chacha20_ietf_xor_ic(block, block, nonce, 1, k)
 
   poly.update(block, 0, block.byteLength)
@@ -163,7 +162,7 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, adlen, t
   poly.update(c, 0, m.byteLength)
   poly.update(_pad0, 0, (0x10 - block.byteLength + m.byteLength) & 0xf)
 
-  STORE64_LE(slen, adlen)
+  STORE64_LE(slen, ad.byteLength)
   poly.update(slen, 0, slen.byteLength)
   STORE64_LE(slen, block.byteLength + m.byteLength)
   poly.update(slen, 0, slen.byteLength)
@@ -177,16 +176,15 @@ function crypto_secretstream_xchacha20poly1305_push (state, out, m, ad, adlen, t
     mac, crypto_secretstream_xchacha20poly1305_INONCEBYTES)
   sodium_increment(nonce)
 
-  if ((tag & crypto_secretstream_xchacha20poly1305_TAG_REKEY) !== 0 ||
+  if ((tag[0] & crypto_secretstream_xchacha20poly1305_TAG_REKEY) !== 0 ||
     sodium_is_zero(nonce.subarray(0, crypto_secretstream_xchacha20poly1305_COUNTERBYTES))) {
     crypto_secretstream_xchacha20poly1305_rekey(state)
   }
 
-  outputs.res_len = crypto_secretstream_xchacha20poly1305_ABYTES + m.byteLength
-  return 0
+  return crypto_secretstream_xchacha20poly1305_ABYTES + m.byteLength
 }
 
-function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, adlen, outputs) {
+function crypto_secretstream_xchacha20poly1305_pull (state, m, tag, _in, ad) {
   assert(state.byteLength === crypto_secretstream_xchacha20poly1305_STATEBYTES,
     'state is should be crypto_secretstream_xchacha20poly1305_STATEBYTES long')
   if (!ad) ad = new Uint8Array(0)
@@ -198,43 +196,41 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, adlen, o
   const slen = new Uint8Array(8)
   const mac = new Uint8Array(crypto_onetimeauth_poly1305_BYTES)
 
-  if (_in.byteLength < crypto_secretstream_xchacha20poly1305_ABYTES) {
-    return -1
-  }
+  assert(_in.byteLength >= crypto_secretstream_xchacha20poly1305_ABYTES,
+    'ciphertext is too short.')
 
   const mlen = _in.byteLength - crypto_secretstream_xchacha20poly1305_ABYTES
   crypto_stream_chacha20_ietf(block, nonce, k)
   const poly = new Poly1305(block)
   block.fill(0) // sodium_memzero(block, sizeof block);
 
-  poly.update(ad, 0, adlen)
-  poly.update(_pad0, 0, (0x10 - adlen) & 0xf)
+  poly.update(ad, 0, ad.byteLength)
+  poly.update(_pad0, 0, (0x10 - ad.byteLength) & 0xf)
 
   block.fill(0) // memset(block, 0, sizeof block);
   block[0] = _in[0]
   crypto_stream_chacha20_ietf_xor_ic(block, block, nonce, 1, k)
 
-  const tag = block[0]
+  tag[0] = block[0]
   block[0] = _in[0]
   poly.update(block, 0, block.byteLength)
 
   const c = _in.subarray(1, _in.length)
   poly.update(c, 0, mlen)
-  // poly.update(_in, 1, mlen)
+
   poly.update(_pad0, 0, (0x10 - block.byteLength + mlen) & 0xf)
 
-  STORE64_LE(slen, adlen)
+  STORE64_LE(slen, ad.byteLength)
   poly.update(slen, 0, slen.byteLength)
   STORE64_LE(slen, block.byteLength + m.byteLength)
   poly.update(slen, 0, slen.byteLength)
 
   poly.finish(mac, 0)
   const stored_mac = _in.subarray(1 + mlen, _in.length)
-  for (let i = 0; i < mac.length; i++) {
-    if (mac[i] !== stored_mac[i]) {
-      mac.fill(0)
-      return -1
-    }
+
+  if (!sodium_memcmp(mac, stored_mac)) {
+    mac.fill(0)
+    throw new Error('MAC could not be verified.')
   }
 
   crypto_stream_chacha20_ietf_xor_ic(m, c.subarray(0, m.length), nonce, 2, k)
@@ -246,45 +242,8 @@ function crypto_secretstream_xchacha20poly1305_pull (state, m, _in, ad, adlen, o
     sodium_is_zero(nonce.subarray(0, crypto_secretstream_xchacha20poly1305_COUNTERBYTES))) {
     crypto_secretstream_xchacha20poly1305_rekey(state)
   }
-  outputs.res_len = mlen
-  outputs.tag = tag
-  return 0
-}
 
-function crypto_secretstream_xchacha20poly1305_statebytes () {
-  return crypto_stream_chacha20_ietf_KEYBYTES + crypto_stream_chacha20_ietf_NONCEBYTES + 8
-}
-
-function crypto_secretstream_xchacha20poly1305_abytes () {
-  return crypto_secretstream_xchacha20poly1305_ABYTES
-}
-
-function crypto_secretstream_xchacha20poly1305_headerbytes () {
-  return crypto_secretstream_xchacha20poly1305_HEADERBYTES
-}
-
-function crypto_secretstream_xchacha20poly1305_keybytes () {
-  return crypto_secretstream_xchacha20poly1305_KEYBYTES
-}
-
-function crypto_secretstream_xchacha20poly1305_messagebytes_max () {
-  return crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX
-}
-
-function crypto_secretstream_xchacha20poly1305_tag_message () {
-  return crypto_secretstream_xchacha20poly1305_TAG_MESSAGE
-}
-
-function crypto_secretstream_xchacha20poly1305_tag_push () {
-  return crypto_secretstream_xchacha20poly1305_TAG_PUSH
-}
-
-function crypto_secretstream_xchacha20poly1305_tag_rekey () {
-  return crypto_secretstream_xchacha20poly1305_TAG_REKEY
-}
-
-function crypto_secretstream_xchacha20poly1305_tag_final () {
-  return crypto_secretstream_xchacha20poly1305_TAG_FINAL
+  return mlen
 }
 
 function xor_buf (out, _in, n) {
@@ -300,13 +259,14 @@ module.exports = {
   crypto_secretstream_xchacha20poly1305_rekey,
   crypto_secretstream_xchacha20poly1305_push,
   crypto_secretstream_xchacha20poly1305_pull,
-  crypto_secretstream_xchacha20poly1305_statebytes,
-  crypto_secretstream_xchacha20poly1305_abytes,
-  crypto_secretstream_xchacha20poly1305_headerbytes,
-  crypto_secretstream_xchacha20poly1305_keybytes,
-  crypto_secretstream_xchacha20poly1305_messagebytes_max,
-  crypto_secretstream_xchacha20poly1305_tag_message,
-  crypto_secretstream_xchacha20poly1305_tag_push,
-  crypto_secretstream_xchacha20poly1305_tag_rekey,
-  crypto_secretstream_xchacha20poly1305_tag_final
+  crypto_secretstream_xchacha20poly1305_STATEBYTES,
+  crypto_secretstream_xchacha20poly1305_ABYTES,
+  crypto_secretstream_xchacha20poly1305_HEADERBYTES,
+  crypto_secretstream_xchacha20poly1305_KEYBYTES,
+  crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX,
+  crypto_secretstream_xchacha20poly1305_TAGBYTES,
+  crypto_secretstream_xchacha20poly1305_TAG_MESSAGE,
+  crypto_secretstream_xchacha20poly1305_TAG_PUSH,
+  crypto_secretstream_xchacha20poly1305_TAG_REKEY,
+  crypto_secretstream_xchacha20poly1305_TAG_FINAL
 }
