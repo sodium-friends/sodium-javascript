@@ -8,7 +8,6 @@ module.exports.crypto_kdf_BYTES_MIN = 16
 module.exports.crypto_kdf_BYTES_MAX = 64
 module.exports.crypto_kdf_CONTEXTBYTES = 8
 module.exports.crypto_kdf_KEYBYTES = 32
-module.exports.STORE64_LE = STORE64_LE
 
 function STORE64_LE (dest, int) {
   var mul = 1

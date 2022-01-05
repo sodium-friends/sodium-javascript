@@ -10,7 +10,6 @@ const {
 } = require('./crypto_stream_chacha20')
 const { crypto_core_hchacha20, crypto_core_hchacha20_INPUTBYTES } = require('./internal/hchacha20')
 const Poly1305 = require('./internal/poly1305')
-const { STORE64_LE } = require('./crypto_kdf')
 const { sodium_increment, sodium_is_zero, sodium_memcmp } = require('./helpers')
 
 const crypto_onetimeauth_poly1305_BYTES = 16
@@ -35,11 +34,12 @@ const crypto_secretstream_xchacha20poly1305_TAG_FINAL = crypto_secretstream_xcha
 
 const _pad0 = new Uint8Array(16)
 
-class Crypto_secretstream_xchacha20poly1305_state {
-  constructor () {
-    this.k = new Uint8Array(crypto_stream_chacha20_ietf_KEYBYTES)
-    this.nonce = new Uint8Array(crypto_stream_chacha20_ietf_NONCEBYTES)
-    this.pad = new Uint8Array(8)
+function STORE64_LE (dest, int) {
+  let mul = 1
+  let i = 0
+  dest[0] = int & 0xFF
+  while (++i < 8 && (mul *= 0x100)) {
+    dest[i] = (int / mul) & 0xFF
   }
 }
 
