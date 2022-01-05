@@ -8,7 +8,7 @@ const {
   crypto_stream_chacha20_ietf_KEYBYTES,
   crypto_stream_chacha20_ietf_NONCEBYTES
 } = require('./crypto_stream_chacha20')
-const { crypto_core_hchacha20, crypto_core_hchacha20_INPUTBYTES } = require('./crypto_core_hchacha20')
+const { crypto_core_hchacha20, crypto_core_hchacha20_INPUTBYTES } = require('./internal/hchacha20')
 const Poly1305 = require('./internal/poly1305')
 const { STORE64_LE } = require('./crypto_kdf')
 const { sodium_increment, sodium_is_zero, sodium_memcmp } = require('./helpers')
