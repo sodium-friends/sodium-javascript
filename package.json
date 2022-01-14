@@ -1,6 +1,6 @@
 {
   "name": "sodium-javascript",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "WIP - a pure javascript version of sodium-native",
   "main": "index.js",
   "dependencies": {
