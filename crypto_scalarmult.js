@@ -6,6 +6,7 @@ const crypto_scalarmult_SCALARBYTES = 32
 
 module.exports = {
   crypto_scalarmult,
+  crypto_scalarmult_ed25519: crypto_scalarmult,
   crypto_scalarmult_base,
   crypto_scalarmult_BYTES,
   crypto_scalarmult_SCALARBYTES
