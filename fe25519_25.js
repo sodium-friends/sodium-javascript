@@ -35,6 +35,7 @@ const importWithMemory = {
 }
 
 const wasm_mul = require('./fe25519_25/fe25519_mul')(importWithMemory)
+const wasm_mul32 = require('./fe25519_25/fe25519_mul32')()
 const wasm_sq = require('./fe25519_25/fe25519_sq')(importWithMemory)
 const wasm_invert = require('./fe25519_25/fe25519_invert')(importWithMemory)
 const wasm_pow = require('./fe25519_25/fe25519_pow22523')()
@@ -797,6 +798,22 @@ function fe25519_mul (h, f, g) {
   wasm_mul.exports.fe25519_mul(80, 0, 40)
 
   parse_fe(h, mem, 80)
+}
+
+function fe25519_mul32 (h, f, n) {
+  check_fe(h)
+  check_fe(f)
+
+  // printFe(f, 'f')
+  // printFe(g, 'g')
+
+  var fbuf = new Uint8Array(f.buffer)
+
+  wasm_mul32.memory.set(fbuf)
+  wasm_mul32.exports.fe25519_mul32(40, 0, n)
+
+  const output = Buffer.from(wasm_mul32.memory.slice(40, 80))
+  parse_fe(h, output, 0)
 }
 
 /*
