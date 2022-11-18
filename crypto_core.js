@@ -39,9 +39,9 @@ function crypto_core_ed25519_is_valid_point (p) {
       ge25519_frombytes(p_p3, p) != 0 ||
       ge25519_is_on_curve(p_p3) == 0 ||
       ge25519_is_on_main_subgroup(p_p3) == 0) {
-    return 0;
+    return false;
   }
-  return 1;
+  return true;
 }
 
 function crypto_core_ed25519_add (r, p, q) {
@@ -151,9 +151,7 @@ function crypto_core_ed25519_scalar_random (r) {
 }
 
 function crypto_core_ed25519_scalar_invert (recip, s) {
-  console.log(s)
   sc25519_invert(recip, s)
-  console.log(recip)
 
   if (sodium_is_zero(s, crypto_core_ed25519_SCALARBYTES)) {
     throw new Error('Zero point')
@@ -177,10 +175,10 @@ function crypto_core_ed25519_scalar_negate (neg, s) {
   t_.fill(0)
   s_.fill(0)
 
-  t_.set(L.subarray(crypto_core_ed25519_SCALARBYTES, crypto_core_ed25519_SCALARBYTES))
+  t_.set(L.subarray(0, crypto_core_ed25519_SCALARBYTES), crypto_core_ed25519_SCALARBYTES)
   s_.set(s.subarray(0, crypto_core_ed25519_SCALARBYTES))
 
-  sodium_sub(t_, s_, crypto_core_ed25519_SCALARBYTES)
+  sodium_sub(t_, s_, crypto_core_ed25519_NONREDUCEDSCALARBYTES)
   sc25519_reduce(t_)
 
   neg.set(t_.subarray(0 , crypto_core_ed25519_SCALARBYTES))
@@ -197,10 +195,10 @@ function crypto_core_ed25519_scalar_complement (comp, s) {
   s_.fill(0)
   t_[0]++;
   
-  t_.set(L.subarray(crypto_core_ed25519_SCALARBYTES, crypto_core_ed25519_SCALARBYTES))
+  t_.set(L.subarray(0, crypto_core_ed25519_SCALARBYTES), crypto_core_ed25519_SCALARBYTES)
   s_.set(s.subarray(0, crypto_core_ed25519_SCALARBYTES))
   
-  sodium_sub(t_, s_, crypto_core_ed25519_SCALARBYTES)
+  sodium_sub(t_, s_, crypto_core_ed25519_NONREDUCEDSCALARBYTES)
   sc25519_reduce(t_)
 
   comp.set(t_.subarray(0, crypto_core_ed25519_SCALARBYTES))

@@ -12,15 +12,8 @@ var sodium = module.exports
 
 // also forwarded at the bottom but randombytes is non-enumerable
 
-sodium.sodium_memzero = function (arr) {
-  arr.fill(0)
-}
-
-sodium.sodium_malloc = function (n) {
-  return new Uint8Array(n)
-}
-
 forward(require('./crypto_box'))
+forward(require('./crypto_core'))
 forward(require('./crypto_generichash'))
 forward(require('./crypto_hash'))
 forward(require('./crypto_hash_sha256'))
