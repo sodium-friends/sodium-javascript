@@ -1,4 +1,5 @@
 const { sodium_memzero } = require('./')
+const { randombytes_buf } = require('./randombytes')
 const ec = require('./fe25519_25')
 const {
   crypto_hash_sha512, crypto_hash_sha512_update,
@@ -16,6 +17,65 @@ const crypto_sign_BYTES = crypto_sign_ed25519_BYTES
 const crypto_sign_PUBLICKEYBYTES = crypto_sign_ed25519_PUBLICKEYBYTES
 const crypto_sign_SECRETKEYBYTES = crypto_sign_ed25519_SECRETKEYBYTES
 const crypto_sign_SEEDBYTES = crypto_sign_ed25519_SEEDBYTES
+
+
+function crypto_sign_seed_keypair (pk, sk, seed) {
+  const A = ec.ge25519_p3()
+
+  crypto_hash_sha512(sk, seed, 32)
+  sk[0] &= 248
+  sk[31] &= 127
+  sk[31] |= 64
+
+  ec.ge25519_scalarmult_base(A, sk)
+  ec.ge25519_p3_tobytes(pk, A)
+
+  sk.set(seed, 32)
+  sk.set(pk, 32)
+}
+
+function crypto_sign_keypair (pk, sk) {
+  const seed = Buffer.alloc(32)
+
+  randombytes_buf(seed)
+  crypto_sign_seed_keypair(pk, sk, seed)
+  sodium_memzero(seed)
+}
+
+function crypto_sign_ed25519_pk_to_curve25519 (curve25519_pk, ed25519_pk)
+{
+  const A = ec.ge25519_p3()
+  const x = ec.fe25519()
+  const one_minus_y = ec.fe25519()
+
+  if (ec.ge25519_has_small_order(ed25519_pk) != 0 ||
+      ec.ge25519_frombytes_negate_vartime(A, ed25519_pk) != 0 ||
+      ec.ge25519_is_on_main_subgroup(A) == 0) {
+      throw new Error('Invalid public key')
+  }
+
+  fe25519_1(one_minus_y)
+  fe25519_sub(one_minus_y, one_minus_y, A[1])
+  fe25519_1(x)
+  fe25519_add(x, x, A[1])
+  fe25519_invert(one_minus_y, one_minus_y)
+  fe25519_mul(x, x, one_minus_y)
+  fe25519_tobytes(curve25519_pk, x)
+}
+
+function crypto_sign_ed25519_sk_to_curve25519 (curve25519_sk, ed25519_sk)
+{
+    const h = Buffer.alloc(crypto_hash_sha512_BYTES)
+
+    crypto_hash_sha512(h, ed25519_sk, 32)
+    h[0] &= 248
+    h[31] &= 127
+    h[31] |= 64
+    curve25519_sk.set(h.subarray(0, crypto_scalarmult_curve25519_BYTES))
+
+    sodium_memzero(h)
+}
+
 
 function _crypto_sign_ed25519_ref10_hinit (hs, prehashed) {
   const DOM2PREFIX = Buffer.from('SigEd25519 no Ed25519 collisions  ')
@@ -71,6 +131,10 @@ function _crypto_sign_ed25519_detached (sig, m, sk, prehashed) {
 }
 
 function crypto_sign_ed25519_detached (sig, m, sk) {
+  return _crypto_sign_ed25519_detached(sig, m, sk, 0)
+}
+
+function crypto_sign_detached (sig, m, sk) {
   return _crypto_sign_ed25519_detached(sig, m, sk, 0)
 }
 
@@ -152,6 +216,10 @@ function crypto_sign_ed25519_open (m, sm, pk) {
   }
 
   return true
+}
+
+function crypto_sign_ed25519_sk_to_pk (pk, sk) {
+  pk.set(sk.subarray(crypto_sign_ed25519_SEEDBYTES))
 }
 
 function crypto_sign_open (m, sm, pk) {
@@ -293,8 +361,13 @@ function crypto_sign_ristretto25519 (sm, m, sk) {
 }
 
 module.exports = {
+  crypto_sign_keypair,
+  crypto_sign_seed_keypair,
+  crypto_sign_ed25519_sk_to_pk,
   crypto_sign,
   crypto_sign_open,
+  crypto_sign_ed25519_detached,
+  crypto_sign_detached,
   crypto_sign_ristretto25519_detached,
   crypto_sign_ristretto25519_verify_detached,
   crypto_sign_verify_detached,
