@@ -2544,19 +2544,19 @@ function ge25519_from_uniform (s, r) {
   var was_square = 0
   var x_sign = 0
 
-  s.set(r, 32)
+  s.set(r.subarray(0, 32))
   x_sign = s[31] >> 7
   s[31] &= 0x7f
   fe25519_frombytes(r_fe, s)
 
   ge25519_elligator2(x, y, r_fe, was_square)
 
-  ge25519_mont_to_ed(p3[0], p3[2], x, y)
+  ge25519_mont_to_ed(p3[0], p3[1], x, y)
   fe25519_neg(negxed, p3[0])
   fe25519_cmov(p3[0], negxed, fe25519_isnegative(p3[0]) ^ x_sign)
 
   fe25519_1(p3[2])
-  fe25519_mul(p3[3], p3[0], p3[2])
+  fe25519_mul(p3[3], p3[0], p3[1])
   ge25519_clear_cofactor(p3)
   ge25519_p3_tobytes(s, p3)
 }
