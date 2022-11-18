@@ -1,14 +1,20 @@
 const assert = require('nanoassert')
 const ec = require('./fe25519_25')
 
+const crypto_scalarmult_ed25519_BYTES = 32
+const crypto_scalarmult_ed25519_SCALARBYTES = 32
+
 module.exports = {
   crypto_scalarmult_ed25519,
   crypto_scalarmult_ed25519_base,
+  crypto_scalarmult_ed25519_base_noclamp,
   crypto_scalarmult_curve25519,
   crypto_scalarmult_curve25519_1,
   crypto_scalarmult_curve25519_base,
   crypto_scalarmult_ristretto255,
-  crypto_scalarmult_ristretto255_base
+  crypto_scalarmult_ristretto255_base,
+  crypto_scalarmult_ed25519_BYTES,
+  crypto_scalarmult_ed25519_SCALARBYTES
 }
 
 const _121666buf = Buffer.alloc(32)
@@ -42,22 +48,27 @@ function _crypto_scalarmult_ed25519 (q, n, p, clamp) {
   var i
 
   // if (ec.ge25519_is_canonical(p) == 0 || ec.ge25519_has_small_order(p) != 0 ||
-  if (  ec.ge25519_frombytes(P, p) != 0 || ec.ge25519_is_on_main_subgroup(P) == 0) {
-    return -1
+  if (ec.ge25519_frombytes(P, p) != 0 || ec.ge25519_is_on_main_subgroup(P) == 0) {
+    throw new Error('Invalid base point')
   }
+
   for (i = 0; i < 32; ++i) {
     t[i] = n[i]
   }
+
   if (clamp !== 0) {
     _crypto_scalarmult_ed25519_clamp(t)
   }
+
   t[31] &= 127
 
   ec.ge25519_scalarmult(Q, t, P)
   ec.ge25519_p3_tobytes(q, Q)
+
   if (_crypto_scalarmult_ed25519_is_inf(q) != 0 || sodium_is_zero(n, 32)) {
-    return -1
+    throw new Error('Point multiplication failed')
   }
+
   return 0
 }
 
