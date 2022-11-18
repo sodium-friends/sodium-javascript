@@ -1,5 +1,4 @@
 const assert = require('nanoassert')
-const sodium = require('./')
 
 const memory = new WebAssembly.Memory({ initial: 1 })
 const mem = Buffer.from(memory.buffer)
@@ -72,12 +71,18 @@ function fe25519_pow22523 (h, f) {
 const base = require('./fe25519_25/base.json').map(a => a.map(b => ge2(b)))
 const printbuf =Buffer.alloc(32)
 
+const ed25519_A_32 = 486662
+
 const ed25519_d = fe25519([
   -10913610, 13857413, -15372611, 6949391, 114729, -8787816, -6275908, -3247719, -18696448, -12055116
 ])
 
 const ed25519_d2 = fe25519([
   -21827239, -5839606, -30745221, 13898782, 229458, 15978800, -12551817, -6495438, 29715968, 9444199
+])
+
+const ed25519_A = fe25519([
+  ed25519_A_32, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ])
 
 const fe25519_sqrtm1 = fe25519([
@@ -102,6 +107,11 @@ module.exports = {
   fe25519,
   ge2,
   ge3,
+  ge25519_p2: ge2,
+  ge25519_p3: ge3,
+  ge25519_p1p1: ge3,
+  ge25519_precomp: ge3,
+  ge25519_cached: ge3,
   print_ge,
   basepoint,
   fe25519_0,
@@ -128,6 +138,9 @@ module.exports = {
   fe25519_pow22523,
   fe25519_pow22523_1,
   fe25519_sqrt,
+  ge25519_is_canonical,
+  ge25519_is_on_curve,
+  ge25519_is_on_main_subgroup,
   ge25519_has_small_order,
   ge25519_frombytes,
   ge25519_add_cached,
@@ -2000,7 +2013,7 @@ function ge25519_is_on_curve (p) {
   return fe25519_iszero(t0)
 }
 
-module.exports.ge25519_is_on_main_subgroup = ge25519_is_on_main_subgroup = function (p) {
+function ge25519_is_on_main_subgroup (p) {
   var pl = ge3()
 
   ge25519_mul_l(pl, p)
