@@ -39,9 +39,9 @@ function crypto_core_ed25519_is_valid_point (p) {
       ge25519_frombytes(p_p3, p) != 0 ||
       ge25519_is_on_curve(p_p3) == 0 ||
       ge25519_is_on_main_subgroup(p_p3) == 0) {
-    return false;
+    return false
   }
-  return true;
+  return true
 }
 
 function crypto_core_ed25519_add (r, p, q) {
@@ -75,14 +75,14 @@ function crypto_core_ed25519_sub (r, p, q) {
       ge25519_frombytes(q_p3, q) != 0 || ge25519_is_on_curve(q_p3) == 0) {
     throw new Error('Operands must be valid points.')
   }
-  ge25519_p3_to_cached(q_cached, q_p3);
-  ge25519_sub_cached(r_p1p1, p_p3, q_cached);
-  ge25519_p1p1_to_p3(r_p3, r_p1p1);
-  ge25519_p3_tobytes(r, r_p3);
+  ge25519_p3_to_cached(q_cached, q_p3)
+  ge25519_sub_cached(r_p1p1, p_p3, q_cached)
+  ge25519_p1p1_to_p3(r_p3, r_p1p1)
+  ge25519_p3_tobytes(r, r_p3)
 }
 
 function crypto_core_ed25519_from_uniform (p, r) {
-    ge25519_from_uniform(p, r)
+  ge25519_from_uniform(p, r)
 }
 
 // const HASH_GE_L = 48
@@ -134,7 +134,6 @@ function crypto_core_ed25519_from_uniform (p, r) {
 //     return crypto_core_ed25519_add(p, &px[0], &px[crypto_core_ed25519_BYTES]);
 // }
 
-
 function crypto_core_ed25519_random (p) {
   const h = b4a.alloc(crypto_core_ed25519_UNIFORMBYTES)
 
@@ -147,7 +146,7 @@ function crypto_core_ed25519_scalar_random (r) {
     randombytes_buf(r, crypto_core_ed25519_SCALARBYTES)
     r[crypto_core_ed25519_SCALARBYTES - 1] &= 0x1f
   } while (sc25519_is_canonical(r) == 0 ||
-           sodium_is_zero(r, crypto_core_ed25519_SCALARBYTES));
+           sodium_is_zero(r, crypto_core_ed25519_SCALARBYTES))
 }
 
 function crypto_core_ed25519_scalar_invert (recip, s) {
@@ -170,7 +169,7 @@ function crypto_core_ed25519_scalar_negate (neg, s) {
   const s_ = b4a.alloc(crypto_core_ed25519_NONREDUCEDSCALARBYTES)
 
   assert(crypto_core_ed25519_NONREDUCEDSCALARBYTES >=
-          2 * crypto_core_ed25519_SCALARBYTES);
+          2 * crypto_core_ed25519_SCALARBYTES)
 
   t_.fill(0)
   s_.fill(0)
@@ -181,7 +180,7 @@ function crypto_core_ed25519_scalar_negate (neg, s) {
   sodium_sub(t_, s_, crypto_core_ed25519_NONREDUCEDSCALARBYTES)
   sc25519_reduce(t_)
 
-  neg.set(t_.subarray(0 , crypto_core_ed25519_SCALARBYTES))
+  neg.set(t_.subarray(0, crypto_core_ed25519_SCALARBYTES))
 }
 
 function crypto_core_ed25519_scalar_complement (comp, s) {
@@ -189,15 +188,15 @@ function crypto_core_ed25519_scalar_complement (comp, s) {
   const s_ = b4a.alloc(crypto_core_ed25519_NONREDUCEDSCALARBYTES)
 
   assert(crypto_core_ed25519_NONREDUCEDSCALARBYTES >=
-                  2 * crypto_core_ed25519_SCALARBYTES);
+                  2 * crypto_core_ed25519_SCALARBYTES)
 
   t_.fill(0)
   s_.fill(0)
-  t_[0]++;
-  
+  t_[0]++
+
   t_.set(L.subarray(0, crypto_core_ed25519_SCALARBYTES), crypto_core_ed25519_SCALARBYTES)
   s_.set(s.subarray(0, crypto_core_ed25519_SCALARBYTES))
-  
+
   sodium_sub(t_, s_, crypto_core_ed25519_NONREDUCEDSCALARBYTES)
   sc25519_reduce(t_)
 
@@ -218,18 +217,18 @@ function crypto_core_ed25519_scalar_add (z, x, y) {
   crypto_core_ed25519_scalar_reduce(z, x_)
 }
 
-function crypto_core_ed25519_scalar_sub(z, x, y) {
+function crypto_core_ed25519_scalar_sub (z, x, y) {
   const yn = b4a.alloc(crypto_core_ed25519_SCALARBYTES)
 
   crypto_core_ed25519_scalar_negate(yn, y)
   crypto_core_ed25519_scalar_add(z, x, yn)
 }
 
-function crypto_core_ed25519_scalar_mul(z, x, y) {
+function crypto_core_ed25519_scalar_mul (z, x, y) {
   sc25519_mul(z, x, y)
 }
 
-function crypto_core_ed25519_scalar_reduce(r, s) {
+function crypto_core_ed25519_scalar_reduce (r, s) {
   const t = b4a.alloc(crypto_core_ed25519_NONREDUCEDSCALARBYTES)
 
   t.set(s)
@@ -239,7 +238,7 @@ function crypto_core_ed25519_scalar_reduce(r, s) {
   sodium_memzero(t)
 }
 
-function crypto_core_ed25519_scalar_is_canonical(s) {
+function crypto_core_ed25519_scalar_is_canonical (s) {
   return sc25519_is_canonical(s)
 }
 
