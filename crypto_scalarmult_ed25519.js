@@ -6,6 +6,7 @@ const crypto_scalarmult_ed25519_SCALARBYTES = 32
 
 module.exports = {
   crypto_scalarmult_ed25519,
+  crypto_scalarmult_ed25519_noclamp,
   crypto_scalarmult_ed25519_base,
   crypto_scalarmult_ed25519_base_noclamp,
   crypto_scalarmult_curve25519,
@@ -131,9 +132,9 @@ function crypto_scalarmult_ed25519_scalarbytes () {
 }
 
 function crypto_scalarmult_ristretto255 (q, n, p) {
-  assert(q instanceof Uint8Array && k.byteLength === 32)
-  assert(n instanceof Uint8Array && k.byteLength === 32)
-  assert(p instanceof Uint8Array && k.byteLength === 32)
+  assert(q instanceof Uint8Array && q.byteLength === 32)
+  assert(n instanceof Uint8Array && n.byteLength === 32)
+  assert(p instanceof Uint8Array && p.byteLength === 32)
 
   var t = q.slice()
   var Q = ec.ge3()
