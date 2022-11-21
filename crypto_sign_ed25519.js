@@ -1,4 +1,4 @@
-const { sodium_memzero } = require('./')
+const { sodium_memzero } = require('./utils')
 const { randombytes_buf } = require('./randombytes')
 const ec = require('./fe25519_25')
 const {
@@ -30,7 +30,7 @@ function crypto_sign_seed_keypair (pk, sk, seed) {
   ec.ge25519_scalarmult_base(A, sk)
   ec.ge25519_p3_tobytes(pk, A)
 
-  sk.set(seed, 32)
+  sk.set(seed)
   sk.set(pk, 32)
 }
 
