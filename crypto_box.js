@@ -1,6 +1,6 @@
 const { crypto_hash_sha512 } = require('./crypto_hash')
 const { crypto_scalarmult, crypto_scalarmult_base } = require('./crypto_scalarmult')
-const { randombytes } = require('./randombytes')
+const { randombytes_buf } = require('./randombytes')
 const { crypto_generichash_batch } = require('./crypto_generichash')
 const { crypto_secretbox_open_easy, crypto_secretbox_easy } = require('./crypto_secretbox')
 const xsalsa20 = require('xsalsa20')
@@ -35,7 +35,7 @@ module.exports = {
 function crypto_box_keypair(pk, sk) {
   check(pk, crypto_box_PUBLICKEYBYTES)
   check(sk, crypto_box_SECRETKEYBYTES)
-  randombytes(sk, 32)
+  randombytes_buf(sk, 32)
   return crypto_scalarmult_base(pk, sk)
 }
 
