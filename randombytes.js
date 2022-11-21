@@ -1,4 +1,12 @@
 var assert = require('nanoassert')
+const {
+  crypto_stream_chacha20_ietf,
+  crypto_stream_chacha20_ietf_KEYBYTES,
+  crypto_stream_chacha20_ietf_NONCEBYTES
+} = require('./crypto_stream_chacha20')
+
+const randombytes_SEEDBYTES = 32
+
 var randombytes = (function () {
   var QUOTA = 65536 // limit for QuotaExceededException
   var crypto = typeof global !== 'undefined' ? crypto = (global.crypto || global.msCrypto) : null
@@ -34,7 +42,21 @@ Object.defineProperty(module.exports, 'randombytes', {
   value: randombytes
 })
 
-module.exports.randombytes_buf = function (out) {
+function randombytes_buf (out) {
   assert(out, 'out must be given')
   randombytes(out, out.length)
+}
+
+function randombytes_buf_deterministic (buf, seed) {
+  const nonce = Buffer.alloc(crypto_stream_chacha20_ietf_NONCEBYTES)
+  nonce.write('LibsodiumDRG')
+
+  assert(randombytes_SEEDBYTES === crypto_stream_chacha20_ietf_KEYBYTES)
+  crypto_stream_chacha20_ietf(buf, nonce, seed)
+}
+
+module.exports = {
+  randombytes_buf,
+  randombytes_buf_deterministic,
+  randombytes_SEEDBYTES
 }
