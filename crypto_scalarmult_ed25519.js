@@ -8,14 +8,20 @@ module.exports = {
   crypto_scalarmult_ed25519,
   crypto_scalarmult_ed25519_noclamp,
   crypto_scalarmult_ed25519_base,
+  crypto_scalarmult: crypto_scalarmult_curve25519,
+  crypto_scalarmult_base: crypto_scalarmult_curve25519_base,
   crypto_scalarmult_ed25519_base_noclamp,
   crypto_scalarmult_curve25519,
   crypto_scalarmult_curve25519_1,
   crypto_scalarmult_curve25519_base,
   crypto_scalarmult_ristretto255,
   crypto_scalarmult_ristretto255_base,
+  crypto_scalarmult_BYTES: crypto_scalarmult_ed25519_BYTES,
+  crypto_scalarmult_SCALARBYTES: crypto_scalarmult_ed25519_SCALARBYTES,
   crypto_scalarmult_ed25519_BYTES,
-  crypto_scalarmult_ed25519_SCALARBYTES
+  crypto_scalarmult_ed25519_SCALARBYTES,
+  crypto_scalarmult_curve25519_BYTES: 32,
+  crypto_scalarmult_curve25519_SCALARBYTES: 32
 }
 
 const _121666buf = Buffer.alloc(32)

@@ -2,10 +2,17 @@ const { sodium_memzero } = require('./utils')
 const { randombytes_buf } = require('./randombytes')
 const ec = require('./fe25519_25')
 const {
-  crypto_hash_sha512, crypto_hash_sha512_update,
-  crypto_hash_sha512_state, crypto_hash_sha512_final
+  crypto_hash_sha512,
+  crypto_hash_sha512_update,
+  crypto_hash_sha512_state,
+  crypto_hash_sha512_final,
+  crypto_hash_sha512_BYTES
 } = require('./crypto_hash.js')
 const { crypto_verify_32 } = require('./crypto_verify')
+const {
+  crypto_scalarmult_base,
+  crypto_scalarmult_curve25519_BYTES
+} = require('./crypto_scalarmult_ed25519')
 
 var crypto_sign_ed25519_BYTES = 64
 var crypto_sign_ed25519_SEEDBYTES = 32
@@ -42,8 +49,7 @@ function crypto_sign_keypair (pk, sk) {
   sodium_memzero(seed)
 }
 
-function crypto_sign_ed25519_pk_to_curve25519 (curve25519_pk, ed25519_pk)
-{
+function crypto_sign_ed25519_pk_to_curve25519 (curve25519_pk, ed25519_pk) {
   const A = ec.ge25519_p3()
   const x = ec.fe25519()
   const one_minus_y = ec.fe25519()
@@ -54,17 +60,16 @@ function crypto_sign_ed25519_pk_to_curve25519 (curve25519_pk, ed25519_pk)
       throw new Error('Invalid public key')
   }
 
-  fe25519_1(one_minus_y)
-  fe25519_sub(one_minus_y, one_minus_y, A[1])
-  fe25519_1(x)
-  fe25519_add(x, x, A[1])
-  fe25519_invert(one_minus_y, one_minus_y)
-  fe25519_mul(x, x, one_minus_y)
-  fe25519_tobytes(curve25519_pk, x)
+  ec.fe25519_1(one_minus_y)
+  ec.fe25519_sub(one_minus_y, one_minus_y, A[1])
+  ec.fe25519_1(x)
+  ec.fe25519_add(x, x, A[1])
+  ec.fe25519_invert(one_minus_y, one_minus_y)
+  ec.fe25519_mul(x, x, one_minus_y)
+  ec.fe25519_tobytes(curve25519_pk, x)
 }
 
-function crypto_sign_ed25519_sk_to_curve25519 (curve25519_sk, ed25519_sk)
-{
+function crypto_sign_ed25519_sk_to_curve25519 (curve25519_sk, ed25519_sk) {
     const h = Buffer.alloc(crypto_hash_sha512_BYTES)
 
     crypto_hash_sha512(h, ed25519_sk, 32)
@@ -75,7 +80,6 @@ function crypto_sign_ed25519_sk_to_curve25519 (curve25519_sk, ed25519_sk)
 
     sodium_memzero(h)
 }
-
 
 function _crypto_sign_ed25519_ref10_hinit (hs, prehashed) {
   const DOM2PREFIX = Buffer.from('SigEd25519 no Ed25519 collisions  ')
@@ -120,7 +124,6 @@ function _crypto_sign_ed25519_detached (sig, m, sk, prehashed) {
   crypto_hash_sha512_final(state, hram)
 
   ec.sc25519_reduce(hram)
-  console.log('h s', hram.toString('hex'))
   _crypto_sign_ed25519_clamp(az)
   ec.sc25519_muladd(sig.subarray(32), hram, az, nonce)
 
@@ -142,7 +145,7 @@ function crypto_sign_ed25519 (sm, m, sk) {
   sm.set(m, crypto_sign_ed25519_BYTES)
 
   /* LCOV_EXCL_START */
-  if (crypto_sign_ed25519_detached(sm, sm.subarray(crypto_sign_ed25519_BYTES), sk) !== 0) {
+  if (crypto_sign_detached(sm, sm.subarray(crypto_sign_ed25519_BYTES), sk) !== 0) {
     sm.fill(0, m.byteLength + crypto_sign_ed25519_BYTES)
     return -1
   }
@@ -161,25 +164,19 @@ function _crypto_sign_ed25519_verify_detached(sig, m, pk, prehashed) {
   var A = ec.ge3()
   var R = ec.ge2()
 
-  // #ifdef ED25519_COMPAT
-  if (sig[63] & 224) {
-    return -1
+  if ((sig[63] & 240) &&
+      ec.sc25519_is_canonical(sig + 32) == 0) {
+    return false
   }
-  // #else
-  // if ((sig[63] & 240) &&
-  //     sc25519_is_canonical(sig + 32) == 0) {
-  //     return -1;
-  // }
-  // if (ge25519_has_small_order(sig) != 0) {
-  //     return -1;
-  // }
-  // if (ge25519_is_canonical(pk) == 0 ||
-  //     ge25519_has_small_order(pk) != 0) {
-  //     return -1;
-  // }
-  // #endif
+  if (ec.ge25519_has_small_order(sig.subarray(0, 32)) != 0) {
+    return false
+  }
+  if (ec.ge25519_is_canonical(pk) == 0 ||
+      ec.ge25519_has_small_order(pk) != 0) {
+    return false
+  }
+
   if (ec.ge25519_frombytes_negate_vartime(A, pk) !== 0) {
-    return -1
   }
   ec.ge25519_tobytes(rcheck, A)
 
@@ -189,12 +186,11 @@ function _crypto_sign_ed25519_verify_detached(sig, m, pk, prehashed) {
   crypto_hash_sha512_update(hs, m)
   crypto_hash_sha512_final(hs, h)
   ec.sc25519_reduce(h)
-  console.log('h v', h.toString('hex'))
 
   ec.ge25519_double_scalarmult_vartime(R, h, A, sig.subarray(32))
   ec.ge25519_tobytes(rcheck, R)
 
-  return crypto_verify_32(rcheck, 0, sig, 0)// | sodium_memcmp(sig.subarray(0, 32), rcheck.subarray(0, 32))
+  return crypto_verify_32(rcheck, 0, sig, 0) === 0
 }
 
 function crypto_sign_ed25519_verify_detached (sig, m, pk) {
@@ -206,7 +202,7 @@ function crypto_sign_ed25519_open (m, sm, pk) {
     throw new Error('Bad signature.')
   }
 
-  if (crypto_sign_ed25519_verify_detached(sm, sm.subarray(64), pk) !== 0) {
+  if (!crypto_sign_ed25519_verify_detached(sm, sm.subarray(64), pk)) {
     if (m.byteLength) m.fill(0)
     throw new Error('Bad signature.')
   }
@@ -303,26 +299,24 @@ function _crypto_sign_ristretto25519_verify_detached(sig, m, pk, prehashed) {
   var R = ec.ge3()
 
   // #ifdef ED25519_COMPAT
-  if (sig[63] & 224) {
-    console.log('here')
-    return -1
-  }
+  // if (sig[63] & 224) {
+  //   return -1
+  // }
   // #else
-  // if ((sig[63] & 240) &&
-  //     sc25519_is_canonical(sig + 32) == 0) {
-  //     return -1;
-  // }
-  // if (ge25519_has_small_order(sig) != 0) {
-  //     return -1;
-  // }
-  // if (ge25519_is_canonical(pk) == 0 ||
-  //     ge25519_has_small_order(pk) != 0) {
-  //     return -1;
-  // }
+  if ((sig[63] & 240) &&
+      ec.sc25519_is_canonical(sig + 32) == 0) {
+    return false
+  }
+  if (ec.ge25519_has_small_order(sig) != 0) {
+    return false
+  }
+  if (ec.ge25519_is_canonical(pk) == 0 ||
+      ec.ge25519_has_small_order(pk) != 0) {
+    return false
+  }
   // #endif
   if (ec.ristretto255_frombytes(A, pk, true) !== 0) {
-    console.log('there')
-    return -1
+    return false
   }
 
   _crypto_sign_ed25519_ref10_hinit(hs, prehashed)
@@ -363,6 +357,8 @@ function crypto_sign_ristretto25519 (sm, m, sk) {
 module.exports = {
   crypto_sign_keypair,
   crypto_sign_seed_keypair,
+  crypto_sign_ed25519_pk_to_curve25519,
+  crypto_sign_ed25519_sk_to_curve25519,
   crypto_sign_ed25519_sk_to_pk,
   crypto_sign,
   crypto_sign_open,
