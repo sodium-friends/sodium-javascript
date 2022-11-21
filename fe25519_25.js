@@ -2,7 +2,7 @@ const assert = require('nanoassert')
 
 const memory = new WebAssembly.Memory({ initial: 1 })
 const mem = Buffer.from(memory.buffer)
-const table = new WebAssembly.Table({ initial: 4, element: "anyfunc" })
+const table = new WebAssembly.Table({ initial: 4, element: 'anyfunc' })
 
 const debug = {
   log (...args) {
@@ -15,7 +15,7 @@ const debug = {
 }
 
 const importObject = {
-  imports: { 
+  imports: {
     js: {
       table
     },
@@ -44,7 +44,7 @@ const wasm_sc_muladd = require('./fe25519_25/sc25519_muladd')(importObject)
 const wasm_scalaramult_internal = require('./fe25519_25/scalarmult_curve25519')(importWithMemory)
 
 function fe25519_invert (h, f) {
-  var buf = new Uint8Array(f.buffer)
+  const buf = new Uint8Array(f.buffer)
 
   // shared memory - invert takes 280 - 360
   mem.set(buf, 280)
@@ -54,7 +54,7 @@ function fe25519_invert (h, f) {
 }
 
 function fe25519_pow22523 (h, f) {
-  var buf = new Uint8Array(f.buffer)
+  let buf = new Uint8Array(f.buffer)
 
   wasm_pow.memory.set(buf)
   wasm_pow.exports.fe25519_pow22523(40, 0)
@@ -69,7 +69,6 @@ function fe25519_pow22523 (h, f) {
 }
 
 const base = require('./fe25519_25/base.json').map(a => a.map(b => ge2(b)))
-const printbuf =Buffer.alloc(32)
 
 const fe25519_sqrtm1 = fe25519([
   -32595792, -7943725, 9377950, 3500415, 12389472, -272473, -25146209, -2005654, 326686, 11406482
@@ -195,15 +194,15 @@ module.exports = {
 }
 
 function print_ge (g, n = 4) {
-  for (let i = 0; i < n; i++) for (let j = 0; j <10; j++) console.log(`g[${i}][${j}]:`, signedInt(g[i][j]).toString(16).padStart(8, '0'))
+  for (let i = 0; i < n; i++) for (let j = 0; j < 10; j++) console.log(`g[${i}][${j}]:`, signedInt(g[i][j]).toString(16).padStart(8, '0'))
 }
 
 function print_fe (f) {
-  for (let j = 0; j <10; j++) console.log(`f[${j}]:`, signedInt(f[j]).toString(16).padStart(8, '0'))
+  for (let j = 0; j < 10; j++) console.log(`f[${j}]:`, signedInt(f[j]).toString(16).padStart(8, '0'))
 }
 
 function fe25519 (arr) {
-  var ret = new Int32Array(10)
+  const ret = new Int32Array(10)
   if (arr) {
     for (let i = 0; i < arr.length; i++) {
       ret[i] = arr[i]
@@ -215,7 +214,7 @@ function fe25519 (arr) {
 
 // projective
 function ge2 (init) {
-  var r = new Array(3)
+  const r = new Array(3)
   const inlen = init ? init.length : 0
 
   for (let i = 0; i < inlen; i++) r[i] = fe25519(init[i])
@@ -226,7 +225,7 @@ function ge2 (init) {
 
 // extended
 function ge3 (init) {
-  var r = new Array(4)
+  const r = new Array(4)
   const inlen = init ? init.length : 0
 
   for (let i = 0; i < inlen; i++) r[i] = fe25519(init[i])
@@ -238,7 +237,7 @@ function ge3 (init) {
 function load_3 (s, o) {
   if (o === undefined) return load_3(s, 0)
 
-  var result
+  let result
 
   result = s[0 + o]
   result |= s[1 + o] << 8
@@ -249,7 +248,7 @@ function load_3 (s, o) {
 
 function load_4 (s, o) {
   if (!o) o = 0
-  var result
+  let result
 
   result = s[o]
   result |= s[o + 1] << 8
@@ -265,11 +264,11 @@ function fe25519_reduce (h, f) {
   check_fe(h)
   check_fe(f)
 
-  var t = fe25519()
+  const t = fe25519()
   fe25519_copy(t, f)
 
-  var q = new Int32Array(1)
-  var carry = new Int32Array(10)
+  const q = new Int32Array(1)
+  const carry = new Int32Array(10)
 
   q[0] = (19 * t[9] + (1 << 24)) >> 25
   q[0] = (t[0] + q[0]) >> 26
@@ -333,7 +332,7 @@ function fe25519_tobytes (s, h) {
   assert(s instanceof Uint8Array)
   assert(s.length >= 32)
 
-  var t = fe25519()
+  const t = fe25519()
 
   fe25519_reduce(t, h)
   s[0] = t[0] >> 0
@@ -373,37 +372,37 @@ function fe25519_tobytes (s, h) {
 function fe25519_frombytes (h, s) {
   check_fe(h)
 
-  var h0  = load_4(s) & 0xffff
-  var h0_ = (load_4(s) >>> 16) & 0xffff
-  var h1  = (load_3(s, 4) << 6) & 0xffff
-  var h1_ = (load_3(s, 4) >>> 10) & 0xffff
-  var h2  = (load_3(s, 7) << 5) & 0xffff
-  var h2_ = (load_3(s, 7) >>> 11) & 0xffff
-  var h3  = (load_3(s, 10) << 3) & 0xffff
-  var h3_ = (load_3(s, 10) >>> 13) & 0xffff
-  var h4  = (load_3(s, 13) << 2) & 0xffff
-  var h4_ = (load_3(s, 13) >>> 14) & 0xffff
-  var h5  = load_4(s, 16) & 0xffff
-  var h5_ = (load_4(s, 16) >> 16) & 0xffff 
-  var h6  = (load_3(s, 20) << 7) & 0xffff
-  var h6_ = (load_3(s, 20) >>> 9) & 0xffff
-  var h7  = (load_3(s, 23) << 5) & 0xffff
-  var h7_ = (load_3(s, 23) >>> 11) & 0xffff
-  var h8  = (load_3(s, 26) << 4) & 0xffff
-  var h8_ = (load_3(s, 26) >>> 12) & 0xffff
-  var h9  = ((load_3(s, 29)) << 2) & 0xffff
-  var h9_ = ((load_3(s, 29) & 8388607) >>> 14) & 0xffff
+  let h0 = load_4(s) & 0xffff
+  let h0_ = (load_4(s) >>> 16) & 0xffff
+  let h1 = (load_3(s, 4) << 6) & 0xffff
+  let h1_ = (load_3(s, 4) >>> 10) & 0xffff
+  let h2 = (load_3(s, 7) << 5) & 0xffff
+  let h2_ = (load_3(s, 7) >>> 11) & 0xffff
+  let h3 = (load_3(s, 10) << 3) & 0xffff
+  let h3_ = (load_3(s, 10) >>> 13) & 0xffff
+  let h4 = (load_3(s, 13) << 2) & 0xffff
+  let h4_ = (load_3(s, 13) >>> 14) & 0xffff
+  let h5 = load_4(s, 16) & 0xffff
+  let h5_ = (load_4(s, 16) >> 16) & 0xffff
+  let h6 = (load_3(s, 20) << 7) & 0xffff
+  let h6_ = (load_3(s, 20) >>> 9) & 0xffff
+  let h7 = (load_3(s, 23) << 5) & 0xffff
+  let h7_ = (load_3(s, 23) >>> 11) & 0xffff
+  let h8 = (load_3(s, 26) << 4) & 0xffff
+  let h8_ = (load_3(s, 26) >>> 12) & 0xffff
+  let h9 = ((load_3(s, 29)) << 2) & 0xffff
+  let h9_ = ((load_3(s, 29) & 8388607) >>> 14) & 0xffff
 
-  var carry0
-  var carry1
-  var carry2
-  var carry3
-  var carry4
-  var carry5
-  var carry6
-  var carry7
-  var carry8
-  var carry9
+  let carry0
+  let carry1
+  let carry2
+  let carry3
+  let carry4
+  let carry5
+  let carry6
+  let carry7
+  let carry8
+  let carry9
 
   carry9 = (h9_ + (1 << 8)) >> 9
   h9_ -= carry9 * (1 << 9)
@@ -595,10 +594,10 @@ function fe25519_cmov (f, g, b) {
   check_fe(f)
   check_fe(g)
 
-  var mask = b ? 0xffffffff : 0x00000000
+  const mask = b ? 0xffffffff : 0x00000000
 
-  var f0, f1, f2, f3, f4, f5, f6, f7, f8, f9
-  var x0, x1, x2, x3, x4, x5, x6, x7, x8, x9
+  let f0, f1, f2, f3, f4, f5, f6, f7, f8, f9
+  let x0, x1, x2, x3, x4, x5, x6, x7, x8, x9
 
   f0 = f[0]
   f1 = f[1]
@@ -656,8 +655,8 @@ function fe25519_cswap (f, g, b) {
   check_fe(f)
   check_fe(g)
 
-  var mask = b ? 0xffffffff : 0x00000000
-  var x0, x1, x2, x3, x4, x5, x6, x7, x8, x9
+  const mask = b ? 0xffffffff : 0x00000000
+  let x0, x1, x2, x3, x4, x5, x6, x7, x8, x9
 
   x0 = (f[0] ^ g[0]) & mask
   x1 = (f[1] ^ g[1]) & mask
@@ -704,7 +703,7 @@ function fe25519_cneg (h, f, b) {
   check_fe(h)
   check_fe(f)
 
-  var negf = fe25519()
+  const negf = fe25519()
 
   fe25519_neg(negf, f)
   fe25519_copy(h, f)
@@ -743,7 +742,7 @@ function fe25519_abs (h, f) {
 function fe25519_isnegative (f) {
   check_fe(f)
 
-  var s = new Uint8Array(32)
+  const s = new Uint8Array(32)
   fe25519_tobytes(s, f)
 
   return s[0] & 1
@@ -759,7 +758,7 @@ function fe25519_isnegative (f) {
 function fe25519_iszero (f) {
   check_fe(f)
 
-  var s = new Uint8Array(32)
+  const s = new Uint8Array(32)
   fe25519_tobytes(s, f)
 
   return sodium_is_zero(s, 32)
@@ -816,8 +815,8 @@ function fe25519_mul (h, f, g) {
   // printFe(f, 'f')
   // printFe(g, 'g')
 
-  var fbuf = new Uint8Array(f.buffer)
-  var gbuf = new Uint8Array(g.buffer)
+  const fbuf = new Uint8Array(f.buffer)
+  const gbuf = new Uint8Array(g.buffer)
 
   // shared memory, mul takes 0 - 120
   mem.set(fbuf)
@@ -834,7 +833,7 @@ function fe25519_mul32 (h, f, n) {
   // printFe(f, 'f')
   // printFe(g, 'g')
 
-  var fbuf = new Uint8Array(f.buffer)
+  const fbuf = new Uint8Array(f.buffer)
 
   wasm_mul32.memory.set(fbuf)
   wasm_mul32.exports.fe25519_mul32(40, 0, n)
@@ -858,7 +857,7 @@ function fe25519_sq (h, f, log) {
   check_fe(h)
   check_fe(f)
 
-  var buf = new Uint8Array(f.buffer)
+  const buf = new Uint8Array(f.buffer)
 
   // shared memory, mul takes 120 - 200
   mem.set(buf, 120)
@@ -882,7 +881,7 @@ function fe25519_sq2 (h, f) {
   check_fe(h)
   check_fe(f)
 
-  var buf = new Uint8Array(f.buffer)
+  const buf = new Uint8Array(f.buffer)
 
   mem.set(buf, 120)
   wasm_sq.exports.sq(160, 120, 1)
@@ -909,8 +908,8 @@ function fe25519_invert_1 (out, z) {
   check_fe(out)
   check_fe(z)
 
-  var t0 = fe25519(); var t1 = fe25519(); var t2 = fe25519(); var t3 = fe25519()
-  var i
+  const t0 = fe25519(); const t1 = fe25519(); const t2 = fe25519(); const t3 = fe25519()
+  let i
 
   fe25519_sq(t0, z)
   fe25519_sq(t1, t0)
@@ -969,8 +968,8 @@ function fe25519_pow22523_1 (out, z) {
   check_fe(out)
   check_fe(z)
 
-  var t0 = fe25519(); var t1 = fe25519(); var t2 = fe25519()
-  var i
+  const t0 = fe25519(); const t1 = fe25519(); const t2 = fe25519()
+  let i
 
   fe25519_sq(t0, z)
   fe25519_sq(t1, t0)
@@ -1023,10 +1022,10 @@ function fe25519_unchecked_sqrt (x, x2) {
   check_fe(x)
   check_fe(x2)
 
-  var p_root = fe25519()
-  var m_root = fe25519()
-  var m_root2 = fe25519()
-  var e = fe25519()
+  const p_root = fe25519()
+  const m_root = fe25519()
+  const m_root2 = fe25519()
+  const e = fe25519()
 
   fe25519_pow22523(e, x)
   fe25519_mul(p_root, e, x)
@@ -1038,8 +1037,8 @@ function fe25519_unchecked_sqrt (x, x2) {
 }
 
 function fe25519_sqrt (x, x2) {
-  var check = fe25519()
-  var x2_copy = fe25519()
+  const check = fe25519()
+  const x2_copy = fe25519()
 
   fe25519_copy(x2_copy, x2)
   fe25519_unchecked_sqrt(x, x2)
@@ -1094,7 +1093,7 @@ function ge25519_add_cached (r, p, q) {
   check_ge3(p)
   check_ge3(q)
 
-  var t0 = fe25519()
+  const t0 = fe25519()
 
   fe25519_add(r[0], p[1], p[0])
   fe25519_sub(r[1], p[1], p[0])
@@ -1114,7 +1113,7 @@ function ge25519_sub_cached (r, p, q) {
   check_ge3(p)
   check_ge3(q)
 
-  var t0 = fe25519()
+  const t0 = fe25519()
 
   fe25519_add(r[0], p[1], p[0])
   fe25519_sub(r[1], p[1], p[0])
@@ -1130,11 +1129,11 @@ function ge25519_sub_cached (r, p, q) {
 }
 
 function slide_vartime (r, a) {
-  var i
-  var b
-  var k
-  var ribs
-  var cmp
+  let i
+  let b
+  let k
+  let ribs
+  let cmp
 
   for (i = 0; i < 256; i++) {
     r[i] = 1 & (a[i >> 3] >> (i & 7))
@@ -1174,15 +1173,15 @@ function slide_vartime (r, a) {
 function ge25519_frombytes (h, s) {
   check_ge3(h)
 
-  var u = fe25519()
-  var v = fe25519()
-  var v3 = fe25519()
-  var vxx = fe25519()
-  var m_root_check = fe25519()
-  var p_root_check = fe25519()
-  var negx = fe25519()
-  var x_sqrtm1 = fe25519()
-  var has_m_root, has_p_root
+  const u = fe25519()
+  const v = fe25519()
+  const v3 = fe25519()
+  const vxx = fe25519()
+  const m_root_check = fe25519()
+  const p_root_check = fe25519()
+  const negx = fe25519()
+  const x_sqrtm1 = fe25519()
+  let has_m_root, has_p_root
 
   fe25519_frombytes(h[1], s)
   fe25519_1(h[2])
@@ -1220,11 +1219,11 @@ function ge25519_frombytes (h, s) {
 function ge25519_frombytes_negate_vartime (h, s) {
   check_ge3(h)
 
-  var u = fe25519()
-  var v = fe25519()
-  var v3 = fe25519()
-  var vxx = fe25519()
-  var m_root_check = fe25519(); var p_root_check = fe25519()
+  const u = fe25519()
+  const v = fe25519()
+  const v3 = fe25519()
+  const vxx = fe25519()
+  const m_root_check = fe25519(); const p_root_check = fe25519()
 
   fe25519_frombytes(h[1], s)
   fe25519_1(h[2])
@@ -1273,7 +1272,7 @@ function ge25519_add_precomp (r, p, q) {
   check_ge3(p)
   check_ge2(q)
 
-  var t0 = fe25519()
+  const t0 = fe25519()
 
   fe25519_add(r[0], p[1], p[0])
   fe25519_sub(r[1], p[1], p[0])
@@ -1296,7 +1295,7 @@ function ge25519_sub_precomp (r, p, q) {
   check_ge3(p)
   check_ge2(q)
 
-  var t0 = fe25519()
+  const t0 = fe25519()
 
   fe25519_add(r[0], p[1], p[0])
   fe25519_sub(r[1], p[1], p[0])
@@ -1354,7 +1353,7 @@ function ge25519_p2_dbl (r, p) {
   check_ge3(r)
   check_ge2(p)
 
-  var t0 = fe25519()
+  const t0 = fe25519()
 
   fe25519_sq(r[0], p[0])
   fe25519_sq(r[2], p[1])
@@ -1403,10 +1402,10 @@ function ge25519_p3_to_precomp (pi, p) {
   check_ge2(pi)
   check_ge3(p)
 
-  var recip = fe25519()
-  var x = fe25519()
-  var y = fe25519()
-  var xy = fe25519()
+  const recip = fe25519()
+  const x = fe25519()
+  const y = fe25519()
+  const xy = fe25519()
 
   fe25519_invert(recip, p[2])
   fe25519_mul(x, p[0], recip)
@@ -1432,9 +1431,9 @@ function ge25519_p3_to_p2 (r, p) {
 
 function ge25519_p3_tobytes (s, h) {
   check_ge3(h)
-  var recip = fe25519()
-  var x = fe25519()
-  var y = fe25519()
+  const recip = fe25519()
+  const x = fe25519()
+  const y = fe25519()
 
   fe25519_invert(recip, h[2])
   fe25519_mul(x, h[0], recip)
@@ -1451,7 +1450,7 @@ function ge25519_p3_dbl (r, p) {
   check_ge3(p)
   check_ge3(r)
 
-  var q = ge2()
+  const q = ge2()
   ge25519_p3_to_p2(q, p)
   ge25519_p2_dbl(r, q)
 }
@@ -1468,7 +1467,7 @@ function ge25519_precomp_0 (h) {
 function ge25519_p3p3_dbl (r, p) {
   check_ge3(r)
   check_ge3(p)
-  var p1p1 = ge3()
+  const p1p1 = ge3()
 
   ge25519_p3_dbl(p1p1, p)
   ge25519_p1p1_to_p3(r, p1p1)
@@ -1480,8 +1479,8 @@ function ge25519_p3_add (r, p, q) {
   check_ge3(p)
   check_ge3(q)
 
-  var q_cached = ge3()
-  var p1p1 = ge3()
+  const q_cached = ge3()
+  const p1p1 = ge3()
 
   ge25519_p3_to_cached(q_cached, q)
   ge25519_add_cached(p1p1, p, q_cached)
@@ -1493,9 +1492,9 @@ function ge25519_p3_dbladd (r, n, q) {
   check_ge3(r)
   check_ge3(q)
 
-  var p2 = ge2()
-  var p1p1 = ge3()
-  var i
+  const p2 = ge2()
+  const p1p1 = ge3()
+  let i
 
   ge25519_p3_to_p2(p2, r)
   for (i = 0; i < n; i++) {
@@ -1507,8 +1506,8 @@ function ge25519_p3_dbladd (r, n, q) {
 }
 
 function equal (b, c) {
-  var u = new Uint8Array(3)
-  var y = new Uint32Array(1)
+  const u = new Uint8Array(3)
+  let y = new Uint32Array(1)
 
   u[0] = b
   u[1] = c
@@ -1528,7 +1527,7 @@ function equal (b, c) {
 // uses uint64_t -> not used much need workaround
 function negative (b) {
   /* 18446744073709551361..18446744073709551615: yes; 0..255: no */
-  var x = b & 0xffffffff
+  let x = b & 0xffffffff
 
   x >>>= 31 /* 1: yes; 0: no */
 
@@ -1563,9 +1562,9 @@ function ge25519_cmov8 (t, precomp, b) {
   assert(precomp.length === 8)
   for (let i = 0; i < 8; i++) check_ge2(precomp[i])
 
-  var minust = ge2()
-  var bnegative = negative(b)
-  var babs = b - (((-bnegative) & b) * (1 << 1))
+  const minust = ge2()
+  const bnegative = negative(b)
+  const babs = b - (((-bnegative) & b) * (1 << 1))
 
   ge25519_precomp_0(t)
   ge25519_cmov(t, precomp[0], equal(babs, 1))
@@ -1582,7 +1581,7 @@ function ge25519_cmov8 (t, precomp, b) {
   ge25519_cmov(t, minust, bnegative)
 }
 
-function ge25519_cmov8_base(t, pos, b) {
+function ge25519_cmov8_base (t, pos, b) {
   check_ge2(t)
   ge25519_cmov8(t, base[pos], b)
 }
@@ -1601,9 +1600,9 @@ function ge25519_cmov8_cached (t, cached, b) {
   assert(cached.length === 8)
   for (let i = 0; i < 8; i++) check_ge3(cached[i])
 
-  var minust = ge3()
-  var bnegative = negative(b)
-  var babs = b - (((-bnegative) & b) * (1 << 1))
+  const minust = ge3()
+  const bnegative = negative(b)
+  const babs = b - (((-bnegative) & b) * (1 << 1))
 
   ge25519_cached_0(t)
   ge25519_cmov_cached(t, cached[0], equal(babs, 1))
@@ -1629,7 +1628,7 @@ function ge25519_sub (r, p, q) {
   check_ge3(r)
   check_ge3(p)
   check_ge3(q)
-  var t0 = fe25519()
+  const t0 = fe25519()
 
   fe25519_add(r[0], p[1], p[0])
   fe25519_sub(r[1], p[1], p[0])
@@ -1647,9 +1646,9 @@ function ge25519_sub (r, p, q) {
 function ge25519_tobytes (s, h) {
   check_ge2(h)
 
-  var recip = fe25519()
-  var x = fe25519()
-  var y = fe25519()
+  const recip = fe25519()
+  const x = fe25519()
+  const y = fe25519()
 
   fe25519_invert(recip, h[2])
   fe25519_mul(x, h[0], recip)
@@ -1661,7 +1660,7 @@ function ge25519_tobytes (s, h) {
 function ge25519_double_scalarmult_vartime (r, a, A, b) {
   check_ge2(r)
 
-  var Bi = [
+  const Bi = [
     ge3([
       [25967493, -14356035, 29566456, 3660896, -12694345, 4014787, 27544626, -11754271, -6079156, 2047605],
       [-12545711, 934262, -2722910, 3049990, -727428, 9406986, 12720692, 5043384, 19500929, -15469378],
@@ -1704,14 +1703,14 @@ function ge25519_double_scalarmult_vartime (r, a, A, b) {
     ])
   ]
 
-  var aslide = new Int8Array(256)
-  var bslide = new Int8Array(256)
+  const aslide = new Int8Array(256)
+  const bslide = new Int8Array(256)
 
-  var Ai = new Array(8) /* A,3A,5A,7A,9A,11A,13A,15A */
+  const Ai = new Array(8) /* A,3A,5A,7A,9A,11A,13A,15A */
   for (let i = 0; i < 8; i++) Ai[i] = ge3()
-  var t = ge3()
-  var u = ge3()
-  var A2 = ge3()
+  const t = ge3()
+  const u = ge3()
+  const A2 = ge3()
   let i
 
   slide_vartime(aslide, a)
@@ -1793,17 +1792,17 @@ function ge25519_scalarmult (h, a, p) {
   check_ge3(h)
   check_ge3(p)
 
-  var e = new Int8Array(64)
-  var carry = new Int8Array(1)
-  var r = ge3()
-  var s = ge2()
-  var t2 = ge3(); var t3 = ge3(); var t4 = ge3(); var t5 = ge3(); var t6 = ge3(); var t7 = ge3(); var t8 = ge3()
-  var p2 = ge3(); var p3 = ge3(); var p4 = ge3(); var p5 = ge3(); var p6 = ge3(); var p7 = ge3(); var p8 = ge3()
+  const e = new Int8Array(64)
+  const carry = new Int8Array(1)
+  const r = ge3()
+  const s = ge2()
+  const t2 = ge3(); const t3 = ge3(); const t4 = ge3(); const t5 = ge3(); const t6 = ge3(); const t7 = ge3(); const t8 = ge3()
+  const p2 = ge3(); const p3 = ge3(); const p4 = ge3(); const p5 = ge3(); const p6 = ge3(); const p7 = ge3(); const p8 = ge3()
 
-  var pi = new Array(8)
+  const pi = new Array(8)
   for (let i = 0; i < 8; i++) pi[i] = ge3()
 
-  var t = ge3()
+  const t = ge3()
 
   ge25519_p3_to_cached(pi[1 - 1], p) /* p */
 
@@ -1888,12 +1887,12 @@ function ge25519_scalarmult (h, a, p) {
 function ge25519_scalarmult_base (h, a) {
   check_ge3(h)
 
-  var i
-  var e = new Int8Array(64)
-  var carry = 0
-  var r = ge3()
-  var s = ge2()
-  var t = ge2()
+  let i
+  const e = new Int8Array(64)
+  let carry = 0
+  const r = ge3()
+  const s = ge2()
+  const t = ge2()
 
   for (i = 0; i < 32; i++) {
     e[2 * i + 0] = (a[i] >> 0) & 15
@@ -1938,28 +1937,28 @@ function ge25519_scalarmult_base (h, a) {
 
 /* multiply by the order of the main subgroup l = 2^252+27742317777372353535851937790883648493 */
 function ge25519_mul_l (r, p) {
-  var _10 = ge3()
-  var _11 = ge3()
-  var _100 = ge3()
-  var _110 = ge3()
-  var _1000 = ge3()
-  var _1011 = ge3()
-  var _10000 = ge3()
-  var _100000 = ge3()
-  var _100110 = ge3()
-  var _1000000 = ge3()
-  var _1010000 = ge3()
-  var _1010011 = ge3()
-  var _1100011 = ge3()
-  var _1100111 = ge3()
-  var _1101011 = ge3()
-  var _10010011 = ge3()
-  var _10010111 = ge3()
-  var _10111101 = ge3()
-  var _11010011 = ge3()
-  var _11100111 = ge3()
-  var _11101101 = ge3()
-  var _11110101 = ge3()
+  const _10 = ge3()
+  const _11 = ge3()
+  const _100 = ge3()
+  const _110 = ge3()
+  const _1000 = ge3()
+  const _1011 = ge3()
+  const _10000 = ge3()
+  const _100000 = ge3()
+  const _100110 = ge3()
+  const _1000000 = ge3()
+  const _1010000 = ge3()
+  const _1010011 = ge3()
+  const _1100011 = ge3()
+  const _1100111 = ge3()
+  const _1101011 = ge3()
+  const _10010011 = ge3()
+  const _10010111 = ge3()
+  const _10111101 = ge3()
+  const _11010011 = ge3()
+  const _11100111 = ge3()
+  const _11101101 = ge3()
+  const _11110101 = ge3()
 
   ge25519_p3p3_dbl(_10, p)
   ge25519_p3_add(_11, p, _10)
@@ -2005,12 +2004,12 @@ function ge25519_mul_l (r, p) {
 function ge25519_is_on_curve (p) {
   check_ge3(p)
 
-  var x2 = fe25519()
-  var y2 = fe25519()
-  var z2 = fe25519()
-  var z4 = fe25519()
-  var t0 = fe25519()
-  var t1 = fe25519()
+  const x2 = fe25519()
+  const y2 = fe25519()
+  const z2 = fe25519()
+  const z4 = fe25519()
+  const t0 = fe25519()
+  const t1 = fe25519()
 
   fe25519_sq(x2, p[0])
   fe25519_sq(y2, p[1])
@@ -2028,7 +2027,7 @@ function ge25519_is_on_curve (p) {
 }
 
 function ge25519_is_on_main_subgroup (p) {
-  var pl = ge3()
+  const pl = ge3()
 
   ge25519_mul_l(pl, p)
 
@@ -2036,8 +2035,8 @@ function ge25519_is_on_main_subgroup (p) {
 }
 
 function ge25519_is_canonical (s) {
-  var c
-  var d
+  let c
+  let d
 
   c = (s[31] & 0x7f) ^ 0x7f
   for (let i = 30; i > 0; i--) {
@@ -2099,9 +2098,9 @@ function ge25519_has_small_order (s) {
     ]
   ]
 
-  var c = new Uint8Array(7)
+  const c = new Uint8Array(7)
   assert(blacklist.length == 7)
-  var j
+  let j
 
   for (j = 0; j < 31; j++) {
     for (let i = 0; i < 7; i++) {
@@ -2113,7 +2112,7 @@ function ge25519_has_small_order (s) {
     c[i] |= (s[j] & 0x7f) ^ blacklist[i][j]
   }
 
-  var k = 0
+  let k = 0
   for (let i = 0; i < 7; i++) {
     k |= (c[i] - 1)
   }
@@ -2126,8 +2125,8 @@ function sc25519_mul (s, a, b) {
   assert(a instanceof Uint8Array && a.length === 32)
   assert(b instanceof Uint8Array && a.length === 32)
 
-  var _a = new Uint32Array(12)
-  var _b = new Uint32Array(12)
+  const _a = new Uint32Array(12)
+  const _b = new Uint32Array(12)
 
   _a[0] = 2097151 & load_3(a)
   _a[1] = 2097151 & (load_4(a, 2) >>> 5)
@@ -2163,7 +2162,7 @@ function sc25519_mul (s, a, b) {
 
   wasm_sc_mul.exports.sc25519_mul(96, 0, 48)
 
-  s.set(wasm_sc_mul.memory.slice(96, 128))
+  s.set(wasm_sc_red.memory.slice(96, 128))
 }
 
 function sc25519_muladd (s, a, b, c) {
@@ -2172,9 +2171,9 @@ function sc25519_muladd (s, a, b, c) {
   assert(b instanceof Uint8Array && b.length >= 32)
   assert(c instanceof Uint8Array && c.length >= 32)
 
-  var _a = new Uint32Array(12)
-  var _b = new Uint32Array(12)
-  var _c = new Uint32Array(12)
+  const _a = new Uint32Array(12)
+  const _b = new Uint32Array(12)
+  const _c = new Uint32Array(12)
 
   _a[0] = 2097151 & load_3(a)
   _a[1] = 2097151 & (load_4(a, 2) >>> 5)
@@ -2271,29 +2270,29 @@ function sc25519_invert (recip, s) {
   assert(recip instanceof Uint8Array && recip.length === 32)
   assert(s instanceof Uint8Array && s.length === 32)
 
-  var _10 = Buffer.alloc(32)
-  var _100 = Buffer.alloc(32)
-  var _1000 = Buffer.alloc(32)
-  var _10000 = Buffer.alloc(32)
-  var _100000 = Buffer.alloc(32)
-  var _1000000 = Buffer.alloc(32)
-  var _10010011 = Buffer.alloc(32)
-  var _10010111 = Buffer.alloc(32)
-  var _100110 = Buffer.alloc(32)
-  var _1010 = Buffer.alloc(32)
-  var _1010000 = Buffer.alloc(32)
-  var _1010011 = Buffer.alloc(32)
-  var _1011 = Buffer.alloc(32)
-  var _10110 = Buffer.alloc(32)
-  var _10111101 = Buffer.alloc(32)
-  var _11 = Buffer.alloc(32)
-  var _1100011 = Buffer.alloc(32)
-  var _1100111 = Buffer.alloc(32)
-  var _11010011 = Buffer.alloc(32)
-  var _1101011 = Buffer.alloc(32)
-  var _11100111 = Buffer.alloc(32)
-  var _11101011 = Buffer.alloc(32)
-  var _11110101 = Buffer.alloc(32)
+  const _10 = Buffer.alloc(32)
+  const _100 = Buffer.alloc(32)
+  const _1000 = Buffer.alloc(32)
+  const _10000 = Buffer.alloc(32)
+  const _100000 = Buffer.alloc(32)
+  const _1000000 = Buffer.alloc(32)
+  const _10010011 = Buffer.alloc(32)
+  const _10010111 = Buffer.alloc(32)
+  const _100110 = Buffer.alloc(32)
+  const _1010 = Buffer.alloc(32)
+  const _1010000 = Buffer.alloc(32)
+  const _1010011 = Buffer.alloc(32)
+  const _1011 = Buffer.alloc(32)
+  const _10110 = Buffer.alloc(32)
+  const _10111101 = Buffer.alloc(32)
+  const _11 = Buffer.alloc(32)
+  const _1100011 = Buffer.alloc(32)
+  const _1100111 = Buffer.alloc(32)
+  const _11010011 = Buffer.alloc(32)
+  const _1101011 = Buffer.alloc(32)
+  const _11100111 = Buffer.alloc(32)
+  const _11101011 = Buffer.alloc(32)
+  const _11110101 = Buffer.alloc(32)
 
   sc25519_sq(_10, s)
   sc25519_mul(_11, s, _10)
@@ -2340,7 +2339,7 @@ function sc25519_invert (recip, s) {
 function sc25519_reduce (s) {
   assert(s instanceof Uint8Array && s.length === 64)
 
-  var _s = new Uint32Array(24)
+  const _s = new Uint32Array(24)
 
   _s[0] = 2097151 & load_3(s)
   _s[1] = 2097151 & (load_4(s, 2) >>> 5)
@@ -2367,7 +2366,7 @@ function sc25519_reduce (s) {
   _s[22] = 2097151 & (load_4(s, 57) >>> 6)
   _s[23] = load_4(s, 60) >>> 3
 
-  var sbuf = new Uint8Array(_s.buffer)
+  const sbuf = new Uint8Array(_s.buffer)
   wasm_sc_red.memory.set(sbuf, 0)
 
   wasm_sc_red.exports.sc25519_reduce(0)
@@ -2384,9 +2383,9 @@ function sc25519_is_canonical (s) {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10
   ])
 
-  var c = 0
-  var n = 1
-  var i = 32
+  let c = 0
+  let n = 1
+  let i = 32
 
   do {
     i--
@@ -2402,10 +2401,10 @@ function chi25519 (out, z) {
   check_fe(out)
   check_fe(z)
 
-  var t0 = fe25519()
-  var t1 = fe25519()
-  var t2 = fe25519()
-  var t3 = fe25519()
+  const t0 = fe25519()
+  const t1 = fe25519()
+  const t2 = fe25519()
+  const t3 = fe25519()
 
   fe25519_sq(t0, z)
   fe25519_mul(t1, t0, z)
@@ -2463,10 +2462,10 @@ function ge25519_mont_to_ed (xed, yed, x, y) {
   check_fe(x)
   check_fe(y)
 
-  var one = fe25519()
-  var x_plus_one = fe25519()
-  var x_minus_one = fe25519()
-  var x_plus_one_y_inv = fe25519()
+  const one = fe25519()
+  const x_plus_one = fe25519()
+  const x_minus_one = fe25519()
+  const x_plus_one_y_inv = fe25519()
 
   fe25519_1(one)
   fe25519_add(x_plus_one, x, one)
@@ -2487,8 +2486,8 @@ function ge25519_mont_to_ed (xed, yed, x, y) {
 
 /* montgomery -- recover y = sqrt(x^3 + A*x^2 + x) */
 function ge25519_xmont_to_ymont (y, x) {
-  var x2 = fe25519()
-  var x3 = fe25519()
+  const x2 = fe25519()
+  const x3 = fe25519()
 
   fe25519_sq(x2, x)
   fe25519_mul(x3, x, x2)
@@ -2503,8 +2502,8 @@ function ge25519_xmont_to_ymont (y, x) {
 function ge25519_clear_cofactor (p3) {
   check_ge3(p3)
 
-  var p1 = ge3()
-  var p2 = ge3()
+  const p1 = ge3()
+  const p2 = ge3()
 
   ge25519_p3_dbl(p1, p3)
   ge25519_p1p1_to_p2(p2, p1)
@@ -2520,15 +2519,15 @@ function ge25519_elligator2 (x, y, r, was_square_p) {
   check_fe(r)
   assert(typeof was_square_p === 'number')
 
-  var e = fe25519()
-  var gx1 = fe25519()
-  var rr2 = fe25519()
-  var x2 = fe25519()
-  var x3 = fe25519()
-  var negx = fe25519()
+  const e = fe25519()
+  const gx1 = fe25519()
+  const rr2 = fe25519()
+  const x2 = fe25519()
+  const x3 = fe25519()
+  const negx = fe25519()
 
-  var s = Buffer.alloc(32)
-  var was_square = 0
+  const s = Buffer.alloc(32)
+  let was_square = 0
 
   fe25519_sq2(rr2, r)
   rr2[0]++
@@ -2563,13 +2562,13 @@ function ge25519_from_uniform (s, r) {
   assert(s instanceof Uint8Array && s.length === 32)
   assert(r instanceof Uint8Array && r.length === 32)
 
-  var p3 = ge3()
-  var x = fe25519()
-  var y = fe25519()
-  var negxed = fe25519()
-  var r_fe = fe25519()
-  var was_square = 0
-  var x_sign = 0
+  const p3 = ge3()
+  const x = fe25519()
+  const y = fe25519()
+  const negxed = fe25519()
+  const r_fe = fe25519()
+  const was_square = 0
+  let x_sign = 0
 
   s.set(r.subarray(0, 32))
   x_sign = s[31] >> 7
@@ -2592,18 +2591,18 @@ function ge25519_from_hash (s, h) {
   assert(s instanceof Uint8Array && s.length === 32)
   assert(h instanceof Uint8Array && h.length === 64)
 
-  var fl = Buffer.alloc(32)
-  var gl = Buffer.alloc(32)
-  var p3 = ge3()
-  var x = fe25519()
-  var y = fe25519()
-  var negy = fe25519()
-  var fe_f = fe25519()
-  var fe_g = fe25519()
+  const fl = Buffer.alloc(32)
+  const gl = Buffer.alloc(32)
+  const p3 = ge3()
+  const x = fe25519()
+  const y = fe25519()
+  const negy = fe25519()
+  const fe_f = fe25519()
+  const fe_g = fe25519()
 
-  var i = 0
-  var was_square = 0
-  var y_sign = 0
+  let i = 0
+  const was_square = 0
+  let y_sign = 0
 
   for (i = 0; i < 32; i++) {
     fl[i] = h[63 - i]
@@ -2642,15 +2641,15 @@ function ristretto255_sqrt_ratio_m1 (x, u, v) {
   check_fe(u)
   check_fe(v)
 
-  var v3 = fe25519()
-  var vxx = fe25519()
-  var m_root_check = fe25519()
-  var p_root_check = fe25519()
-  var f_root_check = fe25519()
-  var x_sqrtm1 = fe25519()
-  var has_m_root = 0
-  var has_p_root = 0
-  var has_f_root = 0
+  const v3 = fe25519()
+  const vxx = fe25519()
+  const m_root_check = fe25519()
+  const p_root_check = fe25519()
+  const f_root_check = fe25519()
+  const x_sqrtm1 = fe25519()
+  let has_m_root = 0
+  let has_p_root = 0
+  let has_f_root = 0
 
   fe25519_sq(v3, v)
   fe25519_mul(v3, v3, v) /* v3 = v^3 */
@@ -2682,10 +2681,10 @@ function ristretto255_sqrt_ratio_m1 (x, u, v) {
 function ristretto255_is_canonical (s) {
   assert(s instanceof Uint8Array)
 
-  var c = 0
-  var d = 0
-  var e = 0
-  var i = 0
+  let c = 0
+  let d = 0
+  let e = 0
+  let i = 0
 
   c = (s[31] & 0x7f) ^ 0x7f
   for (i = 30; i > 0; i--) {
@@ -2702,17 +2701,17 @@ function ristretto255_frombytes (h, s, neg = false) {
   check_ge3(h)
   assert(s instanceof Uint8Array)
 
-  var inv_sqrt = fe25519()
-  var one = fe25519()
-  var s_ = fe25519()
-  var ss = fe25519()
-  var u1 = fe25519()
-  var u2 = fe25519()
-  var u1u1 = fe25519()
-  var u2u2 = fe25519()
-  var v = fe25519()
-  var v_u2u2 = fe25519()
-  var was_square = 0
+  const inv_sqrt = fe25519()
+  const one = fe25519()
+  const s_ = fe25519()
+  const ss = fe25519()
+  const u1 = fe25519()
+  const u2 = fe25519()
+  const u1u1 = fe25519()
+  const u2u2 = fe25519()
+  const v = fe25519()
+  const v_u2u2 = fe25519()
+  let was_square = 0
 
   if (ristretto255_is_canonical(s) == 0) {
     return -1
@@ -2760,25 +2759,25 @@ function ristretto255_p3_tobytes (s, h) {
   check_ge3(h)
   assert(s instanceof Uint8Array)
 
-  var den1 = fe25519()
-  var den2 = fe25519()
-  var den_inv = fe25519()
-  var eden = fe25519()
-  var inv_sqrt = fe25519()
-  var ix = fe25519()
-  var iy = fe25519()
-  var one = fe25519()
-  var s_ = fe25519()
-  var t_z_inv = fe25519()
-  var u1 = fe25519()
-  var u2 = fe25519()
-  var u1_u2u2 = fe25519()
-  var x_ = fe25519()
-  var y_ = fe25519()
-  var x_z_inv = fe25519()
-  var z_inv = fe25519()
-  var zmy = fe25519()
-  var rotate = 0
+  const den1 = fe25519()
+  const den2 = fe25519()
+  const den_inv = fe25519()
+  const eden = fe25519()
+  const inv_sqrt = fe25519()
+  const ix = fe25519()
+  const iy = fe25519()
+  const one = fe25519()
+  const s_ = fe25519()
+  const t_z_inv = fe25519()
+  const u1 = fe25519()
+  const u2 = fe25519()
+  const u1_u2u2 = fe25519()
+  const x_ = fe25519()
+  const y_ = fe25519()
+  const x_z_inv = fe25519()
+  const z_inv = fe25519()
+  const zmy = fe25519()
+  let rotate = 0
 
   fe25519_add(u1, h[2], h[1]) /* u1 = Z+Y */
   fe25519_sub(zmy, h[2], h[1]) /* zmy = Z-Y */
@@ -2823,21 +2822,21 @@ function ristretto255_elligator (p, t) {
   check_fe(t)
   check_ge3(p)
 
-  var c = fe25519()
-  var n = fe25519()
-  var one = fe25519()
-  var r = fe25519()
-  var rpd = fe25519()
-  var s = fe25519()
-  var s_prime = fe25519()
-  var ss = fe25519()
-  var u = fe25519()
-  var v = fe25519()
-  var w0 = fe25519()
-  var w1 = fe25519()
-  var w2 = fe25519()
-  var w3 = fe25519()
-  var wasnt_square = 0
+  const c = fe25519()
+  const n = fe25519()
+  const one = fe25519()
+  const r = fe25519()
+  const rpd = fe25519()
+  const s = fe25519()
+  const s_prime = fe25519()
+  const ss = fe25519()
+  const u = fe25519()
+  const v = fe25519()
+  const w0 = fe25519()
+  const w1 = fe25519()
+  const w2 = fe25519()
+  const w3 = fe25519()
+  let wasnt_square = 0
 
   fe25519_1(one)
   fe25519_sq(r, t) /* r = t^2 */
@@ -2880,13 +2879,13 @@ function ristretto255_from_hash (s, h) {
   assert(s instanceof Uint8Array && s.length === 32)
   assert(h instanceof Uint8Array && h.length === 64)
 
-  var r0 = fe25519()
-  var r1 = fe25519()
-  var p1_cached = ge3()
-  var p_p1p1 = ge3()
-  var p0 = ge3()
-  var p1 = ge3()
-  var p = ge3()
+  const r0 = fe25519()
+  const r1 = fe25519()
+  const p1_cached = ge3()
+  const p_p1p1 = ge3()
+  const p0 = ge3()
+  const p1 = ge3()
+  const p = ge3()
 
   fe25519_frombytes(r0, h)
   fe25519_frombytes(r1, h.slice(32))
