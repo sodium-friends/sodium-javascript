@@ -13,9 +13,8 @@
     "xsalsa20": "^1.0.0"
   },
   "devDependencies": {
-    "browser-run": "^4.0.2",
-    "browserify": "^14.1.0",
     "brittle": "^3.2.1",
+    "browser-run": "^4.0.2",
     "browserify": "^16.5.1",
     "sodium-native": "^3.4.1",
     "standard": "^15.0.1"

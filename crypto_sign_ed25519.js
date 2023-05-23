@@ -190,7 +190,7 @@ function _crypto_sign_ed25519_verify_detached(sig, m, pk, prehashed) {
   ec.ge25519_double_scalarmult_vartime(R, h, A, sig.subarray(32))
   ec.ge25519_tobytes(rcheck, R)
 
-  return crypto_verify_32(rcheck, 0, sig, 0) === 0
+  return crypto_verify_32(rcheck, 0, sig, 0)
 }
 
 function crypto_sign_ed25519_verify_detached (sig, m, pk) {
@@ -199,12 +199,12 @@ function crypto_sign_ed25519_verify_detached (sig, m, pk) {
 
 function crypto_sign_ed25519_open (m, sm, pk) {
   if (sm.byteLength < 64 || sm.byteLength - 64 > crypto_sign_ed25519_MESSAGEBYTES_MAX) {
-    throw new Error('Bad signature.')
+    return false
   }
 
   if (!crypto_sign_ed25519_verify_detached(sm, sm.subarray(64), pk)) {
     if (m.byteLength) m.fill(0)
-    throw new Error('Bad signature.')
+    return false
   }
 
   if (m.byteLength) {
