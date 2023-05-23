@@ -70,6 +70,12 @@ function fe25519_pow22523 (h, f) {
 
 const base = require('./fe25519_25/base.json').map(a => a.map(b => ge2(b)))
 
+const curve25519_h = Buffer.from([
+  0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+])
+
 const fe25519_sqrtm1 = fe25519([
   -32595792, -7943725, 9377950, 3500415, 12389472, -272473, -25146209, -2005654, 326686, 11406482
 ])
@@ -190,7 +196,8 @@ module.exports = {
   ristretto255_frombytes,
   ristretto255_p3_tobytes,
   ristretto255_elligator,
-  ristretto255_from_hash
+  ristretto255_from_hash,
+  curve25519_h
 }
 
 function print_ge (g, n = 4) {

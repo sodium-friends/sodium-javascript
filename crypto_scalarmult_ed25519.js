@@ -54,8 +54,8 @@ function _crypto_scalarmult_ed25519 (q, n, p, clamp) {
   var t = q.slice()
   var i
 
-  // if (ec.ge25519_is_canonical(p) == 0 || ec.ge25519_has_small_order(p) != 0 ||
-  if (ec.ge25519_frombytes(P, p) != 0 || ec.ge25519_is_on_main_subgroup(P) == 0) {
+  if (ec.ge25519_is_canonical(p) == 0 || ec.ge25519_has_small_order(p) != 0 ||
+      ec.ge25519_frombytes(P, p) != 0 || ec.ge25519_is_on_main_subgroup(P) == 0) {
     throw new Error('Invalid base point')
   }
 

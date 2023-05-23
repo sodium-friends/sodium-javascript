@@ -14,6 +14,7 @@ var sodium = module.exports
 
 forward(require('./crypto_box'))
 forward(require('./crypto_core'))
+forward(require('./crypto_core_ristretto255'))
 forward(require('./crypto_generichash'))
 forward(require('./crypto_hash'))
 forward(require('./crypto_hash_sha256'))
@@ -21,16 +22,18 @@ forward(require('./crypto_kdf'))
 forward(require('./crypto_kx'))
 forward(require('./crypto_aead'))
 forward(require('./crypto_onetimeauth'))
-// forward(require('./crypto_scalarmult_ed25519'))
-forward(require('./crypto_scalarmult'))
+forward(require('./crypto_scalarmult_ed25519'))
+// forward(require('./crypto_scalarmult'))
 forward(require('./crypto_secretbox'))
 forward(require('./crypto_shorthash'))
 // forward(require('./crypto_sign'))
 forward(require('./crypto_sign_ed25519'))
 forward(require('./crypto_stream'))
 forward(require('./crypto_stream_chacha20'))
+forward(require('./crypto_tweak'))
 forward(require('./crypto_verify'))
 forward(require('./randombytes'))
+forward(require('./utils'))
 
 function forward (submodule) {
   Object.keys(submodule).forEach(function (prop) {

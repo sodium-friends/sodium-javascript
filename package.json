@@ -15,6 +15,7 @@
   "devDependencies": {
     "browser-run": "^4.0.2",
     "browserify": "^14.1.0",
+    "sodium-native": "^3.4.1",
     "sodium-test": "^0.7.0"
   },
   "browser": {
