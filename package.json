@@ -1,42 +1,52 @@
 {
   "name": "sodium-javascript",
-  "version": "0.5.6",
+  "version": "0.8.0",
   "description": "WIP - a pure javascript version of sodium-native",
   "main": "index.js",
   "dependencies": {
     "blake2b": "^2.1.1",
     "chacha20-universal": "^1.0.4",
-    "nanoassert": "^1.0.0",
-    "sha256-wasm": "^1.3.0",
-    "sha512-wasm": "^1.2.0",
+    "nanoassert": "^2.0.0",
+    "sha256-universal": "^1.1.0",
+    "sha512-universal": "^1.1.0",
     "siphash24": "^1.0.1",
     "xsalsa20": "^1.0.0"
   },
   "devDependencies": {
     "browser-run": "^4.0.2",
     "browserify": "^14.1.0",
+    "brittle": "^3.2.1",
+    "browserify": "^16.5.1",
     "sodium-native": "^3.4.1",
-    "sodium-test": "^0.7.0"
+    "standard": "^15.0.1"
+  },
+  "standard": {
+    "ignore": [
+      "/internal/**/*.js",
+      "/test/fixtures/*.js"
+    ]
   },
   "browser": {
-    "crypto": false
-  },
-  "react-native": {
-    "crypto": "crypto"
+    "crypto": false,
+    "worker_threads": false
   },
   "scripts": {
-    "browser": "browserify test.js | browser-run",
-    "browser-manual": "browserify test.js | browser-run -p 1234",
-    "test": "node test.js"
+    "pretest": "standard",
+    "test": "brittle test/*.js",
+    "test-browser": "browserify test.js | tape-run"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mafintosh/sodium-javascript.git"
+    "url": "git+https://github.com/sodium-friends/sodium-javascript.git"
   },
-  "author": "Mathias Buus (@mafintosh)",
+  "contributors": [
+    "Christophe Diederichs <chm-diederichs@hyperdivision.dk>",
+    "Emil Bay <github@tixz.dk> (http://bayes.dk)",
+    "Mathias Buus <mathiasbuus@gmail.com> (https://mafinto.sh)"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mafintosh/sodium-javascript/issues"
+    "url": "https://github.com/sodium-friends/sodium-javascript/issues"
   },
-  "homepage": "https://github.com/mafintosh/sodium-javascript"
+  "homepage": "https://github.com/sodium-friends/sodium-javascript#readme"
 }

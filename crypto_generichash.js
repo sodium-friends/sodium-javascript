@@ -31,6 +31,6 @@ module.exports.crypto_generichash_instance = function (key, outlen) {
   return blake2b(outlen, key)
 }
 
-blake2b.ready(function (err) {
+blake2b.ready(function (_) {
   module.exports.crypto_generichash_WASM_LOADED = blake2b.WASM_LOADED
 })

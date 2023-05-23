@@ -1,4 +1,5 @@
 var assert = require('nanoassert')
+
 const {
   crypto_stream_chacha20_ietf,
   crypto_stream_chacha20_ietf_KEYBYTES,
@@ -9,42 +10,41 @@ const randombytes_SEEDBYTES = 32
 
 var randombytes = (function () {
   var QUOTA = 65536 // limit for QuotaExceededException
-  var crypto = typeof global !== 'undefined' ? crypto = (global.crypto || global.msCrypto) : null
+  var crypto = globalThis.crypto || globalThis.msCrypto
 
   function browserBytes (out, n) {
-    for (var i = 0; i < n; i += QUOTA) {
-      crypto.getRandomValues(out.subarray(i, i + Math.min(n - i, QUOTA)))
+    for (let i = 0; i < n; i += QUOTA) {
+      crypto.getRandomValues(new Uint8Array(out.buffer, i + out.byteOffset, Math.min(n - i, QUOTA)))
     }
   }
 
   function nodeBytes (out, n) {
-    out.set(crypto.randomBytes(n))
+    new Uint8Array(out.buffer, out.byteOffset, n).set(crypto.randomBytes(n))
   }
 
   function noImpl () {
     throw new Error('No secure random number generator available')
   }
 
-  if (crypto && crypto.getRandomValues) {
-    return browserBytes
-  } else if (typeof require !== 'undefined') {
-    // Node.js.
-    crypto = require('crypto')
-    if (crypto && crypto.randomBytes) {
-      return nodeBytes
-    }
+  if (crypto && crypto.getRandomValues) return browserBytes
+
+  if (require != null) {
+    // Node.js. Bust Browserify
+    crypto = require('cry' + 'pto')
+    if (crypto && crypto.randomBytes) return nodeBytes
   }
 
   return noImpl
 })()
 
+// Make non enumerable as this is an internal function
 Object.defineProperty(module.exports, 'randombytes', {
   value: randombytes
 })
 
 function randombytes_buf (out) {
   assert(out, 'out must be given')
-  randombytes(out, out.length)
+  randombytes(out, out.byteLength)
 }
 
 function randombytes_buf_deterministic (buf, seed) {

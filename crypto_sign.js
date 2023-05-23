@@ -4,10 +4,13 @@ const { crypto_hash } = require('./crypto_hash')
 const {
   gf, gf0, gf1, D, D2,
   X, Y, I, A, Z, M, S,
-  sel25519, car25519, pack25519,
+  sel25519, pack25519,
   inv25519, unpack25519
-} = require('./ed25519')
+} = require('./internal/ed25519')
 const { randombytes } = require('./randombytes')
+const { crypto_scalarmult_BYTES } = require('./crypto_scalarmult.js')
+const { crypto_hash_sha512_BYTES } = require('./crypto_hash.js')
+const assert = require('nanoassert')
 
 const crypto_sign_ed25519_PUBLICKEYBYTES = 32
 const crypto_sign_ed25519_SECRETKEYBYTES = 64
@@ -35,10 +38,10 @@ module.exports = {
   crypto_sign_ed25519_SEEDBYTES,
   crypto_sign_ed25519_BYTES,
   crypto_sign_ed25519_pk_to_curve25519,
+  crypto_sign_ed25519_sk_to_curve25519,
+  crypto_sign_ed25519_sk_to_pk,
   unpackneg,
-  pack,
-  scalarbase,
-  scalarmult
+  pack
 }
 
 function set25519 (r, a) {
@@ -142,7 +145,6 @@ function crypto_sign_keypair (pk, sk, seeded) {
   pack(pk, p)
 
   for (i = 0; i < 32; i++) sk[i + 32] = pk[i]
-  return 0
 }
 
 function crypto_sign_seed_keypair (pk, sk, seed) {
@@ -232,28 +234,10 @@ function crypto_sign_detached (sig, m, sk) {
   for (let i = 0; i < crypto_sign_BYTES; i++) sig[i] = sm[i]
 }
 
-function is_zero25519 (f) {
-  var s = new Uint8Array(32)
-  pack25519(s, f)
-
-  return sodium_is_zero(s, 32)
-
-  function sodium_is_zero (n) {
-    let i
-    let d = 0
-
-    for (let i = 0; i < n.length; i++) {
-      d |= n[i]
-    }
-
-    return 1 & ((d - 1) >> 8)
-  }
-}
-
 function unpackneg (r, p) {
   var t = gf(), chk = gf(), num = gf(),
     den = gf(), den2 = gf(), den4 = gf(),
-    den6 = gf(), x_sqrtm1 = gf(), m_root_check = gf()
+    den6 = gf()
 
   set25519(r[2], gf1)
   unpack25519(r[1], p)
@@ -276,23 +260,18 @@ function unpackneg (r, p) {
 
   S(chk, r[0])
   M(chk, chk, den)
-  if (neq25519(chk, num)) M(r[0], r[0], I)
+  if (!neq25519(chk, num)) M(r[0], r[0], I)
 
   S(chk, r[0])
   M(chk, chk, den)
-  if (neq25519(chk, num)) return -1
-
-  M(x_sqrtm1, r[0], I) /* x*sqrt(-1) */
-  // sel25519(r[0], x_sqrtm1, 1 - has_m_root)
+  if (!neq25519(chk, num)) return false
 
   if (par25519(r[0]) === (p[31] >> 7)) {
     Z(r[0], gf(), r[0])
   }
 
   M(r[3], r[0], r[1])
-
-
-  return 0
+  return true
 }
 
 /* eslint-disable no-unused-vars */
@@ -311,13 +290,12 @@ function crypto_sign_open (msg, sm, pk) {
   mlen = -1
   if (n < 64) return false
 
-  if (unpackneg(q, pk)) return false
+  if (!unpackneg(q, pk)) return false
 
   for (i = 0; i < n; i++) m[i] = sm[i]
   for (i = 0; i < 32; i++) m[i + 32] = pk[i]
   crypto_hash(h, m, n)
   reduce(h)
-  console.log('h so -->', Buffer.from(h).subarray(0, 32).toString('hex'))
   scalarmult(p, q, h)
 
   scalarbase(q, sm.subarray(32))
@@ -325,7 +303,7 @@ function crypto_sign_open (msg, sm, pk) {
   pack(t, p)
 
   n -= 64
-  if (crypto_verify_32(sm, 0, t, 0)) {
+  if (!crypto_verify_32(sm, 0, t, 0)) {
     for (i = 0; i < n; i++) m[i] = 0
     return false
     // throw new Error('crypto_sign_open failed')
@@ -384,12 +362,13 @@ function crypto_sign_ed25519_pk_to_curve25519 (x25519_pk, ed25519_pk) {
   var x = gf([1])
   var one_minus_y = gf([1])
 
-  if (isSmallOrder(ed25519_pk) !== 0 ||
-      unpackneg(a, ed25519_pk) !== 0 ||
-      !ed25519_is_on_main_subgroup(a)) return -1
+  assert(
+    isSmallOrder(ed25519_pk) &&
+    unpackneg(a, ed25519_pk) &&
+    ed25519_is_on_main_subgroup(a), 'Cannot convert key: bad point')
 
   for (let i = 0; i < a.length; i++) {
-    pack25519(x25519_pk, a[i]);
+    pack25519(x25519_pk, a[i])
   }
 
   Z(one_minus_y, one_minus_y, a[1])
@@ -444,7 +423,7 @@ function isSmallOrder (s) {
   var c = new Uint8Array(7)
   var j
 
-  check (bad_points, 7)
+  check(bad_points, 7)
   for (let i = 0; i < bad_points.length; i++) {
     for (j = 0; j < 31; j++) {
       c[i] |= s[j] ^ bad_points[i][j]
@@ -460,7 +439,7 @@ function isSmallOrder (s) {
     k |= (c[i] - 1)
   }
 
-  return ((k >> 8) & 1)
+  return ((k >> 8) & 1) === 0
 }
 
 function crypto_sign_ed25519_sk_to_pk (pk, sk) {
@@ -470,22 +449,21 @@ function crypto_sign_ed25519_sk_to_pk (pk, sk) {
 }
 
 function crypto_sign_ed25519_sk_to_curve25519 (curveSk, edSk) {
-  check(curveSk, crypto_sign_SECRETKEYBYTES)
-  check(edSk, crypto_sign_ed25519_SECRETKEYBYTES)
+  assert(curveSk && curveSk.byteLength === crypto_scalarmult_BYTES, "curveSk must be 'crypto_sign_SECRETKEYBYTES' long")
+  assert(edSk && edSk.byteLength === crypto_sign_ed25519_SECRETKEYBYTES, "edSk must be 'crypto_sign_ed25519_SECRETKEYBYTES' long")
 
-  var h = Buffer.alloc(crypto_hash_sha512_BYTES);
+  var h = new Uint8Array(crypto_hash_sha512_BYTES)
   crypto_hash(h, edSk, 32)
 
-  h[0] &= 248;
-  h[31] &= 127;
-  h[31] |= 64;
+  h[0] &= 248
+  h[31] &= 127
+  h[31] |= 64
 
-  curveSk.set(edSk)
+  curveSk.set(h.subarray(0, crypto_scalarmult_BYTES))
   h.fill(0)
   return curveSk
 }
 
-
-function check (buf, len) {
-  if (!buf || (len && buf.length < len)) throw new Error('Argument must be a buffer' + (len ? ' of length ' + len : ''))
+function check (buf, len, arg = 'Argument') {
+  if (!buf || (len && buf.length < len)) throw new Error(arg + ' must be a buffer' + (len ? ' of length ' + len : ''))
 }

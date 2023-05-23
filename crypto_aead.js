@@ -1,6 +1,7 @@
+/* eslint-disable camelcase */
 const { crypto_stream_chacha20_ietf, crypto_stream_chacha20_ietf_xor_ic } = require('./crypto_stream_chacha20')
 const { crypto_verify_16 } = require('./crypto_verify')
-const Poly1305 = require('./poly1305.js')
+const Poly1305 = require('./internal/poly1305')
 const assert = require('nanoassert')
 
 const crypto_aead_chacha20poly1305_ietf_KEYBYTES = 32
@@ -130,7 +131,7 @@ function crypto_aead_chacha20poly1305_ietf_decrypt_detached (m, nsec, c, mac, ad
   computed_mac.fill(0)
   slen.fill(0)
 
-  if (ret !== 0) {
+  if (!ret) {
     m.fill(0)
     throw new Error('could not verify data')
   }
