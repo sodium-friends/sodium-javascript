@@ -5,6 +5,7 @@ const { crypto_sign, crypto_sign_open, crypto_sign_verify_detached } = require('
 const sign = require('./crypto_sign')
 const ed = require('./ed25519')
 const ec = require('./fe25519_25')
+const { crypto_tweak_ed25519 } = require('./crypto_tweak')
 
 console.log(crypto_scalarmult_ed25519)
 let sm = Buffer.alloc(1024 + sodium.crypto_sign_BYTES)
@@ -153,6 +154,16 @@ console.log('native', res.toString('hex'))
 
 crypto_scalarmult_ed25519(res, fixtures[1].sk, fixtures[1].pk)
 console.log(res.toString('hex'))
+
+const tweak = Buffer.alloc(32)
+const ns = Buffer.alloc(32)
+
+native.crypto_generichash(ns, Buffer.from('namespace'))
+crypto_tweak_ed25519(tweak, fixtures[1].pk, ns)
+console.log('js', tweak.toString('hex'))
+
+native.experimental_crypto_tweak_ed25519(tweak, fixtures[1].pk, ns)
+console.log('native', tweak.toString('hex'))
 
 // const a = Buffer.alloc(32)
 // a[i] = 9
