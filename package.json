@@ -15,15 +15,16 @@
   "devDependencies": {
     "brittle": "^3.2.1",
     "browserify": "^16.5.1",
-    "sodium-test": "^0.10.0",
-    "standard": "^15.0.1",
-    "tape-run": "^7.0.0"
+    "standard": "^15.0.1"
   },
   "standard": {
     "ignore": [
       "/internal/**/*.js",
       "/test/fixtures/*.js"
     ],
+    "rules": {
+      "camelcase": "off"
+    }
   },
   "browser": {
     "crypto": false,
