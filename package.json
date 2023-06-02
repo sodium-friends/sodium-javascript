@@ -4,6 +4,7 @@
   "description": "WIP - a pure javascript version of sodium-native",
   "main": "index.js",
   "dependencies": {
+    "argon2-wasm": "^0.9.0",
     "blake2b": "^2.1.1",
     "chacha20-universal": "^1.0.4",
     "nanoassert": "^2.0.0",
