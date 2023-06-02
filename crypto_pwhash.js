@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 const b4a = require('b4a')
-const argon2 = require('../../wasm/argon2-wasm')
+const argon2 = require('argon2hash-wasm')
 const { randombytes_buf } = require('./randombytes')
 
 const crypto_pwhash_argon2i_ALG_ARGON2I13 = 1
