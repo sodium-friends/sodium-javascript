@@ -20,7 +20,7 @@ var randombytes = (function () {
 
   if (crypto && crypto.getRandomValues) return browserBytes
 
-  if (require != null) {
+  if (typeof require === 'function') {
     // Node.js. Bust Browserify
     crypto = require('cry' + 'pto')
     if (crypto && crypto.randomBytes) return nodeBytes
